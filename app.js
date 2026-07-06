@@ -133,6 +133,33 @@ let messages = [];
 let editing = false;
 let calMonth = null;   // Date, first of displayed month
 let curTeam = "warehouse";
+let curHub = localStorage.getItem("jfk-hub") === "support" ? "support" : "warehouse";
+
+// Members belonging to the currently selected hub.
+function hubMembers() {
+  return curHub === "support" ? staff.filter((p) => p.support_access || p.is_admin) : staff;
+}
+
+function setHub(hub) {
+  curHub = hub;
+  localStorage.setItem("jfk-hub", hub);
+  $("hub-title").textContent = hub === "support" ? "Customer Support Hub" : "Warehouse Hub";
+  $("tasks-title").textContent = hub === "support" ? "Support Task Board" : "Warehouse Task Board";
+  document.querySelectorAll("#hub-toggle button").forEach((b) =>
+    b.classList.toggle("active", b.dataset.hub === hub)
+  );
+  els.clTeam.value = hub;
+  setTeam(hub);          // task board follows the hub
+  renderSchedules();
+  renderPunchTable();
+  renderHoursTable();
+  renderChecklists();
+}
+
+$("hub-toggle").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-hub]");
+  if (btn) setHub(btn.dataset.hub);
+});
 
 // ---------- helpers ----------
 
@@ -377,10 +404,11 @@ async function route() {
     $("msg-admin-badge").classList.toggle("hidden", !admin);
     els.clAdminForm.classList.toggle("hidden", !admin);
     const support = admin || prof.support_access;
-    $("tab-support").classList.toggle("hidden", !support);
-    if (!support && curTeam === "support") setTeam("warehouse");
+    $("hub-toggle").classList.toggle("hidden", !support);
+    if (!support && curHub === "support") curHub = "warehouse";
     showView(els.appView);
     await loadEverything();
+    setHub(curHub);
     maybeAskNotifications();
     checkShiftReminders();
     return;
@@ -753,7 +781,7 @@ async function loadChecklists() {
 
 function renderChecklists() {
   const render = (cadence, el) => {
-    const list = checklistItems.filter((i) => i.cadence === cadence);
+    const list = checklistItems.filter((i) => i.cadence === cadence && (i.team || "warehouse") === curHub);
     if (!list.length) {
       el.innerHTML = `<li class="empty">No ${cadence} items yet.</li>`;
       return;
@@ -902,7 +930,7 @@ function renderPunchTable() {
   punches.forEach((p) => {
     (byMember[p.profile_id] = byMember[p.profile_id] || {})[p.punch_type] = p.punched_at;
   });
-  els.punchTableBody.innerHTML = staff
+  els.punchTableBody.innerHTML = hubMembers()
     .map((s) => {
       const mine = byMember[s.id] || {};
       const lastType = [...PUNCH_ORDER].reverse().find((t) => mine[t]) || "none";
@@ -988,7 +1016,7 @@ function renderHoursTable() {
   const [my, mm, md] = monday.split("-").map(Number);
   const today = todayStr();
 
-  tbody.innerHTML = staff
+  tbody.innerHTML = hubMembers()
     .map((p) => {
       let total = 0;
       const cells = DAYS.map((day, i) => {
@@ -1100,7 +1128,7 @@ async function loadHours() {
 }
 
 function scheduleRows() {
-  return staff;
+  return hubMembers();
 }
 
 function canEditRow(p) {
@@ -1894,6 +1922,39 @@ function maybeAskNotifications() {
   }
 }
 
+// ---------- page routing (nav buttons = pages; logo = homepage) ----------
+
+const PAGE_ROUTES = ["home", "clock", "calendar", "schedules", "announcements", "tasks", "checklists", "supplies", "messages", "admin"];
+const HOME_ONLY = ["today-callout", "reminders", "warnings-card"];
+const MAIN_SECTIONS = ["today-callout", "reminders", "clock", "calendar", "schedules", "announcements", "tasks", "checklists", "supplies", "warnings-card"];
+
+function currentPage() {
+  const h = (location.hash || "#home").slice(1);
+  return PAGE_ROUTES.includes(h) ? h : "home";
+}
+
+function applyPage() {
+  const page = currentPage();
+  const isHome = page === "home";
+  const sidebarOnly = page === "messages" || page === "admin";
+
+  MAIN_SECTIONS.forEach((id) => {
+    const el = $(id);
+    if (!el) return;
+    const show = isHome ? true : !sidebarOnly && page === id && !HOME_ONLY.includes(id);
+    el.classList.toggle("route-hidden", !show);
+  });
+  document.querySelector(".layout").classList.toggle("sidebar-only", sidebarOnly);
+  document.querySelectorAll(".site-nav a").forEach((a) =>
+    a.classList.toggle("active", a.getAttribute("href") === "#" + page)
+  );
+  if (page === "admin") $("admin").scrollIntoView?.();
+  else window.scrollTo({ top: 0 });
+}
+
+window.addEventListener("hashchange", applyPage);
+
 // ---------- init ----------
 
 route();
+applyPage();

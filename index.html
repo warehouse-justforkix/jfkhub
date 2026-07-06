@@ -17,7 +17,7 @@
   <header class="site-header">
     <div class="wrap header-row">
       <div>
-        <h1>Just For Kix <span>Warehouse Hub</span></h1>
+        <h1><a href="#home" class="home-link" title="Back to the homepage">Just For Kix <span id="hub-title">Warehouse Hub</span></a></h1>
         <p class="tagline">Schedules, tasks, and who's in — all in one place.</p>
       </div>
       <div id="user-chip" class="user-chip hidden">
@@ -28,6 +28,10 @@
       </div>
     </div>
     <div class="wrap">
+      <div id="hub-toggle" class="hub-toggle hidden">
+        <button type="button" data-hub="warehouse" class="active">📦 Warehouse</button>
+        <button type="button" data-hub="support">🎧 Customer Support</button>
+      </div>
       <nav id="site-nav" class="site-nav hidden">
         <a href="#clock">Time Clock</a>
         <a href="#calendar">Calendar</a>
@@ -363,8 +367,8 @@
       <!-- Task boards -->
       <section id="tasks" class="card">
         <div class="card-head">
-          <h2>Task Board</h2>
-          <div class="team-tabs" id="team-tabs">
+          <h2 id="tasks-title">Task Board</h2>
+          <div class="team-tabs hidden" id="team-tabs">
             <button type="button" class="team-tab active" data-team="warehouse">Warehouse</button>
             <button type="button" class="team-tab hidden" id="tab-support" data-team="support">Customer Support</button>
           </div>

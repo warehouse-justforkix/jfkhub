@@ -36,6 +36,28 @@ body {
 .site-header h1 { margin: 0; font-size: 1.5rem; letter-spacing: .01em; }
 .site-header h1 span { display: block; font-size: 1.05rem; font-weight: 500; opacity: .92; }
 .tagline { margin: .4rem 0 0; opacity: .85; font-size: .92rem; }
+/* Hub toggle (Warehouse / Customer Support) */
+.hub-toggle { margin-top: .9rem; display: inline-flex; background: rgba(255,255,255,.14); border-radius: 99px; padding: .2rem; gap: .2rem; }
+.hub-toggle button {
+  font: inherit;
+  font-size: .85rem;
+  font-weight: 700;
+  color: #fff;
+  background: transparent;
+  border: none;
+  border-radius: 99px;
+  padding: .35rem .9rem;
+  cursor: pointer;
+}
+.hub-toggle button.active { background: #fff; color: var(--brand-dark); }
+
+/* Page routing */
+.route-hidden { display: none !important; }
+.layout.sidebar-only .main-col { display: none; }
+.layout.sidebar-only .side-col { width: 100%; max-width: 640px; margin: 0 auto; position: static; }
+.home-link { color: inherit; text-decoration: none; display: block; }
+.site-nav a.active { background: #fff; color: var(--brand-dark); }
+
 .site-nav { margin-top: .8rem; display: flex; gap: .5rem; flex-wrap: wrap; }
 .site-nav a {
   color: #fff;
