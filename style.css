@@ -595,7 +595,8 @@ td.cell-off { color: var(--ink-soft); font-style: italic; }
 .admin-list li { display: flex; justify-content: space-between; align-items: center; gap: .6rem; padding: .5rem .1rem; border-bottom: 1px solid var(--line); font-size: .9rem; }
 .admin-list li:last-child { border-bottom: none; }
 .admin-list .empty { color: var(--ink-soft); font-style: italic; }
-.admin-actions { display: flex; gap: .4rem; flex-shrink: 0; }
+.admin-actions { display: flex; gap: .4rem; flex-shrink: 0; align-items: center; }
+.team-select { font: inherit; font-size: .76rem; padding: .2rem .25rem; border: 1px solid #eab4d1; border-radius: 6px; background: #fff; color: var(--brand-dark); }
 @media (max-width: 700px) { .admin-cols { grid-template-columns: 1fr; } }
 
 .site-footer {

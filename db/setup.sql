@@ -14,7 +14,8 @@
 create table if not exists invited_emails (
   email text primary key,               -- stored lowercase
   is_admin boolean not null default false,
-  support_access boolean not null default false,  -- customer-support board access
+  support_access boolean not null default false,   -- customer-support hub access
+  warehouse_access boolean not null default true,    -- warehouse hub access (true+support = both)
   invited_at timestamptz not null default now()
 );
 
@@ -24,7 +25,8 @@ create table if not exists profiles (
   name text not null,
   role text not null default 'part-time' check (role in ('full-time', 'part-time')),
   is_admin boolean not null default false,
-  support_access boolean not null default false,  -- customer-support board access
+  support_access boolean not null default false,   -- customer-support hub access
+  warehouse_access boolean not null default true,    -- warehouse hub access
   avatar text not null default '🙂',              -- emoji profile icon
   avatar_options jsonb,                           -- custom character avatar (DiceBear options); overrides emoji when set
   reminders boolean not null default false,       -- opt-in on-open reminders
@@ -147,15 +149,19 @@ $$ select exists (select 1 from invited_emails where email = lower(check_email))
 
 create or replace function public.has_support() returns boolean
 language sql stable security definer set search_path = public as
-$$ select coalesce((select support_access from profiles where id = auth.uid()), false) $$;
+$ select coalesce((select support_access from profiles where id = auth.uid()), false) $;
+
+create or replace function public.has_warehouse() returns boolean
+language sql stable security definer set search_path = public as
+$ select coalesce((select warehouse_access from profiles where id = auth.uid()), false) $;
 
 -- The admin/support flags always come from the invite, never from the client.
 create or replace function public.profiles_set_admin_flag() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
   new.email := lower(new.email);
-  select coalesce(i.is_admin, false), coalesce(i.support_access, false)
-    into new.is_admin, new.support_access
+  select coalesce(i.is_admin, false), coalesce(i.support_access, false), coalesce(i.warehouse_access, true)
+    into new.is_admin, new.support_access, new.warehouse_access
     from (select 1) x
     left join invited_emails i on i.email = new.email;
   return new;
@@ -172,6 +178,7 @@ begin
   if not public.is_admin() then
     new.is_admin := old.is_admin;
     new.support_access := old.support_access;
+    new.warehouse_access := old.warehouse_access;
   end if;
   new.email := old.email;  -- email is fixed to the auth account
   return new;
@@ -197,8 +204,8 @@ alter table checklist_checks enable row level security;
 -- checklists: strictly team-scoped, same rule as tasks.
 create policy "team checklist items" on checklist_items for all
   to authenticated
-  using (public.is_member() and (public.is_admin() or (checklist_items.team = 'support') = public.has_support()))
-  with check (public.is_member() and (public.is_admin() or (checklist_items.team = 'support') = public.has_support()));
+  using (public.is_member() and (public.is_admin() or (checklist_items.team = 'support' and public.has_support()) or (checklist_items.team = 'warehouse' and public.has_warehouse())))
+  with check (public.is_member() and (public.is_admin() or (checklist_items.team = 'support' and public.has_support()) or (checklist_items.team = 'warehouse' and public.has_warehouse())));
 create policy "member checklist checks" on checklist_checks for all
   to authenticated using (public.is_member()) with check (public.is_member());
 
@@ -243,7 +250,10 @@ create policy "admin delete profile" on profiles for delete
 create policy "team read hours" on member_hours for select
   to authenticated using (
     public.is_admin()
-    or public.has_support() = (select p.support_access from profiles p where p.id = member_hours.profile_id)
+    or exists (
+      select 1 from profiles t where t.id = member_hours.profile_id
+      and ((public.has_support() and t.support_access) or (public.has_warehouse() and t.warehouse_access))
+    )
   );
 create policy "own or admin write hours" on member_hours for insert
   to authenticated with check (profile_id = auth.uid() or public.is_admin());
@@ -260,8 +270,8 @@ create policy "member all notes" on schedule_notes for all
 -- tasks: strictly team-scoped — you see your assigned team's board; admins see both.
 create policy "team tasks" on tasks for all
   to authenticated
-  using (public.is_member() and (public.is_admin() or (tasks.team = 'support') = public.has_support()))
-  with check (public.is_member() and (public.is_admin() or (tasks.team = 'support') = public.has_support()));
+  using (public.is_member() and (public.is_admin() or (tasks.team = 'support' and public.has_support()) or (tasks.team = 'warehouse' and public.has_warehouse())))
+  with check (public.is_member() and (public.is_admin() or (tasks.team = 'support' and public.has_support()) or (tasks.team = 'warehouse' and public.has_warehouse())));
 
 -- announcements: members read + post; delete own (admins delete any).
 create policy "member read announcements" on announcements for select

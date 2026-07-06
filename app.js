@@ -137,7 +137,9 @@ let curHub = localStorage.getItem("jfk-hub") === "support" ? "support" : "wareho
 
 // Members belonging to the currently selected hub.
 function hubMembers() {
-  return curHub === "support" ? staff.filter((p) => p.support_access || p.is_admin) : staff;
+  return curHub === "support"
+    ? staff.filter((p) => p.support_access || p.is_admin)
+    : staff.filter((p) => p.warehouse_access !== false || p.is_admin);
 }
 
 function setHub(hub) {
@@ -403,9 +405,10 @@ async function route() {
     els.roster.classList.toggle("hidden", !admin);
     $("msg-admin-badge").classList.toggle("hidden", !admin);
     els.clAdminForm.classList.toggle("hidden", !admin);
-    $("hub-toggle").classList.toggle("hidden", !admin);
+    const bothTeams = prof.support_access && prof.warehouse_access !== false;
+    $("hub-toggle").classList.toggle("hidden", !(admin || bothTeams));
     $("hours-card").classList.toggle("hidden", !admin);
-    if (!admin) curHub = prof.support_access ? "support" : "warehouse";
+    if (!admin && !bothTeams) curHub = prof.support_access ? "support" : "warehouse";
     showView(els.appView);
     await loadEverything();
     setHub(curHub);
@@ -1647,7 +1650,7 @@ function renderRoster() {
       ${threadUnread(p.id) ? '<span class="unread-dot">●</span>' : ""}
     </li>`;
   };
-  const warehouse = members.filter((p) => !p.support_access);
+  const warehouse = members.filter((p) => p.warehouse_access !== false);
   const support = members.filter((p) => p.support_access);
   els.roster.innerHTML =
     (warehouse.length
@@ -1760,10 +1763,13 @@ function renderAdmin() {
   const memberEmails = new Set(staff.map((p) => p.email));
   const pending = invites.filter((i) => !memberEmails.has(i.email));
 
-  const teamBadge = (isSupport) =>
-    isSupport
-      ? '<span class="role-badge role-part-time">CS</span>'
-      : '<span class="role-badge role-full-time">WH</span>';
+  const teamBadge = (sup, wh) => {
+    if (sup && wh !== false) return '<span class="role-badge role-full-time">WH</span><span class="role-badge role-part-time">CS</span>';
+    if (sup) return '<span class="role-badge role-part-time">CS</span>';
+    return '<span class="role-badge role-full-time">WH</span>';
+  };
+  const teamValue = (p) =>
+    p.support_access && p.warehouse_access !== false ? "both" : p.support_access ? "support" : "warehouse";
 
   els.inviteList.innerHTML = pending.length
     ? pending
@@ -1783,10 +1789,14 @@ function renderAdmin() {
           (p) => `<li>
             <span>${nameWithAvatar(p.name)}
               <span class="role-badge role-${p.role}">${p.role === "full-time" ? "FT" : "PT"}</span>
-              ${p.is_admin ? '<span class="role-badge role-full-time">ADMIN</span>' : teamBadge(p.support_access)}
+              ${p.is_admin ? '<span class="role-badge role-full-time">ADMIN</span>' : teamBadge(p.support_access, p.warehouse_access)}
             </span>
             <span class="admin-actions">
-              ${p.is_admin ? "" : `<button class="btn-mini" data-supacc="${p.id}" data-current="${p.support_access}">${p.support_access ? "Move to WH" : "Move to CS"}</button>`}
+              ${p.is_admin ? "" : `<select class="team-select" data-teamsel="${p.id}">
+                <option value="warehouse" ${teamValue(p) === "warehouse" ? "selected" : ""}>Warehouse</option>
+                <option value="support" ${teamValue(p) === "support" ? "selected" : ""}>Cust. Support</option>
+                <option value="both" ${teamValue(p) === "both" ? "selected" : ""}>Both</option>
+              </select>`}
               ${p.id !== myProfile.id ? `<button class="btn-mini danger" data-unmember="${p.id}" data-email="${esc(p.email)}" data-name="${esc(p.name)}">Remove</button>` : ""}
             </span>
           </li>`
@@ -1799,10 +1809,12 @@ els.inviteForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = els.invEmail.value.trim().toLowerCase();
   setStatus(els.inviteStatus, "");
+  const team = $("inv-team").value;
   const { error } = await supabase.from("invited_emails").insert({
     email,
     is_admin: false,
-    support_access: $("inv-team").value === "support",
+    support_access: team === "support" || team === "both",
+    warehouse_access: team === "warehouse" || team === "both",
   });
   if (error) {
     const msg = error.code === "23505" ? "That email is already on the list." : error.message;
@@ -1814,20 +1826,27 @@ els.inviteForm.addEventListener("submit", async (e) => {
   await loadAdmin();
 });
 
+els.adminSection.addEventListener("change", async (e) => {
+  const sel = e.target.closest("select[data-teamsel]");
+  if (!sel) return;
+  const v = sel.value;
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      support_access: v === "support" || v === "both",
+      warehouse_access: v === "warehouse" || v === "both",
+    })
+    .eq("id", sel.dataset.teamsel);
+  if (error) alert(`Couldn't update: ${error.message}`);
+  await loadStaff();
+  renderAdmin();
+  renderRoster();
+  renderSchedules();
+  renderPunchTable();
+  renderHoursTable();
+});
+
 els.adminSection.addEventListener("click", async (e) => {
-  const supacc = e.target.closest("button[data-supacc]");
-  if (supacc) {
-    const grant = supacc.dataset.current !== "true";
-    const { error } = await supabase
-      .from("profiles")
-      .update({ support_access: grant })
-      .eq("id", supacc.dataset.supacc);
-    if (error) alert(`Couldn't update: ${error.message}`);
-    await loadStaff();
-    renderAdmin();
-    if (supacc.dataset.supacc === myProfile.id) route();
-    return;
-  }
   const uninvite = e.target.closest("button[data-uninvite]");
   if (uninvite) {
     if (!confirm(`Remove the invite for ${uninvite.dataset.uninvite}?`)) return;

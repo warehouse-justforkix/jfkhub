@@ -34,8 +34,8 @@
       </div>
       <nav id="site-nav" class="site-nav hidden">
         <a href="#clock">Time Clock</a>
-        <a href="#calendar">Calendar</a>
         <a href="#schedules">Schedule</a>
+        <a href="#calendar">Calendar</a>
         <a href="#announcements">Announcements</a>
         <a href="#tasks">Task Board</a>
         <a href="#checklists">Checklists</a>
@@ -196,6 +196,7 @@
             <select id="inv-team" aria-label="Team">
               <option value="warehouse" selected>Warehouse</option>
               <option value="support">Customer Support</option>
+              <option value="both">Both teams</option>
             </select>
             <button class="btn btn-primary" type="submit">Add member</button>
           </form>
@@ -271,6 +272,34 @@
         </div>
       </section>
 
+      <!-- Weekly schedules -->
+      <section id="schedules" class="card">
+        <div class="card-head">
+          <h2 id="schedules-title">My Schedule</h2>
+          <button id="edit-toggle" class="btn btn-ghost" type="button">Edit my hours</button>
+        </div>
+        <p class="hint" id="schedules-hint">Everyone's current weekly hours. You can edit your own row.</p>
+        <div class="table-scroll">
+          <table id="schedule-table">
+            <thead>
+              <tr>
+                <th class="name-col">Team member</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+              </tr>
+            </thead>
+            <tbody><!-- rows rendered by app.js --></tbody>
+          </table>
+        </div>
+        <div id="edit-actions" class="edit-actions hidden">
+          <button id="save-schedules" class="btn btn-primary" type="button">Save changes</button>
+          <button id="cancel-edit" class="btn btn-ghost" type="button">Cancel</button>
+        </div>
+      </section>
+
       <!-- Calendar: time off & meetings -->
       <section id="calendar" class="card">
         <div class="card-head">
@@ -328,34 +357,6 @@
         <ul id="notes-list" class="notes-list">
           <li class="empty">Loading…</li>
         </ul>
-      </section>
-
-      <!-- Weekly schedules -->
-      <section id="schedules" class="card">
-        <div class="card-head">
-          <h2 id="schedules-title">My Schedule</h2>
-          <button id="edit-toggle" class="btn btn-ghost" type="button">Edit my hours</button>
-        </div>
-        <p class="hint" id="schedules-hint">Everyone's current weekly hours. You can edit your own row.</p>
-        <div class="table-scroll">
-          <table id="schedule-table">
-            <thead>
-              <tr>
-                <th class="name-col">Team member</th>
-                <th>Monday</th>
-                <th>Tuesday</th>
-                <th>Wednesday</th>
-                <th>Thursday</th>
-                <th>Friday</th>
-              </tr>
-            </thead>
-            <tbody><!-- rows rendered by app.js --></tbody>
-          </table>
-        </div>
-        <div id="edit-actions" class="edit-actions hidden">
-          <button id="save-schedules" class="btn btn-primary" type="button">Save changes</button>
-          <button id="cancel-edit" class="btn btn-ghost" type="button">Cancel</button>
-        </div>
       </section>
 
       <!-- Announcements -->
