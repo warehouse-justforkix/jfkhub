@@ -476,9 +476,86 @@ async function loadEverything() {
     loadMessages(),
     loadChecklists(),
     loadSupplies(),
+    loadWarnings(),
     loadAdmin(),
   ]);
 }
+
+// ---------- warnings (private: the member + admins only) ----------
+
+let warnings = [];
+
+async function loadWarnings() {
+  const { data, error } = await supabase
+    .from("warnings")
+    .select("*")
+    .order("incident_date", { ascending: false });
+  if (error) {
+    $("warn-list").innerHTML = `<li class="empty">Couldn't load warnings: ${esc(error.message)}</li>`;
+    return;
+  }
+  warnings = data;
+  renderWarnings();
+}
+
+function renderWarnings() {
+  const admin = myProfile.is_admin;
+  $("warn-admin-form").classList.toggle("hidden", !admin);
+  if (admin) {
+    const members = staff.filter((p) => !p.is_admin);
+    $("warn-member").innerHTML = members.length
+      ? members.map((p) => `<option value="${p.id}">${esc(p.avatar || "🙂")} ${esc(p.name)}</option>`).join("")
+      : `<option value="">No members yet</option>`;
+  }
+
+  const mine = admin ? warnings : warnings.filter((w) => w.profile_id === myProfile.id);
+  if (!mine.length) {
+    $("warn-list").innerHTML = `<li class="empty">${admin ? "No warnings on record." : "You have no warnings — keep it up! 🎉"}</li>`;
+    return;
+  }
+  $("warn-list").innerHTML = mine
+    .map((w) => {
+      const person = staff.find((p) => p.id === w.profile_id);
+      return `<li class="cl-item warn-item">
+        <span class="cl-label" style="flex:1">⚠ <b>${fmtDate(w.incident_date)}</b>
+          ${admin && person ? `— ${nameWithAvatar(person.name)}` : ""}
+          — ${esc(w.reason)}
+          <span class="cl-by" style="color:var(--ink-soft)">· logged by ${esc(w.created_by)}</span></span>
+        ${admin ? `<button class="note-delete" data-warn-del="${w.id}" title="Remove warning">✕</button>` : ""}
+      </li>`;
+    })
+    .join("");
+}
+
+$("warn-add").addEventListener("click", async () => {
+  const reason = $("warn-reason").value.trim();
+  const memberId = $("warn-member").value;
+  if (!reason || !memberId) {
+    setStatus($("warn-status"), "Pick a member and describe what happened.", true);
+    return;
+  }
+  const { error } = await supabase.from("warnings").insert({
+    profile_id: memberId,
+    incident_date: $("warn-date").value || todayStr(),
+    reason,
+    created_by: myProfile.name,
+  });
+  if (error) {
+    setStatus($("warn-status"), `Couldn't add: ${error.message}`, true);
+    return;
+  }
+  $("warn-reason").value = "";
+  setStatus($("warn-status"), "Warning logged. Only that member and admins can see it. ✔");
+  await loadWarnings();
+});
+
+$("warnings-card").addEventListener("click", async (e) => {
+  const del = e.target.closest("button[data-warn-del]");
+  if (!del) return;
+  if (!confirm("Remove this warning from the record?")) return;
+  await supabase.from("warnings").delete().eq("id", del.dataset.warnDel);
+  await loadWarnings();
+});
 
 // ---------- supplies to order ----------
 

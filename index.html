@@ -420,6 +420,23 @@
         </div>
       </section>
 
+      <!-- Warnings: private, member + admin only -->
+      <section id="warnings-card" class="card">
+        <div class="card-head">
+          <h2>Warnings</h2>
+        </div>
+        <p class="hint" id="warn-hint">Attendance records (no call/no show, late notice). These are private —
+          each staff member sees only their own, and only Karley can add or remove them.</p>
+        <div id="warn-admin-form" class="cl-admin-form hidden">
+          <select id="warn-member"></select>
+          <input id="warn-date" type="date">
+          <input id="warn-reason" type="text" maxlength="200" placeholder="What happened? e.g. No call/no show for 8:00 shift">
+          <button id="warn-add" class="btn btn-primary" type="button">Add warning</button>
+        </div>
+        <p id="warn-status" class="form-status" role="status"></p>
+        <ul id="warn-list" class="cl-list"><li class="empty">Loading…</li></ul>
+      </section>
+
       <!-- Admin (admins only) -->
       <section id="admin" class="card hidden">
         <div class="card-head">

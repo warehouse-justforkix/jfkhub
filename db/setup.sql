@@ -100,6 +100,16 @@ create table if not exists checklist_checks (
   unique (item_id, period)
 );
 
+-- Attendance warnings (no call/no show): PRIVATE — the member + admins only.
+create table if not exists warnings (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references profiles(id) on delete cascade,
+  incident_date date not null default current_date,
+  reason text not null,
+  created_by text not null,
+  created_at timestamptz not null default now()
+);
+
 -- Supplies-to-order list: needed → ordered → received.
 create table if not exists supply_requests (
   id uuid primary key default gen_random_uuid(),
@@ -195,6 +205,14 @@ create policy "member checklist checks" on checklist_checks for all
 alter table supply_requests enable row level security;
 create policy "member all supplies" on supply_requests for all
   to authenticated using (public.is_member()) with check (public.is_member());
+
+alter table warnings enable row level security;
+create policy "own or admin read warnings" on warnings for select
+  to authenticated using (profile_id = auth.uid() or public.is_admin());
+create policy "admin insert warnings" on warnings for insert
+  to authenticated with check (public.is_admin());
+create policy "admin delete warnings" on warnings for delete
+  to authenticated using (public.is_admin());
 
 -- invited_emails: admins manage; a signed-in user may see their own row
 -- (needed during signup to check whether they're invited).
