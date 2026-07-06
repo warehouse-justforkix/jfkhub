@@ -419,6 +419,13 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 }
 .team-tab.active { background: var(--brand); border-color: var(--brand); color: #fff; }
 
+/* Collapsible sidebar cards */
+.side-col .card-head { cursor: pointer; user-select: none; }
+.side-col .card-head h2::after { content: " ▾"; font-size: .75em; color: var(--ink-soft); }
+.side-col .card.collapsed .card-head h2::after { content: " ▸"; }
+.side-col .card.collapsed > *:not(.card-head) { display: none; }
+.side-col .card.collapsed { padding-bottom: 1.1rem; }
+
 /* Two-column layout: main content + messages sidebar */
 .layout { display: flex; gap: 1.2rem; align-items: flex-start; }
 .main-col { flex: 1; min-width: 0; }

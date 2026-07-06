@@ -2005,6 +2005,21 @@ function applyPage() {
 
 window.addEventListener("hashchange", applyPage);
 
+// ---------- collapsible sidebar cards ----------
+
+["messages", "admin", "hours-card"].forEach((id) => {
+  const card = $(id);
+  const head = card?.querySelector(".card-head");
+  if (!head) return;
+  const key = `jfk-collapse-${id}`;
+  if (localStorage.getItem(key) === "1") card.classList.add("collapsed");
+  head.addEventListener("click", (e) => {
+    if (e.target.closest("button, a, select, input")) return; // don't hijack real controls
+    card.classList.toggle("collapsed");
+    localStorage.setItem(key, card.classList.contains("collapsed") ? "1" : "0");
+  });
+});
+
 // ---------- init ----------
 
 route();
