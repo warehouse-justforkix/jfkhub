@@ -83,7 +83,7 @@ main { padding: 1.4rem 0 2.5rem; }
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .card h2 { margin: 0; font-size: 1.15rem; color: var(--brand-dark); }
 .card h3 { margin: 0; font-size: 1rem; color: var(--brand-dark); }
-.hint { margin: .3rem 0 1rem; color: var(--ink-soft); font-size: .88rem; }
+.hint { margin: .3rem 0 1rem; color: var(--ink-soft); font-size: .88rem; text-align: center; }
 
 /* Today callout */
 .today-callout {
