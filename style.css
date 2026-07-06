@@ -303,9 +303,9 @@ td.cell-off { color: var(--ink-soft); font-style: italic; }
   display: inline-flex;
   align-items: center;
   gap: .35rem;
-  background: #ffe9a8;
+  background: rgba(255, 233, 168, .22);
   border-radius: 99px;
-  padding: .25rem .35rem;
+  padding: .3rem .4rem;
 }
 .admin-quick a {
   display: inline-flex;
@@ -313,12 +313,13 @@ td.cell-off { color: var(--ink-soft); font-style: italic; }
   gap: .25rem;
   text-decoration: none;
   color: #7a5c00;
+  background: #ffe9a8;
   font-size: .8rem;
   font-weight: 700;
   padding: .25rem .65rem;
   border-radius: 99px;
 }
-.admin-quick a:hover { background: #fff6d8; }
+.admin-quick a:hover { background: #fff3c9; }
 .admin-quick.hidden { display: none; }
 
 /* Auth / profile cards */
