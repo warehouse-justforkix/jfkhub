@@ -530,8 +530,8 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
   border: 1px solid #f0b9b3;
   color: #8f2318;
   border-radius: 10px;
-  padding: .75rem 1rem;
-  font-size: 1rem;
+  padding: .7rem 1rem;
+  font-size: .93rem;
   text-align: center;
   margin-bottom: 1rem;
 }
