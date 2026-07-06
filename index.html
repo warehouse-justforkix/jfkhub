@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#a30055">
+  <meta name="apple-mobile-web-app-title" content="JFK Hub">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>JFK Warehouse Hub</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <div>
+        <h1>Just For Kix <span>Warehouse Hub</span></h1>
+        <p class="tagline">Schedules, tasks, and who's in — all in one place.</p>
+      </div>
+      <div id="user-chip" class="user-chip hidden">
+        <span id="user-avatar" class="user-avatar"></span>
+        <span id="user-name"></span>
+        <button id="edit-profile" class="btn-mini" type="button" title="Edit my profile">⚙️ Profile</button>
+        <button id="sign-out" class="btn-mini" type="button">Sign out</button>
+      </div>
+    </div>
+    <div class="wrap">
+      <nav id="site-nav" class="site-nav hidden">
+        <a href="#clock">Time Clock</a>
+        <a href="#announcements">Announcements</a>
+        <a href="#tasks">Task Board</a>
+        <a href="#checklists">Checklists</a>
+        <a href="#supplies">Supplies</a>
+        <a href="#calendar">Calendar</a>
+        <a href="#schedules">Schedule</a>
+        <a href="#messages">Messages</a>
+        <a href="#admin" id="nav-admin" class="hidden">Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- Sign in / create account -->
+    <section id="auth-view" class="card auth-card hidden">
+      <h2>Sign in</h2>
+      <p class="hint">Use your work email. First time here? You need an invite from an admin — then hit "Create account."</p>
+      <form id="auth-form">
+        <div class="field">
+          <label for="auth-email">Email</label>
+          <input id="auth-email" type="email" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="auth-password">Password</label>
+          <input id="auth-password" type="password" required minlength="8" autocomplete="current-password">
+        </div>
+        <div class="auth-buttons">
+          <button type="submit" id="btn-signin" class="btn btn-primary">Sign in</button>
+          <button type="button" id="btn-signup" class="btn btn-ghost">Create account</button>
+        </div>
+        <button type="button" id="btn-forgot" class="linklike">Forgot password?</button>
+      </form>
+      <p id="auth-status" class="form-status" role="status"></p>
+    </section>
+
+    <!-- Create / edit profile -->
+    <section id="profile-view" class="card auth-card hidden">
+      <h2 id="profile-title">Create your profile</h2>
+      <p class="hint">This is how you'll show up on the task board and calendar.</p>
+      <form id="profile-form">
+        <div class="field">
+          <label for="pf-name">Your name</label>
+          <input id="pf-name" type="text" required maxlength="60" placeholder="First name (or first + last initial)">
+        </div>
+        <div class="field">
+          <label for="pf-role">Position</label>
+          <select id="pf-role">
+            <option value="full-time">Full-time</option>
+            <option value="part-time">Part-time</option>
+          </select>
+        </div>
+        <fieldset class="hours-fieldset">
+          <legend>Your profile icon</legend>
+          <div class="avatar-mode">
+            <label><input type="radio" name="avatar-mode" id="mode-emoji" value="emoji" checked> Emoji</label>
+            <label><input type="radio" name="avatar-mode" id="mode-character" value="character"> Build my own character</label>
+          </div>
+          <div id="emoji-chooser" class="avatar-row">
+            <input id="pf-avatar" type="text" maxlength="8" value="🙂" aria-label="Emoji icon">
+            <div class="avatar-picks" id="avatar-picks">
+              <button type="button">😀</button><button type="button">😎</button><button type="button">🤠</button>
+              <button type="button">🦋</button><button type="button">🌸</button><button type="button">⭐</button>
+              <button type="button">🐶</button><button type="button">🐱</button><button type="button">🦄</button>
+              <button type="button">⚡</button><button type="button">🏀</button><button type="button">🎧</button>
+            </div>
+          </div>
+          <div id="character-builder" class="character-builder hidden">
+            <img id="cb-preview" class="cb-preview" alt="Your character preview">
+            <div class="cb-fields">
+              <label>Skin tone <select id="cb-skinColor"></select></label>
+              <label>Hair style <select id="cb-top"></select></label>
+              <label>Hair color <select id="cb-hairColor"></select></label>
+              <label>Eyes <select id="cb-eyes"></select></label>
+              <label>Mouth <select id="cb-mouth"></select></label>
+              <label>Shirt color <select id="cb-clothesColor"></select></label>
+            </div>
+          </div>
+        </fieldset>
+        <label class="reminders-check">
+          <input id="pf-reminders" type="checkbox">
+          Show me reminders when I open the hub (my open tasks &amp; today's schedule notes)
+        </label>
+        <fieldset class="hours-fieldset">
+          <legend>Your usual summer hours <span class="optional">(only you and admins can see these — leave a day blank if you're not in)</span></legend>
+          <div class="hours-grid">
+            <label>Mon <input id="pf-mon" type="text" placeholder="8:00–4:30"></label>
+            <label>Tue <input id="pf-tue" type="text" placeholder="8:00–4:30"></label>
+            <label>Wed <input id="pf-wed" type="text" placeholder="8:00–4:30"></label>
+            <label>Thu <input id="pf-thu" type="text" placeholder="8:00–4:30"></label>
+            <label>Fri <input id="pf-fri" type="text" placeholder="8:00–4:30"></label>
+          </div>
+        </fieldset>
+        <button class="btn btn-primary" type="submit">Save my profile</button>
+        <button class="linklike hidden" id="profile-back" type="button">← Back to the hub without saving</button>
+      </form>
+      <p id="profile-status" class="form-status" role="status"></p>
+    </section>
+
+    <!-- Signed in but not invited -->
+    <section id="gate-view" class="card auth-card hidden">
+      <h2>Almost there</h2>
+      <p id="gate-msg"></p>
+      <button id="gate-signout" class="btn btn-ghost" type="button">Sign out</button>
+    </section>
+
+    <!-- The hub (members only) -->
+    <div id="app-view" class="hidden">
+     <div class="layout">
+
+      <!-- Left sidebar: team + chats -->
+      <aside class="side-col">
+        <section id="messages" class="card msg-card">
+          <div class="card-head">
+            <h2 id="msg-title">Messages <span id="msg-badge" class="msg-badge hidden">●</span></h2>
+            <button id="msg-refresh" class="btn-mini" type="button">↻</button>
+          </div>
+          <p class="hint" id="msg-hint">Private line between you and Karley.</p>
+          <ul id="roster" class="roster hidden"></ul>
+          <div id="thread-with" class="thread-with hidden"></div>
+          <ul id="msg-thread" class="msg-thread"><li class="empty">Loading…</li></ul>
+          <form id="msg-form" class="msg-form">
+            <input id="msg-body" type="text" maxlength="1000" required placeholder="Type a message…">
+            <button class="btn btn-primary" type="submit">Send</button>
+          </form>
+          <p id="msg-status" class="form-status" role="status"></p>
+        </section>
+      </aside>
+
+      <div class="main-col">
+
+      <!-- Today callout -->
+      <section id="today-callout" class="today-callout hidden" aria-live="polite"></section>
+
+      <!-- Personal reminders (opt-in) -->
+      <section id="reminders" class="today-callout reminders hidden" aria-live="polite"></section>
+
+      <!-- Time clock -->
+      <section id="clock" class="card">
+        <div class="card-head">
+          <h2>Time Clock</h2>
+          <span id="clock-state" class="clock-state"></span>
+        </div>
+        <p class="hint">Tap as you come and go so we know who's in the building. Not a payroll timecard.</p>
+        <div class="punch-buttons">
+          <button class="btn btn-primary punch" data-punch="in" type="button">🌅 Clock in</button>
+          <button class="btn btn-primary punch" data-punch="lunch-out" type="button">🥪 Out to lunch</button>
+          <button class="btn btn-primary punch" data-punch="lunch-in" type="button">💪 Back from lunch</button>
+          <button class="btn btn-primary punch" data-punch="out" type="button">🏁 Clock out</button>
+          <button class="btn btn-ghost" id="undo-punch" type="button">Undo last</button>
+        </div>
+        <p id="my-punches" class="my-punches"></p>
+
+        <!-- Admin-only: everyone's day -->
+        <div id="punch-admin" class="hidden">
+          <div class="notes-head">
+            <h3>Who's in</h3>
+            <label class="show-past">Day: <input id="punch-date" type="date"></label>
+          </div>
+          <div class="table-scroll">
+            <table id="punch-table">
+              <thead>
+                <tr><th class="name-col">Team member</th><th>Status</th><th>In</th><th>Lunch out</th><th>Lunch in</th><th>Out</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Announcements -->
+      <section id="announcements" class="card">
+        <div class="card-head">
+          <h2>Announcements</h2>
+        </div>
+        <p class="hint">Post things the whole team should see.</p>
+        <form id="ann-form" class="ann-form">
+          <textarea id="ann-body" rows="2" maxlength="1000" required placeholder="Share something with the team…"></textarea>
+          <button class="btn btn-primary" type="submit">Post</button>
+        </form>
+        <p id="ann-status" class="form-status" role="status"></p>
+        <ul id="ann-list" class="ann-list"><li class="empty">Loading…</li></ul>
+      </section>
+
+      <!-- Task boards -->
+      <section id="tasks" class="card">
+        <div class="card-head">
+          <h2>Task Board</h2>
+          <div class="team-tabs" id="team-tabs">
+            <button type="button" class="team-tab active" data-team="warehouse">Warehouse</button>
+            <button type="button" class="team-tab hidden" id="tab-support" data-team="support">Customer Support</button>
+          </div>
+        </div>
+        <p class="hint">Claim a task to take it. Recurring tasks pop back onto the board automatically after they're finished.</p>
+
+        <form id="task-form" class="note-form">
+          <div class="field field-wide">
+            <label for="tf-title">Task</label>
+            <input id="tf-title" type="text" maxlength="120" required placeholder="e.g. Restock shipping supplies">
+          </div>
+          <div class="field">
+            <label for="tf-due">Due (optional)</label>
+            <input id="tf-due" type="date">
+          </div>
+          <div class="field field-wide">
+            <label for="tf-details">Details <span class="optional">(optional)</span></label>
+            <input id="tf-details" type="text" maxlength="300" placeholder="Anything the person doing it should know">
+          </div>
+          <div class="field">
+            <label for="tf-recurrence">Repeats</label>
+            <select id="tf-recurrence">
+              <option value="none" selected>Doesn't repeat</option>
+              <option value="daily">Every day</option>
+              <option value="weekdays">Weekdays (Mon–Fri)</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="tf-assign">Assign to</label>
+            <select id="tf-assign"><option value="" selected>Leave open for anyone</option></select>
+          </div>
+          <div class="field field-submit">
+            <button class="btn btn-primary" type="submit">Add task</button>
+          </div>
+        </form>
+        <p id="task-status" class="form-status" role="status"></p>
+
+        <div class="board">
+          <div class="board-col">
+            <h3>Up for grabs <span id="count-open" class="col-count"></span></h3>
+            <ul id="col-open" class="task-list"><li class="empty">Loading…</li></ul>
+          </div>
+          <div class="board-col">
+            <h3>Claimed <span id="count-claimed" class="col-count"></span></h3>
+            <ul id="col-claimed" class="task-list"><li class="empty">Loading…</li></ul>
+          </div>
+          <div class="board-col">
+            <h3>Done <span class="col-sub">(last 7 days)</span></h3>
+            <ul id="col-done" class="task-list"><li class="empty">Nothing yet.</li></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Daily & weekly checklists -->
+      <section id="checklists" class="card">
+        <div class="card-head">
+          <h2>Checklists</h2>
+        </div>
+        <p class="hint">Tick things off as they're done — the daily list resets every morning, the weekly list every Monday.</p>
+        <div id="cl-admin-form" class="cl-admin-form hidden">
+          <input id="cl-label" type="text" maxlength="120" placeholder="New checklist item…">
+          <select id="cl-cadence">
+            <option value="daily" selected>Daily</option>
+            <option value="weekly">Weekly</option>
+          </select>
+          <select id="cl-team">
+            <option value="warehouse" selected>Warehouse</option>
+            <option value="support">Customer Support</option>
+          </select>
+          <button id="cl-add" class="btn btn-primary" type="button">Add</button>
+        </div>
+        <p id="cl-status" class="form-status" role="status"></p>
+        <div class="board cl-board">
+          <div class="board-col">
+            <h3>Today</h3>
+            <ul id="cl-daily" class="cl-list"><li class="empty">Loading…</li></ul>
+          </div>
+          <div class="board-col">
+            <h3>This Week</h3>
+            <ul id="cl-weekly" class="cl-list"><li class="empty">Loading…</li></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Supplies to order -->
+      <section id="supplies" class="card">
+        <div class="card-head">
+          <h2>Supplies to Order</h2>
+        </div>
+        <p class="hint">Running low on something? Add it here. Karley marks items as ordered and received.</p>
+        <div class="cl-admin-form">
+          <input id="sup-item" type="text" maxlength="120" placeholder="What do we need? e.g. 2&quot; packing tape">
+          <input id="sup-note" type="text" maxlength="200" placeholder="Qty / brand / notes (optional)">
+          <button id="sup-add" class="btn btn-primary" type="button">Add</button>
+        </div>
+        <p id="sup-status" class="form-status" role="status"></p>
+        <div class="board cl-board">
+          <div class="board-col">
+            <h3>Needed <span id="sup-count" class="col-count"></span></h3>
+            <ul id="sup-needed" class="cl-list"><li class="empty">Loading…</li></ul>
+          </div>
+          <div class="board-col">
+            <h3>Ordered</h3>
+            <ul id="sup-ordered" class="cl-list"><li class="empty">—</li></ul>
+          </div>
+          <div class="board-col">
+            <h3>Received <span class="col-sub">(last 14 days)</span></h3>
+            <ul id="sup-received" class="cl-list"><li class="empty">—</li></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Calendar: time off & meetings -->
+      <section id="calendar" class="card">
+        <div class="card-head">
+          <h2>Calendar — Time Off &amp; Meetings</h2>
+          <div class="cal-nav">
+            <button id="cal-prev" class="btn-mini" type="button" aria-label="Previous month">‹</button>
+            <span id="cal-title"></span>
+            <button id="cal-next" class="btn-mini" type="button" aria-label="Next month">›</button>
+          </div>
+        </div>
+        <p class="hint">Mark time off in advance or put a meeting on the calendar — click a day to start an entry.
+          Posting as <strong id="posting-as"></strong>.</p>
+
+        <div class="policy-note">📞 <b>Sick or calling in?</b> You must contact Karley <b>at least 1–2 hours before</b> your
+          scheduled shift starts — posting here alone is not enough.</div>
+
+        <div id="cal-grid" class="cal-grid"></div>
+
+        <form id="note-form" class="note-form">
+          <div class="field">
+            <label for="nf-type">What is it?</label>
+            <select id="nf-type" required>
+              <option value="out">Time off (out that day)</option>
+              <option value="different-hours">In at a different time</option>
+              <option value="meeting">Meeting</option>
+              <option value="other">Other note</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="nf-start">Date</label>
+            <input id="nf-start" type="date" required>
+          </div>
+          <div class="field">
+            <label for="nf-end">Through (optional)</label>
+            <input id="nf-end" type="date">
+          </div>
+          <div class="field">
+            <label for="nf-time">Time <span class="optional">(for meetings)</span></label>
+            <input id="nf-time" type="text" maxlength="40" placeholder="e.g. 2:00–3:00 PM">
+          </div>
+          <div class="field field-wide">
+            <label for="nf-details">Details <span class="optional">(e.g. "in 10–2 instead", "all-team huddle")</span></label>
+            <input id="nf-details" type="text" maxlength="200" placeholder="Optional details">
+          </div>
+          <div class="field field-submit">
+            <button class="btn btn-primary" type="submit">Post it</button>
+          </div>
+        </form>
+        <p id="form-status" class="form-status" role="status"></p>
+
+        <div class="notes-head">
+          <h3>Upcoming</h3>
+          <label class="show-past"><input id="show-past" type="checkbox"> show past entries</label>
+        </div>
+        <ul id="notes-list" class="notes-list">
+          <li class="empty">Loading…</li>
+        </ul>
+      </section>
+
+      <!-- Summer schedules -->
+      <section id="schedules" class="card">
+        <div class="card-head">
+          <h2 id="schedules-title">My Schedule</h2>
+          <button id="edit-toggle" class="btn btn-ghost" type="button">Edit my hours</button>
+        </div>
+        <p class="hint" id="schedules-hint">Your standing weekly hours for the summer — only you and admins can see them.</p>
+        <div class="table-scroll">
+          <table id="schedule-table">
+            <thead>
+              <tr>
+                <th class="name-col">Team member</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+              </tr>
+            </thead>
+            <tbody><!-- rows rendered by app.js --></tbody>
+          </table>
+        </div>
+        <div id="edit-actions" class="edit-actions hidden">
+          <button id="save-schedules" class="btn btn-primary" type="button">Save changes</button>
+          <button id="cancel-edit" class="btn btn-ghost" type="button">Cancel</button>
+        </div>
+      </section>
+
+      <!-- Admin (admins only) -->
+      <section id="admin" class="card hidden">
+        <div class="card-head">
+          <h2>Admin</h2>
+        </div>
+        <p class="hint">Add a team member's email below. They then open this site, hit "Create account" with that
+          email, and set up their own profile.</p>
+        <form id="invite-form" class="invite-form">
+          <input id="inv-email" type="email" required placeholder="name@justforkix.com">
+          <label class="inv-admin-label"><input id="inv-support" type="checkbox"> customer support</label>
+          <label class="inv-admin-label"><input id="inv-admin" type="checkbox"> make admin</label>
+          <button class="btn btn-primary" type="submit">Add member</button>
+        </form>
+        <p id="invite-status" class="form-status" role="status"></p>
+        <div class="admin-cols">
+          <div>
+            <h3>Invited — hasn't joined yet</h3>
+            <ul id="invite-list" class="admin-list"><li class="empty">—</li></ul>
+          </div>
+          <div>
+            <h3>Members</h3>
+            <ul id="member-list" class="admin-list"><li class="empty">—</li></ul>
+          </div>
+        </div>
+      </section>
+
+      </div><!-- /main-col -->
+     </div><!-- /layout -->
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Just For Kix · internal team tool</div>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
