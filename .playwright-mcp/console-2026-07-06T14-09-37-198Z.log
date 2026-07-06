@@ -1,0 +1,9 @@
+[   15308ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://iptnlqfitvmoiofzrmvx.supabase.co/auth/v1/logout?scope=global:0
+[   15326ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://iptnlqfitvmoiofzrmvx.supabase.co/auth/v1/logout?scope=global:0
+[   19120ms] TypeError: Cannot set properties of undefined (setting 'textContent')
+    at setStatus (http://localhost:8321/app.js:159:18)
+    at HTMLFormElement.<anonymous> (http://localhost:8321/app.js:337:3)
+    at eval (eval at <anonymous> (eval at evaluate (:303:30)), <anonymous>:19:43)
+    at async eval (eval at evaluate (:303:30), <anonymous>:4:30)
+    at async <anonymous>:329:30
+[   22258ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://iptnlqfitvmoiofzrmvx.supabase.co/rest/v1/tasks:0

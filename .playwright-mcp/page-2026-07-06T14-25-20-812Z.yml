@@ -1,0 +1,10 @@
+- generic [active] [ref=f7e1]:
+  - banner [ref=f7e2]:
+    - generic [ref=f7e4]:
+      - heading "Just For Kix Warehouse Hub" [level=1] [ref=f7e5]:
+        - text: Just For Kix
+        - generic [ref=f7e6]: Warehouse Hub
+      - paragraph [ref=f7e7]: Schedules, tasks, and who's in — all in one place.
+  - main
+  - contentinfo [ref=f7e8]:
+    - generic [ref=f7e9]: Just For Kix · internal team tool
