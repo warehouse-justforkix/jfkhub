@@ -473,6 +473,38 @@ td.cell-off { color: var(--ink-soft); font-style: italic; }
   margin-bottom: 1rem;
 }
 
+/* Clock-out send-off */
+.goodbye {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(120deg, rgba(122, 0, 63, .93), rgba(204, 0, 111, .93));
+  animation: goodbye-fade 4.5s ease forwards;
+  cursor: pointer;
+}
+.goodbye-inner {
+  color: #ffe9a8;
+  font-size: clamp(1.6rem, 6vw, 3.2rem);
+  font-weight: 800;
+  text-align: center;
+  padding: 1rem 2rem;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, .3);
+  animation: goodbye-pop .6s cubic-bezier(.2, 1.4, .4, 1);
+}
+@keyframes goodbye-pop {
+  from { transform: scale(.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes goodbye-fade {
+  0% { opacity: 0; }
+  8% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* Shift reminder toast */
 .toast {
   position: fixed;

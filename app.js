@@ -958,10 +958,22 @@ els.punchButtons.forEach((btn) =>
       punch_type: btn.dataset.punch,
     });
     if (error) alert(`Couldn't punch: ${error.message}`);
+    else if (btn.dataset.punch === "out") showGoodbye();
     await loadPunches();
     loadWeekPunches();
   })
 );
+
+// Full-screen send-off when someone clocks out for the day.
+function showGoodbye() {
+  document.querySelector(".goodbye")?.remove();
+  const div = document.createElement("div");
+  div.className = "goodbye";
+  div.innerHTML = `<div class="goodbye-inner">🌸 Have a great day, ${esc(myProfile.name)}! 🌸</div>`;
+  document.body.appendChild(div);
+  div.addEventListener("click", () => div.remove());
+  setTimeout(() => div.remove(), 4500);
+}
 
 els.undoPunch.addEventListener("click", async () => {
   const mine = myPunchesToday();
