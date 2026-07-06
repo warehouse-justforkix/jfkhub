@@ -358,6 +358,7 @@ function showView(view) {
   );
   els.userChip.classList.toggle("hidden", !session);
   els.siteNav.classList.toggle("hidden", view !== els.appView);
+  $("admin-quick").classList.toggle("hidden", view !== els.appView);
 }
 
 async function route() {
@@ -1996,6 +1997,14 @@ function applyPage() {
     el.classList.toggle("route-hidden", !show);
   });
   document.querySelector(".layout").classList.toggle("sidebar-only", sidebarOnly);
+  // In sidebar-only mode, show just the requested card(s):
+  // Admin Messages → chats only; Admin → invitations + hours.
+  ["messages", "admin", "hours-card"].forEach((id) => {
+    const el = $(id);
+    if (!el) return;
+    const show = !sidebarOnly || (page === "messages" ? id === "messages" : id !== "messages");
+    el.classList.toggle("route-hidden", !show);
+  });
   document.querySelectorAll(".site-nav a").forEach((a) =>
     a.classList.toggle("active", a.getAttribute("href") === "#" + page)
   );

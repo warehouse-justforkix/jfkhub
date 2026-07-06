@@ -294,8 +294,32 @@ td.cell-off { color: var(--ink-soft); font-style: italic; }
 
 /* Header user chip */
 .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: .45rem; }
 .user-chip { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; background: rgba(255,255,255,.14); padding: .35rem .5rem .35rem .8rem; border-radius: 99px; font-size: .88rem; }
 .user-chip .btn-mini { background: rgba(255,255,255,.9); text-decoration: none; display: inline-flex; align-items: center; gap: .25rem; }
+
+/* Yellow quick-access bubble under the profile chip */
+.admin-quick {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  background: #ffe9a8;
+  border-radius: 99px;
+  padding: .25rem .35rem;
+}
+.admin-quick a {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  text-decoration: none;
+  color: #7a5c00;
+  font-size: .8rem;
+  font-weight: 700;
+  padding: .25rem .65rem;
+  border-radius: 99px;
+}
+.admin-quick a:hover { background: #fff6d8; }
+.admin-quick.hidden { display: none; }
 
 /* Auth / profile cards */
 .auth-card { max-width: 460px; margin: 1.5rem auto; }
