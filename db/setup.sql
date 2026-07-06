@@ -239,9 +239,9 @@ create policy "self or admin update profile" on profiles for update
 create policy "admin delete profile" on profiles for delete
   to authenticated using (public.is_admin());
 
--- member_hours: PRIVATE — only the member themself and admins.
-create policy "own or admin read hours" on member_hours for select
-  to authenticated using (profile_id = auth.uid() or public.is_admin());
+-- member_hours: weekly hours are team-visible; only the member/admin can edit.
+create policy "member read hours" on member_hours for select
+  to authenticated using (public.is_member());
 create policy "own or admin write hours" on member_hours for insert
   to authenticated with check (profile_id = auth.uid() or public.is_admin());
 create policy "own or admin update hours" on member_hours for update

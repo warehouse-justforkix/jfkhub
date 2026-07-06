@@ -103,8 +103,9 @@
               <label>Skin tone <select id="cb-skinColor"></select></label>
               <label>Hair style <select id="cb-top"></select></label>
               <label>Hair color <select id="cb-hairColor"></select></label>
-              <label>Eyes <select id="cb-eyes"></select></label>
+              <label>Eye color <select id="cb-eyeColor"></select></label>
               <label>Mouth <select id="cb-mouth"></select></label>
+              <label>Shirt style <select id="cb-clothing"></select></label>
               <label>Shirt color <select id="cb-clothesColor"></select></label>
             </div>
           </div>
@@ -114,14 +115,26 @@
           Show me reminders when I open the hub (my open tasks &amp; today's schedule notes)
         </label>
         <fieldset class="hours-fieldset">
-          <legend>Your usual weekly hours <span class="optional">(only you and admins can see these — leave a day blank if you're not in; you can update them any time the schedule changes, e.g. after Labor Day)</span></legend>
+          <legend>Your usual weekly hours</legend>
+          <p class="fieldset-hint">Shown on the team schedule. Leave a day blank if you're not in —
+            and update these whenever the schedule changes (e.g. after Labor Day).</p>
           <div class="hours-grid">
-            <label>Mon <input id="pf-mon" type="text" placeholder="8:00–4:30"></label>
-            <label>Tue <input id="pf-tue" type="text" placeholder="8:00–4:30"></label>
-            <label>Wed <input id="pf-wed" type="text" placeholder="8:00–4:30"></label>
-            <label>Thu <input id="pf-thu" type="text" placeholder="8:00–4:30"></label>
-            <label>Fri <input id="pf-fri" type="text" placeholder="8:00–4:30"></label>
+            <label>Mon <input id="pf-mon" type="text" list="shift-options" placeholder="8:00 AM – 4:30 PM"></label>
+            <label>Tue <input id="pf-tue" type="text" list="shift-options" placeholder="8:00 AM – 4:30 PM"></label>
+            <label>Wed <input id="pf-wed" type="text" list="shift-options" placeholder="8:00 AM – 4:30 PM"></label>
+            <label>Thu <input id="pf-thu" type="text" list="shift-options" placeholder="8:00 AM – 4:30 PM"></label>
+            <label>Fri <input id="pf-fri" type="text" list="shift-options" placeholder="8:00 AM – 4:30 PM"></label>
           </div>
+          <datalist id="shift-options">
+            <option value="7:00 AM – 3:30 PM"></option>
+            <option value="8:00 AM – 4:30 PM"></option>
+            <option value="8:30 AM – 5:00 PM"></option>
+            <option value="9:00 AM – 5:00 PM"></option>
+            <option value="9:00 AM – 1:00 PM"></option>
+            <option value="10:00 AM – 2:00 PM"></option>
+            <option value="12:30 PM – 4:30 PM"></option>
+            <option value="1:00 PM – 5:00 PM"></option>
+          </datalist>
         </fieldset>
         <button class="btn btn-primary" type="submit">Save my profile</button>
         <button class="linklike hidden" id="profile-back" type="button">← Back to the hub without saving</button>
@@ -398,7 +411,7 @@
           <h2 id="schedules-title">My Schedule</h2>
           <button id="edit-toggle" class="btn btn-ghost" type="button">Edit my hours</button>
         </div>
-        <p class="hint" id="schedules-hint">Your current weekly hours — only you and admins can see them.</p>
+        <p class="hint" id="schedules-hint">Everyone's current weekly hours. You can edit your own row.</p>
         <div class="table-scroll">
           <table id="schedule-table">
             <thead>

@@ -176,11 +176,20 @@ function setStatus(el, msg, isError = false) {
 
 const CB_OPTIONS = {
   skinColor: [["ffdbb4", "Light"], ["edb98a", "Medium light"], ["d08b5b", "Tan"], ["ae5d29", "Brown"], ["614335", "Deep"]],
-  top: [["shortFlat", "Short"], ["shortRound", "Short round"], ["shortWaved", "Short waved"], ["shortCurly", "Short curly"], ["theCaesar", "Buzz cut"], ["bob", "Bob"], ["bun", "Bun"], ["curly", "Curly"], ["bigHair", "Big hair"], ["straight01", "Long straight"], ["frizzle", "Frizzle"], ["dreads01", "Dreads"]],
-  hairColor: [["2c1b18", "Black"], ["4a312c", "Dark brown"], ["724133", "Brown"], ["a55728", "Auburn"], ["b58143", "Light brown"], ["d6b370", "Blonde"], ["c93305", "Red"], ["e8e1e1", "Gray"]],
-  eyes: [["default", "Default"], ["happy", "Happy"], ["wink", "Wink"], ["squint", "Squint"], ["hearts", "Hearts"], ["surprised", "Surprised"]],
-  mouth: [["default", "Default"], ["smile", "Smile"], ["twinkle", "Twinkle"], ["serious", "Serious"], ["tongue", "Tongue"]],
-  clothesColor: [["65c9ff", "Sky blue"], ["5199e4", "Blue"], ["25557c", "Navy"], ["3c4f5c", "Slate"], ["ff5c5c", "Red"], ["ffafb9", "Pink"], ["ffffb1", "Yellow"], ["a7ffc4", "Mint"], ["929598", "Gray"], ["e6e6e6", "White"]],
+  top: [
+    ["longButNotTooLong", "Long"], ["straight01", "Long straight"], ["straight02", "Straight"],
+    ["straightAndStrand", "Straight + strand"], ["bigHair", "Big hair"], ["curvy", "Curvy"],
+    ["curly", "Curly"], ["bob", "Bob"], ["bun", "Bun"], ["miaWallace", "Bangs + bun"],
+    ["frida", "Updo + flowers"], ["fro", "Fro"], ["froBand", "Fro + band"],
+    ["dreads", "Long dreads"], ["shavedSides", "Shaved sides"], ["shaggy", "Shaggy"],
+    ["shortWaved", "Short waved"], ["shortCurly", "Short curly"], ["shortFlat", "Short"],
+    ["theCaesar", "Buzz cut"], ["hijab", "Hijab"],
+  ],
+  hairColor: [["2c1b18", "Black"], ["4a312c", "Dark brown"], ["724133", "Brown"], ["a55728", "Auburn"], ["b58143", "Light brown"], ["d6b370", "Blonde"], ["ecdcbf", "Platinum"], ["c93305", "Red"], ["f59797", "Pink"], ["e8e1e1", "Gray"]],
+  eyeColor: [["5C3317", "Brown"], ["2c1b18", "Dark brown"], ["3B7AD9", "Blue"], ["3D8A5A", "Green"], ["8E6B23", "Hazel"], ["6E7B8B", "Gray"], ["1e1e1e", "Black"]],
+  mouth: [["smile", "Smile"], ["default", "Soft"], ["twinkle", "Twinkle"], ["serious", "Serious"]],
+  clothing: [["shirtCrewNeck", "T-shirt"], ["shirtVNeck", "V-neck"], ["shirtScoopNeck", "Scoop neck"], ["hoodie", "Hoodie"], ["blazerAndShirt", "Blazer"], ["collarAndSweater", "Sweater"]],
+  clothesColor: [["ff488e", "JFK pink"], ["ffafb9", "Light pink"], ["65c9ff", "Sky blue"], ["5199e4", "Blue"], ["25557c", "Navy"], ["3c4f5c", "Slate"], ["ff5c5c", "Red"], ["ffffb1", "Yellow"], ["a7ffc4", "Mint"], ["929598", "Gray"], ["e6e6e6", "White"], ["262e33", "Black"]],
 };
 
 const charCache = new Map();
@@ -188,20 +197,29 @@ const charCache = new Map();
 function characterUri(opts) {
   const key = JSON.stringify(opts);
   if (!charCache.has(key)) {
-    const av = createAvatar(avataaars, {
+    let svg = createAvatar(avataaars, {
       seed: "jfk",
       skinColor: [opts.skinColor],
       top: [opts.top],
       hairColor: [opts.hairColor],
-      eyes: [opts.eyes],
-      mouth: [opts.mouth],
+      eyes: ["default"],
+      eyebrows: ["defaultNatural"],
+      mouth: [opts.mouth || "smile"],
+      clothing: [opts.clothing || "shirtCrewNeck"],
       clothesColor: [opts.clothesColor],
       accessoriesProbability: 0,
       facialHairProbability: 0,
       backgroundColor: ["ffd6ea"],
       radius: 50,
-    });
-    charCache.set(key, av.toDataUri());
+    }).toString();
+    // Recolor the pupils (the "default" eyes are two fixed-geometry circles).
+    if (opts.eyeColor) {
+      svg = svg.replace(
+        /(<path d="M36 22[^"]*") fill="#000" fill-opacity="\.6"/,
+        `$1 fill="#${opts.eyeColor}" fill-opacity=".85"`
+      );
+    }
+    charCache.set(key, "data:image/svg+xml;utf8," + encodeURIComponent(svg));
   }
   return charCache.get(key);
 }
@@ -297,10 +315,10 @@ async function route() {
     els.postingAs.textContent = prof.name;
     const admin = prof.is_admin;
     els.editToggle.textContent = admin ? "Edit schedules" : "Edit my hours";
-    els.schedulesTitle.textContent = admin ? "Team Schedules" : "My Schedule";
+    els.schedulesTitle.textContent = "Team Schedules";
     els.schedulesHint.textContent = admin
-      ? "Everyone's current weekly hours. Members each see only their own row."
-      : "Your current weekly hours — only you and admins can see them.";
+      ? "Everyone's current weekly hours."
+      : "Everyone's current weekly hours. You can edit your own row.";
     els.navAdmin.classList.toggle("hidden", !admin);
     els.adminSection.classList.toggle("hidden", !admin);
     els.punchAdmin.classList.toggle("hidden", !admin);
@@ -940,7 +958,7 @@ async function loadHours() {
 }
 
 function scheduleRows() {
-  return myProfile.is_admin ? staff : staff.filter((p) => p.id === myProfile.id);
+  return staff;
 }
 
 function canEditRow(p) {
@@ -960,7 +978,7 @@ function renderSchedules() {
       const cells = DAYS.map((day) => {
         const val = hours[day] || "";
         if (editable) {
-          return `<td><input type="text" data-id="${p.id}" data-day="${day}" value="${esc(val)}"></td>`;
+          return `<td><input type="text" list="shift-options" data-id="${p.id}" data-day="${day}" value="${esc(val)}"></td>`;
         }
         return val ? `<td>${esc(val)}</td>` : `<td class="cell-off">—</td>`;
       }).join("");
@@ -1650,13 +1668,17 @@ els.adminSection.addEventListener("click", async (e) => {
 
 // ---------- shift clock-in / clock-out reminders ----------
 
-// Parses freeform hours like "8:00-4:30", "9–1", "12:30-4:30" into minutes-since-midnight.
+// Parses freeform hours like "8:00 AM – 4:30 PM", "8:00-4:30", "9–1", "12:30 PM-4:30 PM".
 function parseShift(str) {
-  const m = /(\d{1,2})(?::(\d{2}))?\s*[-–—]\s*(\d{1,2})(?::(\d{2}))?/.exec(str || "");
+  const m = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*[-–—]\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i.exec(str || "");
   if (!m) return null;
-  let start = parseInt(m[1], 10) * 60 + (m[2] ? parseInt(m[2], 10) : 0);
-  let end = parseInt(m[3], 10) * 60 + (m[4] ? parseInt(m[4], 10) : 0);
-  if (end <= start) end += 12 * 60; // "8:00-4:30" → 4:30 PM
+  let sh = parseInt(m[1], 10) % 12;
+  if ((m[3] || "").toLowerCase() === "pm") sh += 12;
+  let eh = parseInt(m[4], 10) % 12;
+  if ((m[6] || "").toLowerCase() === "pm") eh += 12;
+  let start = sh * 60 + (m[2] ? parseInt(m[2], 10) : 0);
+  let end = eh * 60 + (m[5] ? parseInt(m[5], 10) : 0);
+  if (!m[6] && end <= start) end += 12 * 60; // "8:00-4:30" with no meridiem → 4:30 PM
   if (end <= start) return null;
   return { start, end };
 }
