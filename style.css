@@ -35,7 +35,7 @@ body {
 }
 .site-header h1 { margin: 0; font-size: 1.5rem; letter-spacing: .01em; }
 .site-header h1 span { display: block; font-size: 1.05rem; font-weight: 500; opacity: .92; }
-.tagline { margin: .4rem 0 0; opacity: .85; font-size: .92rem; }
+.tagline { margin: .4rem 0 0; color: #ffd3e9; font-size: .92rem; }
 /* Hub toggle (Warehouse / Customer Support) */
 .hub-toggle { margin-top: .9rem; display: inline-flex; background: rgba(255,255,255,.14); border-radius: 99px; padding: .2rem; gap: .2rem; }
 .hub-toggle button {
