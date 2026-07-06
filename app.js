@@ -115,7 +115,7 @@ const els = {
   adminSection: $("admin"),
   inviteForm: $("invite-form"),
   invEmail: $("inv-email"),
-  invAdmin: $("inv-admin"),
+  invTeam: $("inv-team"),
   inviteStatus: $("invite-status"),
   inviteList: $("invite-list"),
   memberList: $("member-list"),
