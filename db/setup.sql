@@ -149,11 +149,11 @@ $$ select exists (select 1 from invited_emails where email = lower(check_email))
 
 create or replace function public.has_support() returns boolean
 language sql stable security definer set search_path = public as
-$ select coalesce((select support_access from profiles where id = auth.uid()), false) $;
+$$ select coalesce((select support_access from profiles where id = auth.uid()), false) $$;
 
 create or replace function public.has_warehouse() returns boolean
 language sql stable security definer set search_path = public as
-$ select coalesce((select warehouse_access from profiles where id = auth.uid()), false) $;
+$$ select coalesce((select warehouse_access from profiles where id = auth.uid()), false) $$;
 
 -- The admin/support flags always come from the invite, never from the client.
 create or replace function public.profiles_set_admin_flag() returns trigger
