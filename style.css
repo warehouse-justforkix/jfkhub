@@ -629,8 +629,8 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
   font-size: .62rem;
   font-weight: 800;
   letter-spacing: .08em;
-  color: #fff;
-  background: var(--brand-dark);
+  color: #7a5c00;
+  background: #ffe9a8;
   padding: .16rem .5rem;
   border-radius: 99px;
   white-space: nowrap;
