@@ -554,6 +554,7 @@ async function loadEverything() {
     loadNotes(),
     loadTasks(),
     loadPunches(),
+    loadWeekPunches(),
     loadAnnouncements(),
     loadMessages(),
     loadChecklists(),
@@ -927,6 +928,7 @@ els.punchButtons.forEach((btn) =>
     });
     if (error) alert(`Couldn't punch: ${error.message}`);
     await loadPunches();
+    loadWeekPunches();
   })
 );
 
@@ -941,6 +943,82 @@ els.undoPunch.addEventListener("click", async () => {
 });
 
 els.punchDate.addEventListener("change", loadPunches);
+
+// ---------- weekly worked-hours summary (admin) ----------
+
+let weekPunches = [];
+
+async function loadWeekPunches() {
+  if (!myProfile?.is_admin) return;
+  const [monStart] = dayRange(weekPeriod());
+  const { data, error } = await supabase
+    .from("time_punches")
+    .select("*")
+    .gte("punched_at", monStart)
+    .order("punched_at");
+  if (error) return;
+  weekPunches = data;
+  renderHoursTable();
+}
+
+// Worked minutes for one person's punches on one day: in→out minus the lunch
+// gap. A missing clock-out counts up to "now" and is flagged as still open.
+function workedMinutes(dayPunches) {
+  const t = {};
+  dayPunches.forEach((p) => (t[p.punch_type] = new Date(p.punched_at)));
+  if (!t.in) return { mins: 0, open: false, any: dayPunches.length > 0 };
+  const now = new Date();
+  const end = t.out || now;
+  let mins = (end - t.in) / 60000;
+  if (t["lunch-out"]) {
+    const backIn = t["lunch-in"] || t.out || now;
+    mins -= (backIn - t["lunch-out"]) / 60000;
+  }
+  return { mins: Math.max(0, Math.round(mins)), open: !t.out, any: true };
+}
+
+function fmtHM(mins) {
+  return `${Math.floor(mins / 60)}:${String(Math.round(mins) % 60).padStart(2, "0")}`;
+}
+
+function renderHoursTable() {
+  const tbody = document.querySelector("#hours-table tbody");
+  if (!tbody || !myProfile?.is_admin) return;
+  const monday = weekPeriod();
+  const [my, mm, md] = monday.split("-").map(Number);
+  const today = todayStr();
+
+  tbody.innerHTML = staff
+    .map((p) => {
+      let total = 0;
+      const cells = DAYS.map((day, i) => {
+        const date = dateToStr(new Date(my, mm - 1, md + i));
+        if (date > today) return `<td class="cell-off">—</td>`;
+        const [s, e] = dayRange(date);
+        const dayPunches = weekPunches.filter(
+          (x) => x.profile_id === p.id && x.punched_at >= s && x.punched_at < e
+        );
+        const w = workedMinutes(dayPunches);
+        total += w.mins;
+        if (!w.any) return `<td class="cell-off">—</td>`;
+        return `<td>${fmtHM(w.mins)}${w.open ? '<span class="hrs-open" title="Still clocked in">…</span>' : ""}</td>`;
+      }).join("");
+
+      const hours = hoursById[p.id] || {};
+      const schedMins = DAYS.reduce((sum, day) => {
+        const sh = parseShift(hours[day]);
+        return sum + (sh ? sh.end - sh.start : 0);
+      }, 0);
+      const short = schedMins > 0 && total < schedMins;
+      return `<tr>
+        <td class="name-col"><span class="staff-name">${nameWithAvatar(p.name)}</span></td>
+        ${cells}
+        <td><b class="${short ? "hrs-short" : "hrs-ok"}">${fmtHM(total)}</b></td>
+        <td>${schedMins ? fmtHM(schedMins) : '<span class="cell-off">—</span>'}</td>
+      </tr>`;
+    })
+    .join("");
+}
 
 // ---------- announcements ----------
 

@@ -30,12 +30,12 @@
     <div class="wrap">
       <nav id="site-nav" class="site-nav hidden">
         <a href="#clock">Time Clock</a>
+        <a href="#calendar">Calendar</a>
+        <a href="#schedules">Schedule</a>
         <a href="#announcements">Announcements</a>
         <a href="#tasks">Task Board</a>
         <a href="#checklists">Checklists</a>
         <a href="#supplies">Supplies</a>
-        <a href="#calendar">Calendar</a>
-        <a href="#schedules">Schedule</a>
         <a href="#messages">Messages</a>
         <a href="#admin" id="nav-admin" class="hidden">Admin</a>
       </nav>
@@ -245,6 +245,104 @@
               <tbody></tbody>
             </table>
           </div>
+          <div class="notes-head">
+            <h3>Hours this week <span class="col-sub">(worked vs scheduled, lunch deducted)</span></h3>
+          </div>
+          <div class="table-scroll">
+            <table id="hours-table">
+              <thead>
+                <tr><th class="name-col">Team member</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Worked</th><th>Scheduled</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Calendar: time off & meetings -->
+      <section id="calendar" class="card">
+        <div class="card-head">
+          <h2>Calendar — Time Off &amp; Meetings</h2>
+          <div class="cal-nav">
+            <button id="cal-prev" class="btn-mini" type="button" aria-label="Previous month">‹</button>
+            <span id="cal-title"></span>
+            <button id="cal-next" class="btn-mini" type="button" aria-label="Next month">›</button>
+          </div>
+        </div>
+        <p class="hint">Mark time off in advance or put a meeting on the calendar — click a day to start an entry.
+          Posting as <strong id="posting-as"></strong>.</p>
+
+        <div class="policy-note">📞 <b>Sick or calling in?</b> You must contact Karley <b>at least 1–2 hours before</b> your
+          scheduled shift starts.</div>
+
+        <div id="cal-grid" class="cal-grid"></div>
+
+        <form id="note-form" class="note-form">
+          <div class="field">
+            <label for="nf-type">What is it?</label>
+            <select id="nf-type" required>
+              <option value="out">Time off (out that day)</option>
+              <option value="different-hours">In at a different time</option>
+              <option value="meeting">Meeting</option>
+              <option value="other">Other note</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="nf-start">Date</label>
+            <input id="nf-start" type="date" required>
+          </div>
+          <div class="field">
+            <label for="nf-end">Through (optional)</label>
+            <input id="nf-end" type="date">
+          </div>
+          <div class="field">
+            <label for="nf-time">Time <span class="optional">(for meetings)</span></label>
+            <input id="nf-time" type="text" maxlength="40" placeholder="e.g. 2:00–3:00 PM">
+          </div>
+          <div class="field field-wide">
+            <label for="nf-details">Details <span class="optional">(e.g. "in 10–2 instead", "all-team huddle")</span></label>
+            <input id="nf-details" type="text" maxlength="200" placeholder="Optional details">
+          </div>
+          <div class="field field-submit">
+            <button class="btn btn-primary" type="submit">Post it</button>
+          </div>
+        </form>
+        <p id="form-status" class="form-status" role="status"></p>
+
+        <div class="notes-head">
+          <h3>Upcoming</h3>
+          <label class="show-past"><input id="show-past" type="checkbox"> show past entries</label>
+        </div>
+        <ul id="notes-list" class="notes-list">
+          <li class="empty">Loading…</li>
+        </ul>
+      </section>
+
+      <!-- Weekly schedules -->
+      <section id="schedules" class="card">
+        <div class="card-head">
+          <h2 id="schedules-title">My Schedule</h2>
+          <button id="edit-toggle" class="btn btn-ghost" type="button">Edit my hours</button>
+        </div>
+        <p class="hint" id="schedules-hint">Everyone's current weekly hours. You can edit your own row.</p>
+        <div class="table-scroll">
+          <table id="schedule-table">
+            <thead>
+              <tr>
+                <th class="name-col">Team member</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+              </tr>
+            </thead>
+            <tbody><!-- rows rendered by app.js --></tbody>
+          </table>
+        </div>
+        <div id="edit-actions" class="edit-actions hidden">
+          <button id="save-schedules" class="btn btn-primary" type="button">Save changes</button>
+          <button id="cancel-edit" class="btn btn-ghost" type="button">Cancel</button>
         </div>
       </section>
 
@@ -378,93 +476,6 @@
             <h3>Received <span class="col-sub">(last 14 days)</span></h3>
             <ul id="sup-received" class="cl-list"><li class="empty">—</li></ul>
           </div>
-        </div>
-      </section>
-
-      <!-- Calendar: time off & meetings -->
-      <section id="calendar" class="card">
-        <div class="card-head">
-          <h2>Calendar — Time Off &amp; Meetings</h2>
-          <div class="cal-nav">
-            <button id="cal-prev" class="btn-mini" type="button" aria-label="Previous month">‹</button>
-            <span id="cal-title"></span>
-            <button id="cal-next" class="btn-mini" type="button" aria-label="Next month">›</button>
-          </div>
-        </div>
-        <p class="hint">Mark time off in advance or put a meeting on the calendar — click a day to start an entry.
-          Posting as <strong id="posting-as"></strong>.</p>
-
-        <div class="policy-note">📞 <b>Sick or calling in?</b> You must contact Karley <b>at least 1–2 hours before</b> your
-          scheduled shift starts.</div>
-
-        <div id="cal-grid" class="cal-grid"></div>
-
-        <form id="note-form" class="note-form">
-          <div class="field">
-            <label for="nf-type">What is it?</label>
-            <select id="nf-type" required>
-              <option value="out">Time off (out that day)</option>
-              <option value="different-hours">In at a different time</option>
-              <option value="meeting">Meeting</option>
-              <option value="other">Other note</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="nf-start">Date</label>
-            <input id="nf-start" type="date" required>
-          </div>
-          <div class="field">
-            <label for="nf-end">Through (optional)</label>
-            <input id="nf-end" type="date">
-          </div>
-          <div class="field">
-            <label for="nf-time">Time <span class="optional">(for meetings)</span></label>
-            <input id="nf-time" type="text" maxlength="40" placeholder="e.g. 2:00–3:00 PM">
-          </div>
-          <div class="field field-wide">
-            <label for="nf-details">Details <span class="optional">(e.g. "in 10–2 instead", "all-team huddle")</span></label>
-            <input id="nf-details" type="text" maxlength="200" placeholder="Optional details">
-          </div>
-          <div class="field field-submit">
-            <button class="btn btn-primary" type="submit">Post it</button>
-          </div>
-        </form>
-        <p id="form-status" class="form-status" role="status"></p>
-
-        <div class="notes-head">
-          <h3>Upcoming</h3>
-          <label class="show-past"><input id="show-past" type="checkbox"> show past entries</label>
-        </div>
-        <ul id="notes-list" class="notes-list">
-          <li class="empty">Loading…</li>
-        </ul>
-      </section>
-
-      <!-- Weekly schedules -->
-      <section id="schedules" class="card">
-        <div class="card-head">
-          <h2 id="schedules-title">My Schedule</h2>
-          <button id="edit-toggle" class="btn btn-ghost" type="button">Edit my hours</button>
-        </div>
-        <p class="hint" id="schedules-hint">Everyone's current weekly hours. You can edit your own row.</p>
-        <div class="table-scroll">
-          <table id="schedule-table">
-            <thead>
-              <tr>
-                <th class="name-col">Team member</th>
-                <th>Monday</th>
-                <th>Tuesday</th>
-                <th>Wednesday</th>
-                <th>Thursday</th>
-                <th>Friday</th>
-              </tr>
-            </thead>
-            <tbody><!-- rows rendered by app.js --></tbody>
-          </table>
-        </div>
-        <div id="edit-actions" class="edit-actions hidden">
-          <button id="save-schedules" class="btn btn-primary" type="button">Save changes</button>
-          <button id="cancel-edit" class="btn btn-ghost" type="button">Cancel</button>
         </div>
       </section>
 
