@@ -1,0 +1,15 @@
+{
+  "name": "JFK Scheduling Hub",
+  "short_name": "JFK Hub",
+  "description": "Just For Kix warehouse scheduling, tasks, and team hub",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#fff4f9",
+  "theme_color": "#a30055",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
