@@ -179,7 +179,7 @@ const CB_OPTIONS = {
   top: [
     ["straight01", "Long straight"], ["curvy", "Long curly"], ["bob", "Bob"],
     ["bun", "Bun / ponytail"], ["shortFlat", "Short straight"], ["shortCurly", "Short curly"],
-    ["theCaesar", "Short men's cut"], ["fro", "Fro"],
+    ["theCaesar", "Short men's cut"],
   ],
   hairColor: [["2c1b18", "Black"], ["724133", "Brown"], ["d6b370", "Blonde"], ["c93305", "Red"], ["e8e1e1", "Gray"]],
   eyeColor: [["5C3317", "Brown"], ["3B7AD9", "Blue"], ["3D8A5A", "Green"], ["8E6B23", "Hazel"], ["6E7B8B", "Gray"]],
@@ -197,7 +197,7 @@ function characterUri(opts) {
       skinColor: [opts.skinColor],
       top: [opts.top],
       hairColor: [opts.hairColor],
-      eyes: ["default"],
+      eyes: ["squint"],
       eyebrows: ["defaultNatural"],
       mouth: ["smile"],
       clothing: [opts.clothing || "shirtCrewNeck"],
@@ -207,13 +207,19 @@ function characterUri(opts) {
       backgroundColor: ["ffd6ea"],
       radius: 50,
     }).toString();
-    // Recolor the pupils (the "default" eyes are two fixed-geometry circles).
+    // Recolor the irises (the "squint" eyes draw white eyeballs plus two
+    // fixed-geometry pupil paths we can safely recolor), then add upper
+    // eyelid lines for dimension.
     if (opts.eyeColor) {
       svg = svg.replace(
-        /(<path d="M36 22[^"]*") fill="#000" fill-opacity="\.6"/,
-        `$1 fill="#${opts.eyeColor}" fill-opacity=".85"`
+        /(<path d="M32\.82 28\.3[^"]*") fill="#000"( fill-opacity="[^"]*")?/,
+        `$1 fill="#${opts.eyeColor}" fill-opacity=".9"`
       );
     }
+    const lids =
+      '<path d="M16 20c4.5-8 23.5-8 28 0" stroke="#4a3728" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+      '<path d="M68 20c4.5-8 23.5-8 28 0" stroke="#4a3728" stroke-width="2.6" fill="none" stroke-linecap="round"/>';
+    svg = svg.replace(/(<path d="M32\.82 28\.3[^>]*\/>)/, `$1${lids}`);
     charCache.set(key, "data:image/svg+xml;utf8," + encodeURIComponent(svg));
   }
   return charCache.get(key);
