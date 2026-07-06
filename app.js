@@ -177,19 +177,14 @@ function setStatus(el, msg, isError = false) {
 const CB_OPTIONS = {
   skinColor: [["ffdbb4", "Light"], ["edb98a", "Medium light"], ["d08b5b", "Tan"], ["ae5d29", "Brown"], ["614335", "Deep"]],
   top: [
-    ["longButNotTooLong", "Long"], ["straight01", "Long straight"], ["straight02", "Straight"],
-    ["straightAndStrand", "Straight + strand"], ["bigHair", "Big hair"], ["curvy", "Curvy"],
-    ["curly", "Curly"], ["bob", "Bob"], ["bun", "Bun"], ["miaWallace", "Bangs + bun"],
-    ["frida", "Updo + flowers"], ["fro", "Fro"], ["froBand", "Fro + band"],
-    ["dreads", "Long dreads"], ["shavedSides", "Shaved sides"], ["shaggy", "Shaggy"],
-    ["shortWaved", "Short waved"], ["shortCurly", "Short curly"], ["shortFlat", "Short"],
-    ["theCaesar", "Buzz cut"], ["hijab", "Hijab"],
+    ["straight01", "Long straight"], ["curvy", "Long curly"], ["bob", "Bob"],
+    ["bun", "Bun / ponytail"], ["shortFlat", "Short straight"], ["shortCurly", "Short curly"],
+    ["theCaesar", "Short men's cut"], ["fro", "Fro"],
   ],
-  hairColor: [["2c1b18", "Black"], ["4a312c", "Dark brown"], ["724133", "Brown"], ["a55728", "Auburn"], ["b58143", "Light brown"], ["d6b370", "Blonde"], ["ecdcbf", "Platinum"], ["c93305", "Red"], ["f59797", "Pink"], ["e8e1e1", "Gray"]],
-  eyeColor: [["5C3317", "Brown"], ["2c1b18", "Dark brown"], ["3B7AD9", "Blue"], ["3D8A5A", "Green"], ["8E6B23", "Hazel"], ["6E7B8B", "Gray"], ["1e1e1e", "Black"]],
-  mouth: [["smile", "Smile"], ["default", "Soft"], ["twinkle", "Twinkle"], ["serious", "Serious"]],
-  clothing: [["shirtCrewNeck", "T-shirt"], ["shirtVNeck", "V-neck"], ["shirtScoopNeck", "Scoop neck"], ["hoodie", "Hoodie"], ["blazerAndShirt", "Blazer"], ["collarAndSweater", "Sweater"]],
-  clothesColor: [["ff488e", "JFK pink"], ["ffafb9", "Light pink"], ["65c9ff", "Sky blue"], ["5199e4", "Blue"], ["25557c", "Navy"], ["3c4f5c", "Slate"], ["ff5c5c", "Red"], ["ffffb1", "Yellow"], ["a7ffc4", "Mint"], ["929598", "Gray"], ["e6e6e6", "White"], ["262e33", "Black"]],
+  hairColor: [["2c1b18", "Black"], ["724133", "Brown"], ["d6b370", "Blonde"], ["c93305", "Red"], ["e8e1e1", "Gray"]],
+  eyeColor: [["5C3317", "Brown"], ["3B7AD9", "Blue"], ["3D8A5A", "Green"], ["8E6B23", "Hazel"], ["6E7B8B", "Gray"]],
+  clothing: [["shirtCrewNeck", "T-shirt"], ["shirtVNeck", "V-neck"], ["hoodie", "Hoodie"], ["blazerAndShirt", "Blazer"]],
+  clothesColor: [["ff488e", "JFK pink"], ["65c9ff", "Sky blue"], ["25557c", "Navy"], ["ff5c5c", "Red"], ["a7ffc4", "Mint"], ["929598", "Gray"], ["e6e6e6", "White"], ["262e33", "Black"]],
 };
 
 const charCache = new Map();
@@ -204,7 +199,7 @@ function characterUri(opts) {
       hairColor: [opts.hairColor],
       eyes: ["default"],
       eyebrows: ["defaultNatural"],
-      mouth: [opts.mouth || "smile"],
+      mouth: ["smile"],
       clothing: [opts.clothing || "shirtCrewNeck"],
       clothesColor: [opts.clothesColor],
       accessoriesProbability: 0,
@@ -225,7 +220,10 @@ function characterUri(opts) {
 }
 
 function avatarHtml(p) {
-  if (p?.avatar_options) {
+  if (p?.avatar_options?.style === "image" && p.avatar_options.url) {
+    return `<span class="avatar-wrap"><img class="avatar-img avatar-photo" src="${esc(p.avatar_options.url)}" alt=""></span>`;
+  }
+  if (p?.avatar_options && p.avatar_options.style !== "image") {
     return `<span class="avatar-wrap"><img class="avatar-img" src="${characterUri(p.avatar_options)}" alt=""></span>`;
   }
   return `<span class="name-avatar">${esc(p?.avatar || "🙂")}</span>`;
@@ -252,16 +250,25 @@ function cbPreview() {
   $("cb-preview").src = characterUri(cbValues());
 }
 
-function characterMode() {
-  return $("mode-character").checked;
+function avatarMode() {
+  if ($("mode-image").checked) return "image";
+  if ($("mode-character").checked) return "character";
+  return "emoji";
 }
 
 function setAvatarMode(mode) {
   $("mode-character").checked = mode === "character";
-  $("mode-emoji").checked = mode !== "character";
+  $("mode-image").checked = mode === "image";
+  $("mode-emoji").checked = mode === "emoji";
   $("character-builder").classList.toggle("hidden", mode !== "character");
-  $("emoji-chooser").classList.toggle("hidden", mode === "character");
+  $("image-chooser").classList.toggle("hidden", mode !== "image");
+  $("emoji-chooser").classList.toggle("hidden", mode !== "emoji");
   if (mode === "character") cbPreview();
+  if (mode === "image") {
+    const existing = myProfile?.avatar_options?.style === "image" ? myProfile.avatar_options.url : null;
+    $("img-preview").classList.toggle("hidden", !existing && !$("pf-image").files[0]);
+    if (existing && !$("pf-image").files[0]) $("img-preview").src = existing;
+  }
 }
 
 // populate builder selects once
@@ -273,6 +280,40 @@ Object.entries(CB_OPTIONS).forEach(([k, opts]) => {
 });
 $("mode-emoji").addEventListener("change", () => setAvatarMode("emoji"));
 $("mode-character").addEventListener("change", () => setAvatarMode("character"));
+$("mode-image").addEventListener("change", () => setAvatarMode("image"));
+
+$("pf-image").addEventListener("change", () => {
+  const file = $("pf-image").files[0];
+  if (file) {
+    $("img-preview").src = URL.createObjectURL(file);
+    $("img-preview").classList.remove("hidden");
+  }
+});
+
+// Downscales the chosen picture to a small square and stores it inline on the
+// profile — no external storage needed at this team size.
+async function uploadAvatarImage() {
+  const file = $("pf-image").files[0];
+  if (!file) {
+    // keep existing uploaded image if there is one
+    return myProfile?.avatar_options?.style === "image" ? myProfile.avatar_options : null;
+  }
+  if (file.size > 8 * 1024 * 1024) throw new Error("Image is over 8 MB — pick a smaller one.");
+  const bitmap = await createImageBitmap(file).catch(() => null);
+  if (!bitmap) throw new Error("That file doesn't look like an image.");
+  const SIZE = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = SIZE;
+  canvas.height = SIZE;
+  const ctx = canvas.getContext("2d");
+  // center-crop to square
+  const side = Math.min(bitmap.width, bitmap.height);
+  const sx = (bitmap.width - side) / 2;
+  const sy = (bitmap.height - side) / 2;
+  ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, SIZE, SIZE);
+  const url = canvas.toDataURL("image/png");
+  return { style: "image", url };
+}
 
 // ---------- auth & routing ----------
 
@@ -428,8 +469,9 @@ els.editProfile.addEventListener("click", () => {
   els.pfName.value = myProfile.name;
   els.pfRole.value = myProfile.role;
   els.pfAvatar.value = myProfile.avatar || "🙂";
-  cbSet(myProfile.avatar_options);
-  setAvatarMode(myProfile.avatar_options ? "character" : "emoji");
+  const opts = myProfile.avatar_options;
+  if (opts && opts.style !== "image") cbSet(opts);
+  setAvatarMode(opts?.style === "image" ? "image" : opts ? "character" : "emoji");
   els.pfReminders.checked = !!myProfile.reminders;
   const hours = hoursById[myProfile.id] || {};
   DAYS.forEach((d) => ($(`pf-${d}`).value = hours[d] || ""));
@@ -446,11 +488,26 @@ els.profileForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   setStatus(els.profileStatus, "Saving…");
 
+  const mode = avatarMode();
+  let avatarOptions = null;
+  try {
+    if (mode === "character") avatarOptions = cbValues();
+    else if (mode === "image") {
+      avatarOptions = await uploadAvatarImage();
+      if (!avatarOptions) {
+        setStatus(els.profileStatus, "Pick an image file first (or choose Emoji / Build a character).", true);
+        return;
+      }
+    }
+  } catch (err) {
+    setStatus(els.profileStatus, `Image upload failed: ${err.message}`, true);
+    return;
+  }
   const fields = {
     name: els.pfName.value.trim(),
     role: els.pfRole.value,
     avatar: els.pfAvatar.value.trim() || "🙂",
-    avatar_options: characterMode() ? cbValues() : null,
+    avatar_options: avatarOptions,
     reminders: els.pfReminders.checked,
   };
 

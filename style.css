@@ -396,6 +396,10 @@ td.cell-off { color: var(--ink-soft); font-style: italic; }
   box-shadow: 0 1px 2px rgba(90, 0, 45, .35);
 }
 .user-chip .avatar-img { width: 1.6em; height: 1.6em; }
+.avatar-photo { object-fit: cover; }
+.image-chooser { display: flex; gap: .9rem; align-items: flex-start; }
+.image-chooser img { object-fit: cover; }
+.image-chooser input[type="file"] { font-size: .82rem; max-width: 100%; }
 
 /* Character builder */
 .avatar-mode { display: flex; gap: 1.1rem; font-size: .88rem; margin-bottom: .6rem; }

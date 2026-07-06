@@ -86,7 +86,8 @@
           <legend>Your profile icon</legend>
           <div class="avatar-mode">
             <label><input type="radio" name="avatar-mode" id="mode-emoji" value="emoji" checked> Emoji</label>
-            <label><input type="radio" name="avatar-mode" id="mode-character" value="character"> Build my own character</label>
+            <label><input type="radio" name="avatar-mode" id="mode-character" value="character"> Build a character</label>
+            <label><input type="radio" name="avatar-mode" id="mode-image" value="image"> Upload a picture</label>
           </div>
           <div id="emoji-chooser" class="avatar-row">
             <input id="pf-avatar" type="text" maxlength="8" value="🙂" aria-label="Emoji icon">
@@ -97,6 +98,15 @@
               <button type="button">⚡</button><button type="button">🏀</button><button type="button">🎧</button>
             </div>
           </div>
+          <div id="image-chooser" class="image-chooser hidden">
+            <img id="img-preview" class="cb-preview hidden" alt="Your avatar preview">
+            <div>
+              <input id="pf-image" type="file" accept="image/png,image/jpeg,image/webp">
+              <p class="fieldset-hint">Square images look best (max 3&nbsp;MB). Tip: make a 3D character of yourself with
+                an AI image tool (e.g. "cute 3D animated character of a woman with red hair, pink shirt, plain background")
+                or use an iPhone Memoji sticker, save the picture, and upload it here.</p>
+            </div>
+          </div>
           <div id="character-builder" class="character-builder hidden">
             <img id="cb-preview" class="cb-preview" alt="Your character preview">
             <div class="cb-fields">
@@ -104,7 +114,6 @@
               <label>Hair style <select id="cb-top"></select></label>
               <label>Hair color <select id="cb-hairColor"></select></label>
               <label>Eye color <select id="cb-eyeColor"></select></label>
-              <label>Mouth <select id="cb-mouth"></select></label>
               <label>Shirt style <select id="cb-clothing"></select></label>
               <label>Shirt color <select id="cb-clothesColor"></select></label>
             </div>
