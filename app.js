@@ -1714,6 +1714,7 @@ async function loadMessages() {
     ? staff.some((p) => p.id !== myProfile.id && threadUnread(p.id))
     : threadUnread(myProfile.id);
   els.msgBadge.classList.toggle("hidden", !anyUnread);
+  $("chip-msg-dot").classList.toggle("hidden", !anyUnread);
 }
 
 function renderThread() {

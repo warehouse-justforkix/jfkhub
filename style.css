@@ -294,8 +294,8 @@ td.cell-off { color: var(--ink-soft); font-style: italic; }
 
 /* Header user chip */
 .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
-.user-chip { display: flex; align-items: center; gap: .6rem; background: rgba(255,255,255,.14); padding: .35rem .5rem .35rem .8rem; border-radius: 99px; font-size: .88rem; }
-.user-chip .btn-mini { background: rgba(255,255,255,.9); }
+.user-chip { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; background: rgba(255,255,255,.14); padding: .35rem .5rem .35rem .8rem; border-radius: 99px; font-size: .88rem; }
+.user-chip .btn-mini { background: rgba(255,255,255,.9); text-decoration: none; display: inline-flex; align-items: center; gap: .25rem; }
 
 /* Auth / profile cards */
 .auth-card { max-width: 460px; margin: 1.5rem auto; }
