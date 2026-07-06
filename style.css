@@ -284,15 +284,14 @@ td.cell-off { color: var(--ink-soft); font-style: italic; }
 .fieldset-hint { margin: 0 0 .6rem; font-size: .78rem; color: var(--ink-soft); line-height: 1.4; }
 .hours-grid { display: flex; flex-direction: column; gap: .45rem; }
 .hours-grid label {
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: 2.6rem 1fr;
   align-items: center;
   gap: .6rem;
   font-size: .8rem;
   font-weight: 700;
   color: var(--ink-soft);
 }
-.hours-grid label > input { flex: 1; }
 .hours-grid input {
   font: inherit;
   font-size: .88rem;
