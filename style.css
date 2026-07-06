@@ -626,7 +626,7 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 .cl-board { margin-top: .4rem; }
 /* Checklists card: only two lists (Today / This Week) — fill the card 50/50 and center */
 #checklists .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-#checklists .cl-item label { justify-content: center; text-align: center; flex: 1; }
+#checklists .cl-item label { text-align: left; flex: 1; }
 @media (max-width: 800px) { #checklists .board { grid-template-columns: 1fr; } }
 .cl-admin-form { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .6rem; }
 .cl-admin-form input[type="text"] { flex: 1; min-width: 200px; font: inherit; padding: .45rem .55rem; border: 1px solid #e8b7d1; border-radius: 8px; }
