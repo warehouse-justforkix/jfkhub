@@ -365,6 +365,8 @@ td.cell-off { color: var(--ink-soft); font-style: italic; }
 #punch-table th, #punch-table td { border: 1px solid var(--line); padding: .4rem .4rem; text-align: left; overflow-wrap: break-word; }
 #punch-table thead th { background: #fdeaf4; color: var(--brand-dark); font-weight: 600; }
 #punch-table .name-col { width: 22%; }
+#punch-table th:nth-child(2), #punch-table td:nth-child(2) { width: 19%; }
+#punch-table .clock-state { white-space: normal; display: inline-block; line-height: 1.25; padding: .15rem .5rem; font-size: .72rem; }
 .hrs-short { color: #c62828; }
 .hrs-ok { color: #157347; }
 .hrs-open { color: var(--accent); margin-left: .15rem; }
