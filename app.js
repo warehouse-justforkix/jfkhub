@@ -297,10 +297,10 @@ async function route() {
     els.postingAs.textContent = prof.name;
     const admin = prof.is_admin;
     els.editToggle.textContent = admin ? "Edit schedules" : "Edit my hours";
-    els.schedulesTitle.textContent = admin ? "Summer Schedules" : "My Schedule";
+    els.schedulesTitle.textContent = admin ? "Team Schedules" : "My Schedule";
     els.schedulesHint.textContent = admin
-      ? "Everyone's standing weekly hours. Members each see only their own row."
-      : "Your standing weekly hours for the summer — only you and admins can see them.";
+      ? "Everyone's current weekly hours. Members each see only their own row."
+      : "Your current weekly hours — only you and admins can see them.";
     els.navAdmin.classList.toggle("hidden", !admin);
     els.adminSection.classList.toggle("hidden", !admin);
     els.punchAdmin.classList.toggle("hidden", !admin);
