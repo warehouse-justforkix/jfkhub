@@ -331,7 +331,10 @@ td.cell-off { color: var(--ink-soft); font-style: italic; }
 .st-in { background: #d9f2db; color: #157347; }
 .st-lunch { background: #fff4e0; color: var(--diff); }
 .st-out { background: #fddfdd; color: #c62828; }
-.punch-buttons { display: flex; flex-wrap: wrap; gap: .6rem; margin: .4rem 0 .7rem; }
+.punch-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin: .4rem 0 .7rem; }
+.punch-buttons .punch { padding: .5rem .4rem; white-space: nowrap; font-size: .85rem; }
+.punch-buttons #undo-punch { grid-column: 1 / -1; justify-self: start; }
+@media (max-width: 640px) { .punch-buttons { grid-template-columns: repeat(2, 1fr); } }
 .my-punches { font-size: .85rem; color: var(--ink-soft); margin: 0 0 .4rem; }
 #punch-table, #hours-table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: .9rem; margin-top: .3rem; }
 #punch-table th, #punch-table td, #hours-table th, #hours-table td { border: 1px solid var(--line); padding: .5rem .6rem; text-align: left; }
