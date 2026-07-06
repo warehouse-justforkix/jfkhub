@@ -219,15 +219,8 @@
             <h2>Hours This Week</h2>
             <span class="admin-badge">ADMIN ONLY</span>
           </div>
-          <p class="hint">Worked vs scheduled, lunch deducted. "…" means still clocked in.</p>
-          <div class="table-scroll">
-            <table id="hours-table">
-              <thead>
-                <tr><th class="name-col">Member</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Worked</th><th>Sched.</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
+          <p class="hint">Worked vs scheduled, lunch deducted. Tap a name to see their week. "…" means still clocked in.</p>
+          <div id="hours-acc"><p class="empty-hint">No members yet.</p></div>
         </section>
       </aside>
 
@@ -283,12 +276,12 @@
           <table id="schedule-table">
             <thead>
               <tr>
-                <th class="name-col">Team member</th>
-                <th>Monday</th>
-                <th>Tuesday</th>
-                <th>Wednesday</th>
-                <th>Thursday</th>
-                <th>Friday</th>
+                <th class="name-col">Member</th>
+                <th>Mon</th>
+                <th>Tue</th>
+                <th>Wed</th>
+                <th>Thu</th>
+                <th>Fri</th>
               </tr>
             </thead>
             <tbody><!-- rows rendered by app.js --></tbody>

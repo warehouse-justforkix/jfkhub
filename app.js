@@ -1025,26 +1025,37 @@ function fmtHM(mins) {
 }
 
 function renderHoursTable() {
-  const tbody = document.querySelector("#hours-table tbody");
-  if (!tbody || !myProfile?.is_admin) return;
+  const box = $("hours-acc");
+  if (!box || !myProfile?.is_admin) return;
   const monday = weekPeriod();
   const [my, mm, md] = monday.split("-").map(Number);
   const today = todayStr();
+  const DAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  const members = hubMembers();
+  if (!members.length) {
+    box.innerHTML = `<p class="empty-hint">No members yet.</p>`;
+    return;
+  }
+  // remember which panels were open across re-renders
+  const open = new Set([...box.querySelectorAll("details[open]")].map((d) => d.dataset.id));
 
-  tbody.innerHTML = hubMembers()
+  box.innerHTML = members
     .map((p) => {
       let total = 0;
-      const cells = DAYS.map((day, i) => {
+      const rows = DAYS.map((day, i) => {
         const date = dateToStr(new Date(my, mm - 1, md + i));
-        if (date > today) return `<td class="cell-off">—</td>`;
-        const [s, e] = dayRange(date);
-        const dayPunches = weekPunches.filter(
-          (x) => x.profile_id === p.id && x.punched_at >= s && x.punched_at < e
-        );
-        const w = workedMinutes(dayPunches);
-        total += w.mins;
-        if (!w.any) return `<td class="cell-off">—</td>`;
-        return `<td>${fmtHM(w.mins)}${w.open ? '<span class="hrs-open" title="Still clocked in">…</span>' : ""}</td>`;
+        let cell = '<span class="cell-off">—</span>';
+        if (date <= today) {
+          const [s, e] = dayRange(date);
+          const dayPunches = weekPunches.filter(
+            (x) => x.profile_id === p.id && x.punched_at >= s && x.punched_at < e
+          );
+          const w = workedMinutes(dayPunches);
+          total += w.mins;
+          if (w.any) cell = `${fmtHM(w.mins)}${w.open ? '<span class="hrs-open" title="Still clocked in">…</span>' : ""}`;
+        }
+        const sh = parseShift((hoursById[p.id] || {})[day]);
+        return `<div class="hrs-row"><span>${DAY_LABELS[i]}</span><span>${cell}</span><span class="cell-off">${sh ? fmtHM(sh.end - sh.start) : "—"}</span></div>`;
       }).join("");
 
       const hours = hoursById[p.id] || {};
@@ -1053,12 +1064,17 @@ function renderHoursTable() {
         return sum + (sh ? sh.end - sh.start : 0);
       }, 0);
       const short = schedMins > 0 && total < schedMins;
-      return `<tr>
-        <td class="name-col"><span class="staff-name">${nameWithAvatar(p.name)}</span></td>
-        ${cells}
-        <td><b class="${short ? "hrs-short" : "hrs-ok"}">${fmtHM(total)}</b></td>
-        <td>${schedMins ? fmtHM(schedMins) : '<span class="cell-off">—</span>'}</td>
-      </tr>`;
+      return `<details class="hrs-acc" data-id="${p.id}" ${open.has(p.id) ? "open" : ""}>
+        <summary>
+          <span class="roster-name">${nameWithAvatar(p.name)}</span>
+          <b class="${short ? "hrs-short" : "hrs-ok"}">${fmtHM(total)}</b>
+          <span class="cell-off">/ ${schedMins ? fmtHM(schedMins) : "—"}</span>
+        </summary>
+        <div class="hrs-body">
+          <div class="hrs-row hrs-head"><span></span><span>Worked</span><span>Sched.</span></div>
+          ${rows}
+        </div>
+      </details>`;
     })
     .join("");
 }
