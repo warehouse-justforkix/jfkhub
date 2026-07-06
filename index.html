@@ -167,6 +167,7 @@
         <section id="messages" class="card msg-card">
           <div class="card-head">
             <h2 id="msg-title">Messages <span id="msg-badge" class="msg-badge hidden">●</span></h2>
+            <span id="msg-admin-badge" class="admin-badge hidden">ADMIN ONLY</span>
             <button id="msg-refresh" class="btn-mini" type="button">↻</button>
           </div>
           <p class="hint" id="msg-hint">Private line between you and Karley.</p>
@@ -178,6 +179,33 @@
             <button class="btn btn-primary" type="submit">Send</button>
           </form>
           <p id="msg-status" class="form-status" role="status"></p>
+        </section>
+
+        <!-- Admin controls (admins only) -->
+        <section id="admin" class="card hidden">
+          <div class="card-head">
+            <h2>Invitations</h2>
+            <span class="admin-badge">ADMIN ONLY</span>
+          </div>
+          <p class="hint">Add a team member's email. They open this site, hit "Create account" with that
+            email, and set up their own profile.</p>
+          <form id="invite-form" class="invite-form">
+            <input id="inv-email" type="email" required placeholder="name@justforkix.com">
+            <label class="inv-admin-label"><input id="inv-support" type="checkbox"> customer support</label>
+            <label class="inv-admin-label"><input id="inv-admin" type="checkbox"> make admin</label>
+            <button class="btn btn-primary" type="submit">Add member</button>
+          </form>
+          <p id="invite-status" class="form-status" role="status"></p>
+          <div class="admin-cols">
+            <div>
+              <h3>Invited — hasn't joined yet</h3>
+              <ul id="invite-list" class="admin-list"><li class="empty">—</li></ul>
+            </div>
+            <div>
+              <h3>Members</h3>
+              <ul id="member-list" class="admin-list"><li class="empty">—</li></ul>
+            </div>
+          </div>
         </section>
       </aside>
 
@@ -457,32 +485,6 @@
         </div>
         <p id="warn-status" class="form-status" role="status"></p>
         <ul id="warn-list" class="cl-list"><li class="empty">Loading…</li></ul>
-      </section>
-
-      <!-- Admin (admins only) -->
-      <section id="admin" class="card hidden">
-        <div class="card-head">
-          <h2>Admin</h2>
-        </div>
-        <p class="hint">Add a team member's email below. They then open this site, hit "Create account" with that
-          email, and set up their own profile.</p>
-        <form id="invite-form" class="invite-form">
-          <input id="inv-email" type="email" required placeholder="name@justforkix.com">
-          <label class="inv-admin-label"><input id="inv-support" type="checkbox"> customer support</label>
-          <label class="inv-admin-label"><input id="inv-admin" type="checkbox"> make admin</label>
-          <button class="btn btn-primary" type="submit">Add member</button>
-        </form>
-        <p id="invite-status" class="form-status" role="status"></p>
-        <div class="admin-cols">
-          <div>
-            <h3>Invited — hasn't joined yet</h3>
-            <ul id="invite-list" class="admin-list"><li class="empty">—</li></ul>
-          </div>
-          <div>
-            <h3>Members</h3>
-            <ul id="member-list" class="admin-list"><li class="empty">—</li></ul>
-          </div>
-        </div>
       </section>
 
       </div><!-- /main-col -->

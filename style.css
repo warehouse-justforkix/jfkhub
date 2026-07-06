@@ -492,6 +492,29 @@ td.cell-off { color: var(--ink-soft); font-style: italic; }
 
 .thread-with { font-size: .85rem; font-weight: 600; color: var(--brand-dark); margin-bottom: .4rem; }
 
+/* Admin-only labels and sidebar admin card */
+.admin-badge {
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  color: #fff;
+  background: var(--brand-dark);
+  padding: .16rem .5rem;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.roster-group {
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--brand-dark);
+  background: #fdeaf4;
+  padding: .3rem .6rem;
+}
+.side-col .admin-cols { grid-template-columns: 1fr; }
+.side-col .invite-form input[type="email"] { min-width: 0; }
+
 /* Checklists */
 .cl-board { margin-top: .4rem; }
 .cl-admin-form { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .6rem; }

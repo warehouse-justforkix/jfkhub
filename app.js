@@ -368,6 +368,7 @@ async function route() {
       ? "Your team — tap a person to open their private chat."
       : "Private line to the admins — only you and they can see this thread.";
     els.roster.classList.toggle("hidden", !admin);
+    $("msg-admin-badge").classList.toggle("hidden", !admin);
     els.clAdminForm.classList.toggle("hidden", !admin);
     const support = admin || prof.support_access;
     $("tab-support").classList.toggle("hidden", !support);
@@ -1526,17 +1527,23 @@ function renderRoster() {
   if (!currentThreadId || !members.some((m) => m.id === currentThreadId)) {
     currentThreadId = members[0].id;
   }
-  els.roster.innerHTML = members
-    .map((p) => {
-      const presence = presenceOf(p.id);
-      return `<li class="roster-item ${p.id === currentThreadId ? "active" : ""}" data-id="${p.id}">
-        <span class="roster-avatar presence-${presence}">${avatarHtml(p)}</span>
-        <span class="roster-name">${esc(p.name)}</span>
-        ${p.support_access ? '<span class="role-badge role-part-time">CS</span>' : ""}
-        ${threadUnread(p.id) ? '<span class="unread-dot">●</span>' : ""}
-      </li>`;
-    })
-    .join("");
+  const item = (p) => {
+    const presence = presenceOf(p.id);
+    return `<li class="roster-item ${p.id === currentThreadId ? "active" : ""}" data-id="${p.id}">
+      <span class="roster-avatar presence-${presence}">${avatarHtml(p)}</span>
+      <span class="roster-name">${esc(p.name)}</span>
+      ${threadUnread(p.id) ? '<span class="unread-dot">●</span>' : ""}
+    </li>`;
+  };
+  const warehouse = members.filter((p) => !p.support_access);
+  const support = members.filter((p) => p.support_access);
+  els.roster.innerHTML =
+    (warehouse.length
+      ? `<li class="roster-group">Warehouse Team</li>` + warehouse.map(item).join("")
+      : "") +
+    (support.length
+      ? `<li class="roster-group">Customer Support Team</li>` + support.map(item).join("")
+      : "");
 }
 
 els.roster.addEventListener("click", (e) => {
