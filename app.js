@@ -2004,6 +2004,10 @@ function applyPage() {
     if (!el) return;
     const show = !sidebarOnly || (page === "messages" ? id === "messages" : id !== "messages");
     el.classList.toggle("route-hidden", !show);
+    // On a dedicated page, always arrive with the card(s) open;
+    // back home, restore each card's remembered collapsed state.
+    if (sidebarOnly && show) el.classList.remove("collapsed");
+    else if (!sidebarOnly) el.classList.toggle("collapsed", localStorage.getItem(`jfk-collapse-${id}`) === "1");
   });
   document.querySelectorAll(".site-nav a").forEach((a) =>
     a.classList.toggle("active", a.getAttribute("href") === "#" + page)
