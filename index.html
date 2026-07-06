@@ -193,8 +193,10 @@
             email, and set up their own profile.</p>
           <form id="invite-form" class="invite-form">
             <input id="inv-email" type="email" required placeholder="name@justforkix.com">
-            <label class="inv-admin-label"><input id="inv-support" type="checkbox"> customer support</label>
-            <label class="inv-admin-label"><input id="inv-admin" type="checkbox"> make admin</label>
+            <select id="inv-team" aria-label="Team">
+              <option value="warehouse" selected>Warehouse</option>
+              <option value="support">Customer Support</option>
+            </select>
             <button class="btn btn-primary" type="submit">Add member</button>
           </form>
           <p id="invite-status" class="form-status" role="status"></p>
@@ -207,6 +209,23 @@
               <h3>Members</h3>
               <ul id="member-list" class="admin-list"><li class="empty">—</li></ul>
             </div>
+          </div>
+        </section>
+
+        <!-- Weekly hours (admins only) -->
+        <section id="hours-card" class="card hidden">
+          <div class="card-head">
+            <h2>Hours This Week</h2>
+            <span class="admin-badge">ADMIN ONLY</span>
+          </div>
+          <p class="hint">Worked vs scheduled, lunch deducted. "…" means still clocked in.</p>
+          <div class="table-scroll">
+            <table id="hours-table">
+              <thead>
+                <tr><th class="name-col">Member</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Worked</th><th>Sched.</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
           </div>
         </section>
       </aside>
@@ -245,17 +264,6 @@
             <table id="punch-table">
               <thead>
                 <tr><th class="name-col">Team member</th><th>Status</th><th>In</th><th>Lunch out</th><th>Lunch in</th><th>Out</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-          <div class="notes-head">
-            <h3>Hours this week <span class="col-sub">(worked vs scheduled, lunch deducted)</span></h3>
-          </div>
-          <div class="table-scroll">
-            <table id="hours-table">
-              <thead>
-                <tr><th class="name-col">Team member</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Worked</th><th>Scheduled</th></tr>
               </thead>
               <tbody></tbody>
             </table>

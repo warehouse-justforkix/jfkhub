@@ -194,11 +194,11 @@ alter table time_punches enable row level security;
 alter table checklist_items enable row level security;
 alter table checklist_checks enable row level security;
 
--- checklists: warehouse items for every member; support items need support access.
-create policy "member team checklist items" on checklist_items for all
+-- checklists: strictly team-scoped, same rule as tasks.
+create policy "team checklist items" on checklist_items for all
   to authenticated
-  using (public.is_member() and (team = 'warehouse' or public.has_support() or public.is_admin()))
-  with check (public.is_member() and (team = 'warehouse' or public.has_support() or public.is_admin()));
+  using (public.is_member() and (public.is_admin() or (checklist_items.team = 'support') = public.has_support()))
+  with check (public.is_member() and (public.is_admin() or (checklist_items.team = 'support') = public.has_support()));
 create policy "member checklist checks" on checklist_checks for all
   to authenticated using (public.is_member()) with check (public.is_member());
 
@@ -239,9 +239,12 @@ create policy "self or admin update profile" on profiles for update
 create policy "admin delete profile" on profiles for delete
   to authenticated using (public.is_admin());
 
--- member_hours: weekly hours are team-visible; only the member/admin can edit.
-create policy "member read hours" on member_hours for select
-  to authenticated using (public.is_member());
+-- member_hours: hours are visible within your own team; only the member/admin can edit.
+create policy "team read hours" on member_hours for select
+  to authenticated using (
+    public.is_admin()
+    or public.has_support() = (select p.support_access from profiles p where p.id = member_hours.profile_id)
+  );
 create policy "own or admin write hours" on member_hours for insert
   to authenticated with check (profile_id = auth.uid() or public.is_admin());
 create policy "own or admin update hours" on member_hours for update
@@ -254,18 +257,11 @@ create policy "admin delete hours" on member_hours for delete
 create policy "member all notes" on schedule_notes for all
   to authenticated using (public.is_member()) with check (public.is_member());
 
--- tasks: warehouse board is for every member; the support board needs
--- support access (admins always see both).
-create policy "member team tasks" on tasks for all
+-- tasks: strictly team-scoped — you see your assigned team's board; admins see both.
+create policy "team tasks" on tasks for all
   to authenticated
-  using (
-    public.is_member()
-    and (team = 'warehouse' or public.has_support() or public.is_admin())
-  )
-  with check (
-    public.is_member()
-    and (team = 'warehouse' or public.has_support() or public.is_admin())
-  );
+  using (public.is_member() and (public.is_admin() or (tasks.team = 'support') = public.has_support()))
+  with check (public.is_member() and (public.is_admin() or (tasks.team = 'support') = public.has_support()));
 
 -- announcements: members read + post; delete own (admins delete any).
 create policy "member read announcements" on announcements for select

@@ -403,9 +403,9 @@ async function route() {
     els.roster.classList.toggle("hidden", !admin);
     $("msg-admin-badge").classList.toggle("hidden", !admin);
     els.clAdminForm.classList.toggle("hidden", !admin);
-    const support = admin || prof.support_access;
-    $("hub-toggle").classList.toggle("hidden", !support);
-    if (!support && curHub === "support") curHub = "warehouse";
+    $("hub-toggle").classList.toggle("hidden", !admin);
+    $("hours-card").classList.toggle("hidden", !admin);
+    if (!admin) curHub = prof.support_access ? "support" : "warehouse";
     showView(els.appView);
     await loadEverything();
     setHub(curHub);
@@ -1760,13 +1760,17 @@ function renderAdmin() {
   const memberEmails = new Set(staff.map((p) => p.email));
   const pending = invites.filter((i) => !memberEmails.has(i.email));
 
+  const teamBadge = (isSupport) =>
+    isSupport
+      ? '<span class="role-badge role-part-time">CS</span>'
+      : '<span class="role-badge role-full-time">WH</span>';
+
   els.inviteList.innerHTML = pending.length
     ? pending
         .map(
           (i) => `<li>
             <span>${esc(i.email)}
-              ${i.support_access ? ' <span class="role-badge role-part-time">SUPPORT</span>' : ""}
-              ${i.is_admin ? ' <span class="role-badge role-full-time">ADMIN</span>' : ""}</span>
+              ${i.is_admin ? '<span class="role-badge role-full-time">ADMIN</span>' : teamBadge(i.support_access)}</span>
             <button class="btn-mini danger" data-uninvite="${esc(i.email)}">Remove</button>
           </li>`
         )
@@ -1777,13 +1781,12 @@ function renderAdmin() {
     ? staff
         .map(
           (p) => `<li>
-            <span>${esc(p.name)} · ${esc(p.email)}
+            <span>${nameWithAvatar(p.name)}
               <span class="role-badge role-${p.role}">${p.role === "full-time" ? "FT" : "PT"}</span>
-              ${p.support_access ? '<span class="role-badge role-part-time">SUPPORT</span>' : ""}
-              ${p.is_admin ? '<span class="role-badge role-full-time">ADMIN</span>' : ""}
+              ${p.is_admin ? '<span class="role-badge role-full-time">ADMIN</span>' : teamBadge(p.support_access)}
             </span>
             <span class="admin-actions">
-              <button class="btn-mini" data-supacc="${p.id}" data-current="${p.support_access}">${p.support_access ? "Revoke support" : "Grant support"}</button>
+              ${p.is_admin ? "" : `<button class="btn-mini" data-supacc="${p.id}" data-current="${p.support_access}">${p.support_access ? "Move to WH" : "Move to CS"}</button>`}
               ${p.id !== myProfile.id ? `<button class="btn-mini danger" data-unmember="${p.id}" data-email="${esc(p.email)}" data-name="${esc(p.name)}">Remove</button>` : ""}
             </span>
           </li>`
@@ -1798,8 +1801,8 @@ els.inviteForm.addEventListener("submit", async (e) => {
   setStatus(els.inviteStatus, "");
   const { error } = await supabase.from("invited_emails").insert({
     email,
-    is_admin: els.invAdmin.checked,
-    support_access: $("inv-support").checked,
+    is_admin: false,
+    support_access: $("inv-team").value === "support",
   });
   if (error) {
     const msg = error.code === "23505" ? "That email is already on the list." : error.message;
