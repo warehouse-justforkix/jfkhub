@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=18">
+  <link rel="stylesheet" href="style.css?v=19">
 </head>
 <body>
   <header class="site-header">
@@ -317,7 +317,7 @@
 
         <form id="note-form" class="note-form">
           <div class="field">
-            <label for="nf-type">What is it?</label>
+            <label for="nf-type">Type</label>
             <select id="nf-type" required>
               <option value="out">Time off (out that day)</option>
               <option value="different-hours">In at a different time</option>
@@ -330,16 +330,16 @@
             <input id="nf-start" type="date" required>
           </div>
           <div class="field">
-            <label for="nf-end">Through (optional)</label>
+            <label for="nf-end">Through</label>
             <input id="nf-end" type="date">
           </div>
           <div class="field">
-            <label for="nf-time">Time <span class="optional">(for meetings)</span></label>
-            <input id="nf-time" type="text" maxlength="40" placeholder="e.g. 2:00–3:00 PM">
+            <label for="nf-time">Time</label>
+            <input id="nf-time" type="text" maxlength="40" placeholder="Meetings, e.g. 2:00 PM">
           </div>
           <div class="field field-wide">
-            <label for="nf-details">Details <span class="optional">(e.g. "in 10–2 instead", "all-team huddle")</span></label>
-            <input id="nf-details" type="text" maxlength="200" placeholder="Optional details">
+            <label for="nf-details">Details</label>
+            <input id="nf-details" type="text" maxlength="200" placeholder='Optional — e.g. "in 10–2 instead", "all-team huddle"'>
           </div>
           <div class="field field-submit">
             <button class="btn btn-primary" type="submit">Post it</button>
@@ -387,12 +387,12 @@
             <input id="tf-title" type="text" maxlength="120" required placeholder="e.g. Restock shipping supplies">
           </div>
           <div class="field">
-            <label for="tf-due">Due (optional)</label>
+            <label for="tf-due">Due</label>
             <input id="tf-due" type="date">
           </div>
           <div class="field field-wide">
-            <label for="tf-details">Details <span class="optional">(optional)</span></label>
-            <input id="tf-details" type="text" maxlength="300" placeholder="Anything the person doing it should know">
+            <label for="tf-details">Details</label>
+            <input id="tf-details" type="text" maxlength="300" placeholder="Optional — anything the person doing it should know">
           </div>
           <div class="field">
             <label for="tf-recurrence">Repeats</label>
@@ -516,6 +516,6 @@
     <div class="wrap">Just For Kix · internal team tool</div>
   </footer>
 
-  <script type="module" src="app.js?v=18"></script>
+  <script type="module" src="app.js?v=19"></script>
 </body>
 </html>

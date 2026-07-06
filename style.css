@@ -169,7 +169,7 @@ td.cell-off { color: var(--ink-soft); font-style: italic; }
   padding: .9rem 1rem 1rem;
 }
 .field { display: flex; flex-direction: column; gap: .25rem; }
-.field label { font-size: .78rem; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .03em; }
+.field label { font-size: .66rem; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
 .field .optional { font-weight: 400; text-transform: none; letter-spacing: 0; }
 .field select, .field input {
   font: inherit;
