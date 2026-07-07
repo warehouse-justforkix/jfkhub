@@ -468,6 +468,44 @@ details.punch-acc .punch-rows { padding: 0 .65rem .55rem; }
 .punch-cell-ro:hover { background: none; outline: none; }
 .pend { color: #b8860b; font-size: .78rem; white-space: normal; }
 
+/* Photo attachments */
+.photo-btn {
+  height: 2.2rem;
+  width: 2.5rem;
+  flex: 0 0 auto;
+  font-size: 1rem;
+  padding: 0;
+  background: #fff;
+  border: 1px solid #e8b7d1;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.photo-btn:hover { background: #fdeaf4; }
+.photo-btn.has-photo { background: #ffe9a8; border-color: #e0c26a; }
+.submit-row { display: flex; align-items: center; gap: .4rem; }
+.entry-photo {
+  display: block;
+  max-height: 110px;
+  max-width: 200px;
+  border-radius: 8px;
+  margin-top: .35rem;
+  border: 1px solid var(--line);
+  cursor: zoom-in;
+}
+.entry-photo-sm { max-height: 64px; max-width: 120px; }
+.photo-view {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  background: rgba(30, 5, 18, .88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  cursor: zoom-out;
+}
+.photo-view img { max-width: 92vw; max-height: 88vh; border-radius: 10px; box-shadow: 0 8px 40px rgba(0,0,0,.5); }
+
 /* Punch-fix requests */
 #punch-reqs { margin-top: 1rem; }
 #punch-reqs h3 { margin: 0 0 .45rem; }

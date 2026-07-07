@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=88">
+  <link rel="stylesheet" href="style.css?v=89">
 </head>
 <body>
   <header class="site-header">
@@ -407,6 +407,8 @@
         <p class="hint">Post things the whole team should know.</p>
         <form id="ann-form" class="ann-form">
           <textarea id="ann-body" rows="2" maxlength="1000" required placeholder="Share something with the team…"></textarea>
+          <button type="button" class="photo-btn" id="ann-photo-btn" title="Attach a photo">📷</button>
+          <input type="file" id="ann-photo" accept="image/*" class="hidden">
           <button class="btn btn-primary" type="submit">Post</button>
         </form>
         <p id="ann-status" class="form-status" role="status"></p>
@@ -448,8 +450,12 @@
             <select id="tf-assign"><option value="" selected>Leave open for anyone</option></select>
           </div>
           <div class="field field-submit">
-            <button class="btn btn-primary" type="submit">Add task</button>
+            <div class="submit-row">
+              <button type="button" class="photo-btn" id="tf-photo-btn" title="Attach a photo">📷</button>
+              <button class="btn btn-primary" type="submit">Add task</button>
+            </div>
           </div>
+          <input type="file" id="tf-photo" accept="image/*" class="hidden">
         </form>
         <p id="task-status" class="form-status" role="status"></p>
 
@@ -478,6 +484,8 @@
         <div class="cl-admin-form">
           <input id="rs-item" type="text" maxlength="120" placeholder="What needs restocking?">
           <input id="rs-note" type="text" maxlength="200" placeholder="Qty / location (optional)">
+          <button type="button" class="photo-btn" id="rs-photo-btn" title="Attach a photo">📷</button>
+          <input type="file" id="rs-photo" accept="image/*" class="hidden">
           <button id="rs-add" class="btn btn-primary" type="button">Add</button>
         </div>
         <p id="rs-status" class="form-status" role="status"></p>
@@ -509,6 +517,8 @@
             <option value="warehouse" selected>Warehouse</option>
             <option value="support">Customer Support</option>
           </select>
+          <button type="button" class="photo-btn" id="cl-photo-btn" title="Attach a photo">📷</button>
+          <input type="file" id="cl-photo" accept="image/*" class="hidden">
           <button id="cl-add" class="btn btn-primary" type="button">Add</button>
         </div>
         <p id="cl-status" class="form-status" role="status"></p>
@@ -533,6 +543,8 @@
         <div class="cl-admin-form">
           <input id="sup-item" type="text" maxlength="120" placeholder="What do we need?">
           <input id="sup-note" type="text" maxlength="200" placeholder="Qty / brand / notes (optional)">
+          <button type="button" class="photo-btn" id="sup-photo-btn" title="Attach a photo">📷</button>
+          <input type="file" id="sup-photo" accept="image/*" class="hidden">
           <button id="sup-add" class="btn btn-primary" type="button">Add</button>
         </div>
         <p id="sup-status" class="form-status" role="status"></p>
@@ -561,6 +573,6 @@
     <div class="wrap">Just For Kix · internal team tool</div>
   </footer>
 
-  <script type="module" src="app.js?v=88"></script>
+  <script type="module" src="app.js?v=89"></script>
 </body>
 </html>

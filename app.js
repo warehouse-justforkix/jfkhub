@@ -646,7 +646,8 @@ function restockLine(r) {
   return `<li class="cl-item ${r.status === "done" ? "done" : ""}">
     <span class="cl-label" style="flex:1;text-align:left"><b>${esc(r.item)}</b>${r.note ? ` — ${esc(r.note)}` : ""}
       <span class="cl-by" style="color:var(--ink-soft)">· ${esc(r.requested_by)}</span>
-      ${r.assigned_to ? `<span class="task-owner">${nameWithAvatar(r.assigned_to)}</span>` : ""}</span>
+      ${r.assigned_to ? `<span class="task-owner">${nameWithAvatar(r.assigned_to)}</span>` : ""}
+      ${photoThumb(r.photo, true)}</span>
     ${buttons}
     <button class="note-delete" data-rs-del="${r.id}" title="Remove">✕</button>
   </li>`;
@@ -668,6 +669,7 @@ $("rs-add").addEventListener("click", async () => {
     item,
     note: $("rs-note").value.trim() || null,
     requested_by: myProfile.name,
+    photo: rsPhoto.uri,
   });
   if (error) {
     setStatus($("rs-status"), `Couldn't add: ${error.message}`, true);
@@ -675,6 +677,7 @@ $("rs-add").addEventListener("click", async () => {
   }
   $("rs-item").value = "";
   $("rs-note").value = "";
+  rsPhoto.clear();
   setStatus($("rs-status"), "Added to the restock list! ✔");
   await loadRestock();
 });
@@ -800,7 +803,8 @@ function supplyLine(s) {
         : "";
   return `<li class="cl-item ${s.status === "received" ? "done" : ""}">
     <span class="cl-label" style="flex:1"><b>${esc(s.item)}</b>${s.note ? ` — ${esc(s.note)}` : ""}
-      <span class="cl-by" style="color:var(--ink-soft)">· ${esc(s.requested_by)}</span></span>
+      <span class="cl-by" style="color:var(--ink-soft)">· ${esc(s.requested_by)}</span>
+      ${photoThumb(s.photo, true)}</span>
     ${advance}
     <button class="note-delete" data-sup-del="${s.id}" title="Remove">✕</button>
   </li>`;
@@ -824,6 +828,7 @@ $("sup-add").addEventListener("click", async () => {
     item,
     note: $("sup-note").value.trim() || null,
     requested_by: myProfile.name,
+    photo: supPhoto.uri,
   });
   if (error) {
     setStatus($("sup-status"), `Couldn't add: ${error.message}`, true);
@@ -831,6 +836,7 @@ $("sup-add").addEventListener("click", async () => {
   }
   $("sup-item").value = "";
   $("sup-note").value = "";
+  supPhoto.clear();
   setStatus($("sup-status"), "Added! ✔");
   await loadSupplies();
 });
@@ -898,7 +904,7 @@ function renderChecklists() {
         return `<li class="cl-item ${check ? "done" : ""}">
           <label>
             <input type="checkbox" data-item="${i.id}" data-cadence="${i.cadence}" ${check ? "checked" : ""}>
-            <span class="cl-label">${esc(i.label)}</span>
+            <span class="cl-label">${esc(i.label)}${photoThumb(i.photo, true)}</span>
             ${i.team === "support" ? '<span class="role-badge role-part-time">CS</span>' : ""}
           </label>
           ${check ? `<span class="cl-by">✓ ${esc(check.checked_by)}</span>` : ""}
@@ -946,12 +952,14 @@ els.clAdd.addEventListener("click", async () => {
     label,
     cadence: els.clCadence.value,
     team: els.clTeam.value,
+    photo: clPhoto.uri,
   });
   if (error) {
     setStatus(els.clStatus, `Couldn't add: ${error.message}`, true);
     return;
   }
   els.clLabel.value = "";
+  clPhoto.clear();
   await loadChecklists();
 });
 
@@ -1402,6 +1410,75 @@ function renderHoursTable() {
     .join("");
 }
 
+// ---------- photo attachments ----------
+
+// Resize to a reasonable size and return a data URI (same approach as avatars).
+async function resizePhoto(file) {
+  if (file.size > 10 * 1024 * 1024) throw new Error("Image is over 10 MB — pick a smaller one.");
+  const bitmap = await createImageBitmap(file).catch(() => null);
+  if (!bitmap) throw new Error("That file doesn't look like an image.");
+  const MAX = 640;
+  const scale = Math.min(1, MAX / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/jpeg", 0.75);
+}
+
+// Wire a 📷 button to a hidden file input; the picked photo rides along on the next add.
+function photoPicker(btnId, inputId) {
+  const btn = $(btnId), input = $(inputId);
+  const state = {
+    uri: null,
+    clear() {
+      state.uri = null;
+      input.value = "";
+      btn.classList.remove("has-photo");
+      btn.title = "Attach a photo";
+    },
+  };
+  btn.addEventListener("click", () => input.click());
+  input.addEventListener("change", async () => {
+    const file = input.files[0];
+    if (!file) return;
+    try {
+      state.uri = await resizePhoto(file);
+      btn.classList.add("has-photo");
+      btn.title = "Photo attached — tap to change";
+    } catch (err) {
+      alert(err.message);
+      state.clear();
+    }
+  });
+  return state;
+}
+
+const annPhoto = photoPicker("ann-photo-btn", "ann-photo");
+const tfPhoto = photoPicker("tf-photo-btn", "tf-photo");
+const rsPhoto = photoPicker("rs-photo-btn", "rs-photo");
+const clPhoto = photoPicker("cl-photo-btn", "cl-photo");
+const supPhoto = photoPicker("sup-photo-btn", "sup-photo");
+
+const photoThumb = (src, small) =>
+  src ? `<img class="entry-photo${small ? " entry-photo-sm" : ""}" src="${esc(src)}" alt="Attached photo" title="Tap to view">` : "";
+
+// Tap any thumbnail to view it full-screen.
+function showPhoto(src) {
+  document.querySelector(".photo-view")?.remove();
+  const div = document.createElement("div");
+  div.className = "photo-view";
+  const img = document.createElement("img");
+  img.src = src;
+  div.appendChild(img);
+  div.addEventListener("click", () => div.remove());
+  document.body.appendChild(div);
+}
+document.addEventListener("click", (e) => {
+  const img = e.target.closest("img.entry-photo");
+  if (img) showPhoto(img.src);
+});
+
 // ---------- announcements ----------
 
 async function loadAnnouncements() {
@@ -1427,6 +1504,7 @@ async function loadAnnouncements() {
               ${canDelete ? `<button class="note-delete" data-ann="${a.id}" title="Delete announcement">✕</button>` : ""}
             </div>
             <div class="ann-body">${esc(a.body)}</div>
+            ${photoThumb(a.photo)}
           </li>`;
         })
         .join("")
@@ -1440,12 +1518,14 @@ els.annForm.addEventListener("submit", async (e) => {
     author_id: myProfile.id,
     author_name: myProfile.name,
     body: els.annBody.value.trim(),
+    photo: annPhoto.uri,
   });
   if (error) {
     setStatus(els.annStatus, `Couldn't post: ${error.message}`, true);
     return;
   }
   els.annForm.reset();
+  annPhoto.clear();
   await loadAnnouncements();
 });
 
@@ -1848,6 +1928,7 @@ function taskCard(t) {
   return `<li class="task-card ${t.status}">
     <div class="task-title">${esc(t.title)}</div>
     ${t.details ? `<div class="task-details">${esc(t.details)}</div>` : ""}
+    ${photoThumb(t.photo, true)}
     ${meta ? `<div class="task-meta">${meta}</div>` : ""}
     <div class="task-actions">${actions}</div>
   </li>`;
@@ -1936,6 +2017,7 @@ els.taskForm.addEventListener("submit", async (e) => {
     due_date: els.tfDue.value || null,
     recurrence: els.tfRecurrence.value,
     assigned_to: els.tfAssign.value || null,
+    photo: tfPhoto.uri,
   });
 
   if (error) {
@@ -1944,6 +2026,7 @@ els.taskForm.addEventListener("submit", async (e) => {
   }
   setStatus(els.taskStatus, "Task added! ✔");
   els.taskForm.reset();
+  tfPhoto.clear();
   await loadTasks();
 });
 

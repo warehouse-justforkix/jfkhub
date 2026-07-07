@@ -64,6 +64,7 @@ create table if not exists tasks (
   status text not null default 'open' check (status in ('open', 'done')),
   recurrence text not null default 'none'
     check (recurrence in ('none', 'daily', 'weekdays', 'weekly', 'monthly')),
+  photo text,                     -- optional attached photo (resized data URI)
   created_at timestamptz not null default now(),
   completed_at timestamptz
 );
@@ -73,6 +74,7 @@ create table if not exists announcements (
   author_id uuid references profiles(id) on delete set null,
   author_name text not null,
   body text not null,
+  photo text,                     -- optional attached photo (resized data URI)
   created_at timestamptz not null default now()
 );
 
@@ -104,6 +106,7 @@ create table if not exists checklist_items (
   cadence text not null check (cadence in ('daily', 'weekly')),
   team text not null default 'warehouse' check (team in ('warehouse', 'support')),
   sort_order int not null default 0,
+  photo text,                     -- optional attached photo (resized data URI)
   created_at timestamptz not null default now()
 );
 
@@ -134,6 +137,7 @@ create table if not exists restock_items (
   requested_by text not null,
   assigned_to text,
   status text not null default 'open' check (status in ('open', 'done')),
+  photo text,                     -- optional attached photo (resized data URI)
   created_at timestamptz not null default now(),
   completed_at timestamptz
 );
@@ -145,6 +149,7 @@ create table if not exists supply_requests (
   note text,
   requested_by text not null,
   status text not null default 'needed' check (status in ('needed', 'ordered', 'received')),
+  photo text,                     -- optional attached photo (resized data URI)
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
