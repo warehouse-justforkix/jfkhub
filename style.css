@@ -721,13 +721,13 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
   max-width: 100%;
   box-sizing: border-box;
   height: 2.1rem;             /* identical box size for every field */
-  font-size: .75rem;          /* small enough for full member names */
-  padding: 0 .5rem;           /* vertical centering via fixed height */
+  font-size: .68rem;          /* ~11px — fits full member names */
+  padding: 0 .4rem;           /* vertical centering via fixed height */
   line-height: normal;
   text-align: left;
 }
-#warn-admin-form input::placeholder { font-size: .75rem; }
-#warn-admin-form input[type="date"] { font-size: .75rem; }
+#warn-admin-form input::placeholder { font-size: .68rem; }
+#warn-admin-form input[type="date"] { font-size: .68rem; }
 .warn-item { border-color: #f0b9b3; background: #fff7f6; flex-wrap: wrap; font-size: .85rem; padding: .4rem .55rem; }
 .warn-item .cl-label { line-height: 1.4; }
 
