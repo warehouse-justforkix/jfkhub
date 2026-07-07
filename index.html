@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=55">
+  <link rel="stylesheet" href="style.css?v=56">
 </head>
 <body>
   <header class="site-header">
@@ -84,8 +84,9 @@
       <p class="hint">This is how you'll show up on the task board and calendar.</p>
       <form id="profile-form">
         <div class="field">
-          <label for="pf-name">Your name</label>
-          <input id="pf-name" type="text" required maxlength="60" placeholder="First name (or first + last initial)">
+          <label for="pf-name">Your first name</label>
+          <input id="pf-name" type="text" required maxlength="30" placeholder="First name only"
+            pattern="[^\s]+" title="First name only — no spaces">
         </div>
         <div class="field">
           <label for="pf-role">Position</label>
@@ -555,6 +556,6 @@
     <div class="wrap">Just For Kix · internal team tool</div>
   </footer>
 
-  <script type="module" src="app.js?v=55"></script>
+  <script type="module" src="app.js?v=56"></script>
 </body>
 </html>

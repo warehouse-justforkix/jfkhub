@@ -552,7 +552,7 @@ els.profileForm.addEventListener("submit", async (e) => {
     return;
   }
   const fields = {
-    name: els.pfName.value.trim(),
+    name: els.pfName.value.trim().split(/\s+/)[0], // first name only
     role: els.pfRole.value,
     avatar: els.pfAvatar.value.trim() || "🙂",
     avatar_options: avatarOptions,
