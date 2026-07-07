@@ -429,7 +429,7 @@ tr.row-off .staff-name { color: var(--ink-soft); }
 @media (max-width: 640px) {
   #punch-table th, #punch-table td { padding: .3rem .12rem; }
   #punch-table .clock-state { font-size: .6rem; padding: .12rem .3rem; }
-  .pend { font-size: .6rem; white-space: normal; }
+  #punch-table .pend { font-size: .6rem; white-space: normal; }
 }
 #punch-table thead th { background: #fdeaf4; color: var(--brand-dark); font-weight: 600; }
 #punch-table .name-col { width: 22%; }
