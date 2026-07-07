@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=28">
+  <link rel="stylesheet" href="style.css?v=29">
 </head>
 <body>
   <header class="site-header">
@@ -172,10 +172,10 @@
       <!-- Left sidebar: team + chats -->
       <aside class="side-col">
         <section id="messages" class="card msg-card">
+          <span id="msg-admin-badge" class="admin-strip hidden">ADMIN ONLY</span>
           <div class="card-head">
             <h2 id="msg-title">Messages <span id="msg-badge" class="msg-badge hidden">●</span></h2>
             <button id="msg-refresh" class="btn-mini" type="button">↻</button>
-            <span id="msg-admin-badge" class="admin-badge hidden">ADMIN ONLY</span>
           </div>
           <p class="hint" id="msg-hint">Private line between you and Karley.</p>
           <ul id="roster" class="roster hidden"></ul>
@@ -190,9 +190,9 @@
 
         <!-- Admin controls (admins only) -->
         <section id="admin" class="card hidden">
+          <span class="admin-strip">ADMIN ONLY</span>
           <div class="card-head">
             <h2>Invitations</h2>
-            <span class="admin-badge">ADMIN ONLY</span>
           </div>
           <p class="hint">Add a team member's email. They open this site, hit "Create account" with that
             email, and set up their own profile.</p>
@@ -220,18 +220,18 @@
 
         <!-- Weekly hours (admins only) -->
         <section id="hours-card" class="card hidden">
+          <span class="admin-strip">ADMIN ONLY</span>
           <div class="card-head">
             <h2>Hours This Week</h2>
-            <span class="admin-badge">ADMIN ONLY</span>
           </div>
           <p class="hint">Worked vs scheduled, lunch deducted. Tap a name to see their week. "…" means still clocked in.</p>
           <div id="hours-acc"><p class="empty-hint">No members yet.</p></div>
         </section>
       <!-- Warnings: private, member + admin only -->
       <section id="warnings-card" class="card">
+        <span class="admin-strip">ADMIN ONLY &amp; ASSOCIATED STAFF MEMBER</span>
         <div class="card-head">
           <h2>Warnings</h2>
-          <span class="admin-badge badge-yellow">ADMIN ONLY &amp; ASSOCIATED STAFF MEMBER</span>
         </div>
         <p class="hint" id="warn-hint">Attendance records (no call/no show, late notice). These are private —
           each staff member sees only their own, and only Karley can add or remove them.</p>
@@ -552,6 +552,6 @@
     <div class="wrap">Just For Kix · internal team tool</div>
   </footer>
 
-  <script type="module" src="app.js?v=28"></script>
+  <script type="module" src="app.js?v=29"></script>
 </body>
 </html>

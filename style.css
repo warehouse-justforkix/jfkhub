@@ -472,8 +472,23 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 .side-col .card-head { cursor: pointer; user-select: none; }
 .side-col .card-head h2::after { content: " ▾"; font-size: .75em; color: var(--ink-soft); }
 .side-col .card.collapsed .card-head h2::after { content: " ▸"; }
-.side-col .card.collapsed > *:not(.card-head) { display: none; }
+.side-col .card.collapsed > *:not(.card-head):not(.admin-strip) { display: none; }
 .side-col .card.collapsed { padding-bottom: 1.1rem; }
+
+/* Yellow admin strip across the top of a card */
+.admin-strip {
+  display: block;
+  background: #ffe9a8;
+  color: #7a5c00;
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-align: center;
+  padding: .3rem .6rem;
+  margin: -1.2rem -1.3rem .8rem;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.admin-strip.hidden { display: none; }
 
 /* Two-column layout: main content + messages sidebar */
 .layout { display: flex; gap: 1.2rem; align-items: flex-start; }
