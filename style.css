@@ -198,7 +198,7 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
 @media (max-width: 640px) {
   #note-form .field select, #note-form .field input { font-size: .72rem; padding: .35rem .35rem; }
   #note-form input::placeholder { font-size: .72rem; }
-  #note-form .field:first-child { grid-column: 1 / -1; } /* Type dropdown gets a full row */
+  #note-form { column-gap: .5rem; } /* a touch more room so dropdown labels fit */
 }
 .field-submit { grid-column: span 1; }
 .form-status { min-height: 1.2em; font-size: .85rem; color: var(--brand-dark); margin: .5rem 0 0; }
