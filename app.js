@@ -73,6 +73,8 @@ const els = {
   calPrev: $("cal-prev"),
   calNext: $("cal-next"),
   form: $("note-form"),
+  nfVisField: $("nf-vis-field"),
+  nfVis: $("nf-vis"),
   postingAs: $("posting-as"),
   nfType: $("nf-type"),
   nfStart: $("nf-start"),
@@ -406,6 +408,7 @@ async function route() {
       : "Everyone's current weekly hours. You can edit your own row.";
     els.navAdmin.classList.toggle("hidden", !admin);
     els.adminSection.classList.toggle("hidden", !admin);
+    els.nfVisField.classList.toggle("hidden", !admin);
     els.punchAdmin.classList.remove("hidden"); // everyone sees who's in
     els.punchFixHint.classList.toggle("hidden", admin);
     if (!admin) els.punchReqs.classList.add("hidden"); // shown by renderPunchRequests when pending exist
@@ -1596,7 +1599,7 @@ function renderNotes() {
       return `<li class="${isPast ? "past" : ""}">
         <span class="note-date">${noteDateLabel(n)}</span>
         <span class="note-type type-${n.note_type}">${TYPE_LABELS[n.note_type] || n.note_type}</span>
-        <span class="note-name">${esc(n.staff_name)}</span>
+        <span class="note-name">${esc(n.staff_name)}${n.visibility === "admin" ? ' <span title="Only visible to you">🔒</span>' : ""}</span>
         ${n.event_time ? `<span class="note-details">${esc(n.event_time)}</span>` : ""}
         ${n.details ? `<span class="note-details">${esc(n.details)}</span>` : ""}
         <button class="note-delete" data-id="${n.id}" title="Remove this entry" aria-label="Remove entry">✕</button>
@@ -1650,7 +1653,7 @@ function renderCalendar() {
       .slice(0, 4)
       .map(
         (n) =>
-          `<div class="cal-chip type-${n.note_type}" title="${esc(n.staff_name)} — ${TYPE_LABELS[n.note_type]}${n.event_time ? " " + esc(n.event_time) : ""}${n.details ? ": " + esc(n.details) : ""}">${esc(n.staff_name)}${n.note_type === "meeting" && n.event_time ? " · " + esc(n.event_time) : ""}</div>`
+          `<div class="cal-chip type-${n.note_type}" title="${esc(n.staff_name)} — ${TYPE_LABELS[n.note_type]}${n.event_time ? " " + esc(n.event_time) : ""}${n.details ? ": " + esc(n.details) : ""}${n.visibility === "admin" ? " (only visible to you)" : ""}">${n.visibility === "admin" ? "🔒 " : ""}${esc(n.staff_name)}${n.note_type === "meeting" && n.event_time ? " · " + esc(n.event_time) : ""}</div>`
       )
       .join("");
     const more = dayNotes.length > 4 ? `<div class="cal-more">+${dayNotes.length - 4} more</div>` : "";
@@ -1708,6 +1711,7 @@ els.form.addEventListener("submit", async (e) => {
     end_date: end,
     event_time: els.nfTime.value.trim() || null,
     details: els.nfDetails.value.trim() || null,
+    visibility: myProfile.is_admin ? els.nfVis.value : "team",
   });
 
   if (error) {

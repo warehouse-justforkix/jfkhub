@@ -41,6 +41,7 @@ create table if not exists member_hours (
 );
 
 -- Calendar entries: time off, changed hours, meetings, notes.
+-- visibility 'admin' = a "view only" entry the admin posts for herself.
 create table if not exists schedule_notes (
   id uuid primary key default gen_random_uuid(),
   staff_name text not null,
@@ -49,6 +50,7 @@ create table if not exists schedule_notes (
   end_date date,
   event_time text,                      -- freeform, mainly for meetings ("2:00–3:00 PM")
   details text,
+  visibility text not null default 'team' check (visibility in ('team', 'admin')),
   created_at timestamptz not null default now()
 );
 
@@ -291,9 +293,12 @@ create policy "own or admin update hours" on member_hours for update
 create policy "admin delete hours" on member_hours for delete
   to authenticated using (public.is_admin());
 
--- calendar entries: members only (small team — everyone can do everything).
-create policy "member all notes" on schedule_notes for all
-  to authenticated using (public.is_member()) with check (public.is_member());
+-- calendar entries: members see/edit team entries; admin-only entries are
+-- invisible to everyone but admins.
+create policy "member notes" on schedule_notes for all
+  to authenticated
+  using (public.is_member() and (visibility = 'team' or public.is_admin()))
+  with check (public.is_member() and (visibility = 'team' or public.is_admin()));
 
 -- tasks: strictly team-scoped — you see your assigned team's board; admins see both.
 create policy "team tasks" on tasks for all
