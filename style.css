@@ -53,6 +53,8 @@ body {
 
 /* Page routing */
 .route-hidden { display: none !important; }
+.hub-hidden { display: none !important; }
+.rs-board .cl-item { flex-wrap: wrap; }
 .layout.sidebar-only .main-col { display: none; }
 .layout.sidebar-only .side-col { width: 100%; max-width: 640px; margin: 0 auto; position: static; }
 .home-link { color: inherit; text-decoration: none; display: block; }

@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=21">
+  <link rel="stylesheet" href="style.css?v=22">
 </head>
 <body>
   <header class="site-header">
@@ -44,6 +44,7 @@
         <a href="#calendar">Calendar</a>
         <a href="#announcements">Announcements</a>
         <a href="#tasks">Task Board</a>
+        <a href="#restocking" id="nav-restocking">Restocking</a>
         <a href="#checklists">Checklists</a>
         <a href="#supplies">Supplies</a>
       </nav>
@@ -430,6 +431,31 @@
         </div>
       </section>
 
+      <!-- Restocking list -->
+      <section id="restocking" class="card">
+        <div class="card-head">
+          <h2>Restocking</h2>
+        </div>
+        <p class="hint">Notice something running low on the floor? Add it here so it gets restocked — anyone can
+          assign themselves and check it off.</p>
+        <div class="cl-admin-form">
+          <input id="rs-item" type="text" maxlength="120" placeholder="What needs restocking? e.g. Small poly mailers at station 2">
+          <input id="rs-note" type="text" maxlength="200" placeholder="Qty / location (optional)">
+          <button id="rs-add" class="btn btn-primary" type="button">Add</button>
+        </div>
+        <p id="rs-status" class="form-status" role="status"></p>
+        <div class="board cl-board rs-board">
+          <div class="board-col">
+            <h3>To Restock <span id="rs-count" class="col-count"></span></h3>
+            <ul id="rs-open" class="cl-list"><li class="empty">Loading…</li></ul>
+          </div>
+          <div class="board-col">
+            <h3>Restocked <span class="col-sub">(last 7 days)</span></h3>
+            <ul id="rs-done" class="cl-list"><li class="empty">—</li></ul>
+          </div>
+        </div>
+      </section>
+
       <!-- Daily & weekly checklists -->
       <section id="checklists" class="card">
         <div class="card-head">
@@ -516,6 +542,6 @@
     <div class="wrap">Just For Kix · internal team tool</div>
   </footer>
 
-  <script type="module" src="app.js?v=21"></script>
+  <script type="module" src="app.js?v=22"></script>
 </body>
 </html>

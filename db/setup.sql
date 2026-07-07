@@ -112,6 +112,18 @@ create table if not exists warnings (
   created_at timestamptz not null default now()
 );
 
+-- Restocking list (warehouse floor): anyone adds, assigns themselves, completes.
+create table if not exists restock_items (
+  id uuid primary key default gen_random_uuid(),
+  item text not null,
+  note text,
+  requested_by text not null,
+  assigned_to text,
+  status text not null default 'open' check (status in ('open', 'done')),
+  created_at timestamptz not null default now(),
+  completed_at timestamptz
+);
+
 -- Supplies-to-order list: needed → ordered → received.
 create table if not exists supply_requests (
   id uuid primary key default gen_random_uuid(),
@@ -211,6 +223,10 @@ create policy "member checklist checks" on checklist_checks for all
 
 alter table supply_requests enable row level security;
 create policy "member all supplies" on supply_requests for all
+  to authenticated using (public.is_member()) with check (public.is_member());
+
+alter table restock_items enable row level security;
+create policy "member all restock" on restock_items for all
   to authenticated using (public.is_member()) with check (public.is_member());
 
 alter table warnings enable row level security;

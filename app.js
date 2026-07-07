@@ -151,6 +151,9 @@ function setHub(hub) {
     b.classList.toggle("active", b.dataset.hub === hub)
   );
   els.clTeam.value = hub;
+  // Restocking is a warehouse-floor feature
+  $("restocking").classList.toggle("hub-hidden", hub === "support");
+  $("nav-restocking").classList.toggle("hub-hidden", hub === "support");
   setTeam(hub);          // task board follows the hub
   renderSchedules();
   renderPunchTable();
@@ -591,10 +594,92 @@ async function loadEverything() {
     loadMessages(),
     loadChecklists(),
     loadSupplies(),
+    loadRestock(),
     loadWarnings(),
     loadAdmin(),
   ]);
 }
+
+// ---------- restocking list ----------
+
+let restock = [];
+
+async function loadRestock() {
+  const { data, error } = await supabase
+    .from("restock_items")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) {
+    $("rs-open").innerHTML = `<li class="empty">Couldn't load: ${esc(error.message)}</li>`;
+    return;
+  }
+  restock = data;
+  renderRestock();
+}
+
+function restockLine(r) {
+  const mine = r.assigned_to === myProfile.name;
+  const buttons =
+    r.status === "open"
+      ? [
+          !r.assigned_to ? `<button class="btn-mini primary" data-rs-claim="${r.id}">I'll do it</button>` : "",
+          mine ? `<button class="btn-mini" data-rs-unclaim="${r.id}">Unclaim</button>` : "",
+          `<button class="btn-mini ${r.assigned_to ? "primary" : ""}" data-rs-done="${r.id}">Done ✓</button>`,
+        ].filter(Boolean).join("")
+      : `<button class="btn-mini" data-rs-reopen="${r.id}">Reopen</button>`;
+  return `<li class="cl-item ${r.status === "done" ? "done" : ""}">
+    <span class="cl-label" style="flex:1;text-align:left"><b>${esc(r.item)}</b>${r.note ? ` — ${esc(r.note)}` : ""}
+      <span class="cl-by" style="color:var(--ink-soft)">· ${esc(r.requested_by)}</span>
+      ${r.assigned_to ? `<span class="task-owner">${nameWithAvatar(r.assigned_to)}</span>` : ""}</span>
+    ${buttons}
+    <button class="note-delete" data-rs-del="${r.id}" title="Remove">✕</button>
+  </li>`;
+}
+
+function renderRestock() {
+  const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+  const open = restock.filter((r) => r.status === "open");
+  const done = restock.filter((r) => r.status === "done" && (r.completed_at || "") >= weekAgo);
+  $("rs-open").innerHTML = open.length ? open.map(restockLine).join("") : `<li class="empty">Nothing waiting to be restocked. 🎉</li>`;
+  $("rs-done").innerHTML = done.length ? done.map(restockLine).join("") : `<li class="empty">Nothing restocked this week yet.</li>`;
+  $("rs-count").textContent = open.length ? `(${open.length})` : "";
+}
+
+$("rs-add").addEventListener("click", async () => {
+  const item = $("rs-item").value.trim();
+  if (!item) return;
+  const { error } = await supabase.from("restock_items").insert({
+    item,
+    note: $("rs-note").value.trim() || null,
+    requested_by: myProfile.name,
+  });
+  if (error) {
+    setStatus($("rs-status"), `Couldn't add: ${error.message}`, true);
+    return;
+  }
+  $("rs-item").value = "";
+  $("rs-note").value = "";
+  setStatus($("rs-status"), "Added to the restock list! ✔");
+  await loadRestock();
+});
+
+$("restocking").addEventListener("click", async (e) => {
+  const act = (attr) => e.target.closest(`button[${attr}]`)?.getAttribute(attr);
+  const claim = act("data-rs-claim");
+  const unclaim = act("data-rs-unclaim");
+  const done = act("data-rs-done");
+  const reopen = act("data-rs-reopen");
+  const del = act("data-rs-del");
+  if (claim) await supabase.from("restock_items").update({ assigned_to: myProfile.name }).eq("id", claim);
+  else if (unclaim) await supabase.from("restock_items").update({ assigned_to: null }).eq("id", unclaim);
+  else if (done) await supabase.from("restock_items").update({ status: "done", assigned_to: myProfile.name, completed_at: new Date().toISOString() }).eq("id", done);
+  else if (reopen) await supabase.from("restock_items").update({ status: "open", completed_at: null }).eq("id", reopen);
+  else if (del) {
+    if (!confirm("Remove this restock item?")) return;
+    await supabase.from("restock_items").delete().eq("id", del);
+  } else return;
+  await loadRestock();
+});
 
 // ---------- warnings (private: the member + admins only) ----------
 
@@ -2049,9 +2134,9 @@ function maybeAskNotifications() {
 
 // ---------- page routing (nav buttons = pages; logo = homepage) ----------
 
-const PAGE_ROUTES = ["home", "clock", "calendar", "schedules", "announcements", "tasks", "checklists", "supplies", "messages", "admin"];
+const PAGE_ROUTES = ["home", "clock", "calendar", "schedules", "announcements", "tasks", "restocking", "checklists", "supplies", "messages", "admin"];
 const HOME_ONLY = ["today-callout", "reminders", "warnings-card"];
-const MAIN_SECTIONS = ["today-callout", "reminders", "clock", "calendar", "schedules", "announcements", "tasks", "checklists", "supplies", "warnings-card"];
+const MAIN_SECTIONS = ["today-callout", "reminders", "clock", "calendar", "schedules", "announcements", "tasks", "restocking", "checklists", "supplies", "warnings-card"];
 
 function currentPage() {
   const h = (location.hash || "#home").slice(1);
