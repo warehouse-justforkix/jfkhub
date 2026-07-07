@@ -406,7 +406,7 @@ async function route() {
     $("chip-msg-label").textContent = admin ? "Admin Messages" : "Message Karley";
     els.msgHint.textContent = admin
       ? "Your team — tap a person to open their private chat."
-      : "Private line to the admins — only you and they can see this thread.";
+      : "Private message Karley (admin) - only you and her can see this thread.";
     els.roster.classList.toggle("hidden", !admin);
     els.msgThread.classList.toggle("hidden", admin);
     els.msgForm.classList.toggle("hidden", admin);
