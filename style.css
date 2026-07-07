@@ -549,7 +549,7 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 .side-col { width: 330px; flex-shrink: 0; position: sticky; top: 1rem; }
 .msg-card .msg-thread { max-height: 46vh; }
 @media (max-width: 1080px) {
-  .layout { flex-direction: column; }
+  .layout { flex-direction: column; gap: 0; }
   .side-col { width: 100%; position: static; }
 }
 
