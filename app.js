@@ -1964,7 +1964,7 @@ function renderAdmin() {
         .map(
           (i) => `<li>
             <span>${esc(i.email)}
-              ${i.is_admin ? '<span class="role-badge role-full-time">ADMIN</span>' : teamBadge(i.support_access)}</span>
+              ${i.is_admin ? '<span class="role-badge badge-admin">ADMIN</span>' : teamBadge(i.support_access)}</span>
             <button class="btn-mini danger" data-uninvite="${esc(i.email)}">Remove</button>
           </li>`
         )
@@ -1977,7 +1977,7 @@ function renderAdmin() {
           (p) => `<li>
             <span>${nameWithAvatar(p.name)}
               <span class="role-badge role-${p.role}">${p.role === "full-time" ? "FT" : "PT"}</span>
-              ${p.is_admin ? '<span class="role-badge role-full-time">ADMIN</span>' : teamBadge(p.support_access, p.warehouse_access)}
+              ${p.is_admin ? '<span class="role-badge badge-admin">ADMIN</span>' : teamBadge(p.support_access, p.warehouse_access)}
             </span>
             <span class="admin-actions">
               ${p.is_admin ? "" : `<select class="team-select" data-teamsel="${p.id}">

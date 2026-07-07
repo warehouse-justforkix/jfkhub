@@ -129,6 +129,7 @@ main { padding: 1.4rem 0 2.5rem; }
   vertical-align: middle;
 }
 .role-full-time { background: #fbdcec; color: var(--brand-dark); }
+.badge-admin { background: #ffe9a8; color: #7a5c00; }
 .role-part-time { background: #fde7f1; color: #a3126a; }
 td.cell-off { color: var(--ink-soft); font-style: italic; }
 
