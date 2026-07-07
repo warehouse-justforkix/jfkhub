@@ -377,8 +377,9 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
   .admin-quick { grid-area: quick; justify-self: end; align-self: start; margin-top: .3rem; }
   .user-chip { padding: .3rem .5rem; font-size: .78rem; gap: .35rem; }
   .user-chip #user-name { max-width: 6.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .user-chip .btn-mini { font-size: .72rem; padding: .2rem .5rem; }
-  .admin-quick a { font-size: .7rem; padding: .2rem .5rem; }
+  /* Match the nav pills (Time Clock, Schedule, …) */
+  .user-chip .btn-mini { font-size: .85rem; font-weight: 600; padding: .3rem .8rem; }
+  .admin-quick a { font-size: .85rem; font-weight: 600; padding: .3rem .8rem; }
 }
 
 /* Auth / profile cards */
