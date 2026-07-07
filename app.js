@@ -408,6 +408,8 @@ async function route() {
       ? "Your team — tap a person to open their private chat."
       : "Private line to the admins — only you and they can see this thread.";
     els.roster.classList.toggle("hidden", !admin);
+    els.msgThread.classList.toggle("hidden", admin);
+    els.msgForm.classList.toggle("hidden", admin);
     els.clAdminForm.classList.toggle("hidden", !admin);
     const bothTeams = prof.support_access && prof.warehouse_access !== false;
     $("hub-toggle").classList.toggle("hidden", !(admin || bothTeams));
@@ -1819,6 +1821,20 @@ function currentThreadMemberId() {
   return myProfile.is_admin ? currentThreadId : myProfile.id;
 }
 
+function threadHtml(memberId) {
+  const thread = messages.filter((m) => m.member_id === memberId);
+  if (!thread.length) return `<li class="empty">No messages yet.</li>`;
+  return thread
+    .map((m) => {
+      const mine = myProfile.is_admin ? m.from_admin : !m.from_admin;
+      return `<li class="msg ${mine ? "msg-mine" : "msg-theirs"}">
+        <div class="msg-meta">${nameWithAvatar(m.sender_name)} · ${fmtTime(m.created_at)} ${new Date(m.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+        <div class="msg-bubble">${esc(m.body)}</div>
+      </li>`;
+    })
+    .join("");
+}
+
 function renderRoster() {
   if (!myProfile?.is_admin) return;
   const members = staff.filter((p) => p.id !== myProfile.id);
@@ -1826,16 +1842,25 @@ function renderRoster() {
     els.roster.innerHTML = `<li class="empty">No team members yet — invite them in the Admin section below.</li>`;
     return;
   }
-  if (!currentThreadId || !members.some((m) => m.id === currentThreadId)) {
-    currentThreadId = members[0].id;
-  }
+  // preserve which chats are open across re-renders
+  const open = new Set([...els.roster.querySelectorAll("details[open]")].map((d) => d.dataset.id));
+
   const item = (p) => {
     const presence = presenceOf(p.id);
-    return `<li class="roster-item ${p.id === currentThreadId ? "active" : ""}" data-id="${p.id}">
-      <span class="roster-avatar presence-${presence}">${avatarHtml(p)}</span>
-      <span class="roster-name">${esc(p.name)}</span>
-      ${threadUnread(p.id) ? '<span class="unread-dot">●</span>' : ""}
-    </li>`;
+    return `<li><details class="chat-acc" data-id="${p.id}" ${open.has(p.id) ? "open" : ""}>
+      <summary>
+        <span class="roster-avatar presence-${presence}">${avatarHtml(p)}</span>
+        <span class="roster-name">${esc(p.name)}</span>
+        ${threadUnread(p.id) ? '<span class="msg-pop-inline">💬</span>' : ""}
+      </summary>
+      <div class="chat-body">
+        <ul class="msg-thread chat-thread">${threadHtml(p.id)}</ul>
+        <form class="msg-form" data-member="${p.id}">
+          <input type="text" maxlength="1000" required placeholder="Type a message…">
+          <button class="btn btn-primary" type="submit">Send</button>
+        </form>
+      </div>
+    </details></li>`;
   };
   const warehouse = members.filter((p) => p.warehouse_access !== false);
   const support = members.filter((p) => p.support_access);
@@ -1846,14 +1871,46 @@ function renderRoster() {
     (support.length
       ? `<li class="roster-group">Customer Support Team</li>` + support.map(item).join("")
       : "");
+  els.roster.querySelectorAll(".chat-thread").forEach((ul) => (ul.scrollTop = ul.scrollHeight));
 }
 
-els.roster.addEventListener("click", (e) => {
-  const item = e.target.closest(".roster-item");
-  if (!item) return;
-  currentThreadId = item.dataset.id;
-  renderThread();
-  renderRoster();
+// Opening a chat marks it read; sending goes to that member's thread.
+els.roster.addEventListener(
+  "toggle",
+  (e) => {
+    const d = e.target;
+    if (!d.matches?.("details.chat-acc") || !d.open) return;
+    localStorage.setItem(threadSeenKey(d.dataset.id), new Date().toISOString());
+    d.querySelector(".msg-pop-inline")?.remove();
+    const ul = d.querySelector(".chat-thread");
+    if (ul) ul.scrollTop = ul.scrollHeight;
+    const anyUnread = staff.some((p) => p.id !== myProfile.id && threadUnread(p.id));
+    els.msgBadge.classList.toggle("hidden", !anyUnread);
+    $("chip-msg-dot").classList.toggle("hidden", !anyUnread);
+  },
+  true
+);
+
+els.roster.addEventListener("submit", async (e) => {
+  const form = e.target.closest("form[data-member]");
+  if (!form) return;
+  e.preventDefault();
+  const input = form.querySelector("input");
+  const body = input.value.trim();
+  if (!body) return;
+  const { error } = await supabase.from("messages").insert({
+    member_id: form.dataset.member,
+    from_admin: true,
+    sender_name: myProfile.name,
+    body,
+  });
+  if (error) {
+    alert(`Couldn't send: ${error.message}`);
+    return;
+  }
+  input.value = "";
+  localStorage.setItem(threadSeenKey(form.dataset.member), new Date().toISOString());
+  await loadMessages();
 });
 
 async function loadMessages() {
@@ -1877,12 +1934,8 @@ async function loadMessages() {
 }
 
 function renderThread() {
+  if (myProfile.is_admin) return; // admin uses the per-contact accordions
   const memberId = currentThreadMemberId();
-  if (myProfile.is_admin) {
-    const person = staff.find((p) => p.id === memberId);
-    els.threadWith.classList.toggle("hidden", !person);
-    if (person) els.threadWith.innerHTML = `Chat with ${nameWithAvatar(person.name)}`;
-  }
   const thread = messages.filter((m) => m.member_id === memberId);
   if (!memberId || !thread.length) {
     els.msgThread.innerHTML = `<li class="empty">No messages yet${myProfile.is_admin ? "" : " — say hi!"}</li>`;
