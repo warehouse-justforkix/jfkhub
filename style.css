@@ -693,6 +693,19 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
   background: linear-gradient(120deg, rgba(122, 0, 63, .93), rgba(204, 0, 111, .93));
   animation: goodbye-fade 4.5s ease forwards;
   cursor: pointer;
+  overflow: hidden;
+}
+.goodbye .confetti {
+  position: absolute;
+  top: -4vh;
+  border-radius: 2px;
+  animation-name: confetti-fall;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes confetti-fall {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--drift, 0vw), 108vh) rotate(720deg); opacity: .85; }
 }
 .goodbye-inner {
   color: #ffe9a8;

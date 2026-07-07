@@ -1123,7 +1123,16 @@ function showGoodbye() {
   document.querySelector(".goodbye")?.remove();
   const div = document.createElement("div");
   div.className = "goodbye";
-  div.innerHTML = `<div class="goodbye-inner">🌸 Have a great day, ${esc(myProfile.name)}! 🌸</div>`;
+  const colors = ["#e5007d", "#ff4fa5", "#ffe9a8", "#7ec8e3", "#9be89b", "#c9a0ff", "#fff"];
+  const confetti = Array.from({ length: 100 }, (_, i) => {
+    const left = Math.random() * 100;
+    const delay = Math.random() * 1.2;
+    const dur = 2.4 + Math.random() * 2;
+    const size = 6 + Math.random() * 7;
+    const drift = (Math.random() * 16 - 8).toFixed(1);
+    return `<span class="confetti" style="left:${left}%;width:${size}px;height:${(size * 0.45).toFixed(1)}px;background:${colors[i % colors.length]};animation-delay:${delay.toFixed(2)}s;animation-duration:${dur.toFixed(2)}s;--drift:${drift}vw"></span>`;
+  }).join("");
+  div.innerHTML = `${confetti}<div class="goodbye-inner">🎉 Great Work Today, ${esc(myProfile.name)}! 🎉</div>`;
   document.body.appendChild(div);
   div.addEventListener("click", () => div.remove());
   setTimeout(() => div.remove(), 4500);
