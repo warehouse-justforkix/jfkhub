@@ -664,7 +664,10 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
   color: #7a5c00;
   white-space: normal;
   text-align: center;
-  line-height: 1.3;
+  line-height: 1.25;
+  font-size: .55rem;
+  max-width: 55%;
+  flex-shrink: 1;
 }
 .roster-group {
   font-size: .68rem;
@@ -696,7 +699,15 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 .cl-list .empty { color: var(--ink-soft); font-style: italic; font-size: .88rem; border: none; background: none; }
 #warn-admin-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 #warn-admin-form .field-wide, #warn-admin-form .field-submit { grid-column: span 2; }
-#warn-admin-form .field select, #warn-admin-form .field input { width: 100%; }
+#warn-admin-form .field { min-width: 0; }
+#warn-admin-form .field select, #warn-admin-form .field input {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  font-size: .8rem;
+  padding: .3rem .35rem;
+}
 .warn-item { border-color: #f0b9b3; background: #fff7f6; flex-wrap: wrap; font-size: .85rem; padding: .4rem .55rem; }
 .warn-item .cl-label { line-height: 1.4; }
 
