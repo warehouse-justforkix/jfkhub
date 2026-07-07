@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=71">
+  <link rel="stylesheet" href="style.css?v=72">
 </head>
 <body>
   <header class="site-header">
@@ -270,6 +270,25 @@
       <!-- Personal reminders (opt-in) -->
       <section id="reminders" class="today-callout reminders hidden" aria-live="polite"></section>
 
+      <!-- Who's In: statuses visible to the whole team; punch edits are admin-only -->
+      <section id="whosin" class="card">
+        <div id="punch-admin" class="hidden">
+          <div class="card-head">
+            <h2>Who's In</h2>
+            <label class="show-past">Day: <input id="punch-date" type="date"></label>
+          </div>
+          <div id="punch-list"></div>
+          <p class="hint hidden" id="punch-fix-hint">Missed a punch? Tap a time on your own card to send Karley a correction — it stays pending until she approves it.</p>
+          <div id="my-punch-reqs" class="hidden"></div>
+        </div>
+
+        <!-- Admin-only: pending punch-change requests -->
+        <div id="punch-reqs" class="hidden">
+          <h3>Pending punch changes</h3>
+          <div id="punch-req-list"></div>
+        </div>
+      </section>
+
       <!-- Time clock -->
       <section id="clock" class="card">
         <div class="card-head">
@@ -285,23 +304,6 @@
           <button class="btn btn-ghost" id="undo-punch" type="button">Undo Last</button>
         </div>
         <p id="my-punches" class="my-punches"></p>
-
-        <!-- Everyone's day: statuses visible to the whole team; punch edits are admin-only -->
-        <div id="punch-admin" class="hidden">
-          <div class="notes-head">
-            <h3>Who's in</h3>
-            <label class="show-past">Day: <input id="punch-date" type="date"></label>
-          </div>
-          <div id="punch-list"></div>
-          <p class="hint hidden" id="punch-fix-hint">Missed a punch? Tap a time on your own card to send Karley a correction — it stays pending until she approves it.</p>
-          <div id="my-punch-reqs" class="hidden"></div>
-        </div>
-
-        <!-- Admin-only: pending punch-change requests -->
-        <div id="punch-reqs" class="hidden">
-          <h3>Pending punch changes</h3>
-          <div id="punch-req-list"></div>
-        </div>
       </section>
 
       <!-- Weekly schedules -->
@@ -557,6 +559,6 @@
     <div class="wrap">Just For Kix · internal team tool</div>
   </footer>
 
-  <script type="module" src="app.js?v=71"></script>
+  <script type="module" src="app.js?v=72"></script>
 </body>
 </html>

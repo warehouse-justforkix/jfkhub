@@ -2340,7 +2340,7 @@ function maybeAskNotifications() {
 
 const PAGE_ROUTES = ["home", "clock", "calendar", "schedules", "announcements", "tasks", "restocking", "checklists", "supplies", "messages", "admin"];
 const HOME_ONLY = ["today-callout", "reminders"];
-const MAIN_SECTIONS = ["today-callout", "reminders", "clock", "calendar", "schedules", "announcements", "tasks", "restocking", "checklists", "supplies"];
+const MAIN_SECTIONS = ["today-callout", "reminders", "whosin", "clock", "calendar", "schedules", "announcements", "tasks", "restocking", "checklists", "supplies"];
 
 function currentPage() {
   const h = (location.hash || "#home").slice(1);
@@ -2355,7 +2355,9 @@ function applyPage() {
   MAIN_SECTIONS.forEach((id) => {
     const el = $(id);
     if (!el) return;
-    const show = isHome ? true : !sidebarOnly && page === id && !HOME_ONLY.includes(id);
+    const show = isHome
+      ? true
+      : !sidebarOnly && !HOME_ONLY.includes(id) && (page === id || (page === "clock" && id === "whosin"));
     el.classList.toggle("route-hidden", !show);
   });
   document.querySelector(".layout").classList.toggle("sidebar-only", sidebarOnly);
