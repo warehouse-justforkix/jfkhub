@@ -417,19 +417,38 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
 .st-lunch { background: #fff4e0; color: var(--diff); }
 .st-out { background: #fddfdd; color: #c62828; }
 .st-offday { background: #eee9ec; color: #8a8090; }
-tr.row-off { opacity: .5; }
-tr.row-off .staff-name { color: var(--ink-soft); }
+.row-off { opacity: .5; }
+.row-off .staff-name { color: var(--ink-soft); }
 .punch-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin: .4rem 0 .7rem; }
 .punch-buttons .punch { padding: .38rem .4rem; white-space: nowrap; font-size: .82rem; }
 .punch-buttons #undo-punch { grid-column: 1 / -1; justify-self: start; }
 @media (max-width: 640px) { .punch-buttons { grid-template-columns: repeat(2, 1fr); } }
 .my-punches { font-size: .85rem; color: var(--ink-soft); margin: 0 0 .4rem; }
-#punch-table { border-collapse: collapse; width: 100%; font-size: clamp(.6rem, 2.3vw, .78rem); table-layout: fixed; margin-top: .3rem; }
-#punch-table th, #punch-table td { border: 1px solid var(--line); padding: .4rem .4rem; text-align: left; overflow-wrap: break-word; }
-#punch-table thead th { background: #fdeaf4; color: var(--brand-dark); font-weight: 600; }
-#punch-table .name-col { width: 22%; }
-#punch-table th:nth-child(2), #punch-table td:nth-child(2) { width: 19%; }
-#punch-table .clock-state { white-space: normal; display: inline-block; line-height: 1.25; padding: .15rem .5rem; font-size: .72rem; }
+/* Who's in: one card per person (admin cards collapse) */
+#punch-list { margin-top: .3rem; font-size: .8rem; }
+.punch-person, details.punch-acc {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: .5rem .65rem;
+  margin-bottom: .5rem;
+  background: #fff;
+}
+.punch-person-flat, .punch-person-head, details.punch-acc summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+}
+details.punch-acc { padding: 0; }
+details.punch-acc summary { padding: .5rem .65rem; cursor: pointer; list-style: none; }
+details.punch-acc summary::-webkit-details-marker { display: none; }
+details.punch-acc summary .staff-name::after { content: " ▸"; color: var(--ink-soft); font-size: .8rem; }
+details.punch-acc[open] summary .staff-name::after { content: " ▾"; }
+details.punch-acc .punch-rows { padding: 0 .65rem .55rem; }
+#punch-list .clock-state { white-space: normal; display: inline-block; line-height: 1.25; padding: .15rem .5rem; font-size: .72rem; text-align: center; }
+.punch-rows { margin-top: .3rem; display: grid; gap: .25rem; }
+.punch-row { display: flex; align-items: baseline; gap: .45rem; }
+.punch-row-label { flex: 0 0 4.6rem; font-weight: 600; color: var(--brand-dark); font-size: .72rem; }
 .punch-cell {
   font: inherit;
   background: none;
@@ -442,33 +461,7 @@ tr.row-off .staff-name { color: var(--ink-soft); }
 .punch-cell:hover { background: #fdeaf4; outline: 1px dashed #eab4d1; }
 .punch-cell-ro { cursor: default; }
 .punch-cell-ro:hover { background: none; outline: none; }
-.pend { color: #b8860b; font-size: .78rem; white-space: nowrap; }
-
-/* Mobile: each person becomes a mini card with the four punches stacked */
-@media (max-width: 640px) {
-  #punch-table, #punch-table tbody { display: block; }
-  #punch-table { font-size: .8rem; }
-  #punch-table thead { display: none; }
-  #punch-table tr {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: .25rem .5rem;
-    align-items: center;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: .5rem .65rem;
-    margin-bottom: .5rem;
-  }
-  #punch-table td, #punch-table .name-col, #punch-table td:nth-child(2) { display: block; border: none; padding: 0; width: auto; }
-  #punch-table td:nth-child(2) { justify-self: end; }
-  #punch-table td:nth-child(n+3) { grid-column: 1 / -1; display: flex; align-items: baseline; gap: .45rem; }
-  #punch-table td:nth-child(n+3)::before { flex: 0 0 4.6rem; font-weight: 600; color: var(--brand-dark); font-size: .72rem; }
-  #punch-table td:nth-child(3)::before { content: "Clock in"; }
-  #punch-table td:nth-child(4)::before { content: "Lunch out"; }
-  #punch-table td:nth-child(5)::before { content: "Lunch in"; }
-  #punch-table td:nth-child(6)::before { content: "Clock out"; }
-  #punch-table .pend { white-space: normal; }
-}
+.pend { color: #b8860b; font-size: .78rem; white-space: normal; }
 
 /* Punch-fix requests */
 #punch-reqs { margin-top: 1rem; }

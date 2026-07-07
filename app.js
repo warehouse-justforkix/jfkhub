@@ -49,7 +49,7 @@ const els = {
   myPunches: $("my-punches"),
   punchAdmin: $("punch-admin"),
   punchDate: $("punch-date"),
-  punchTableBody: document.querySelector("#punch-table tbody"),
+  punchList: $("punch-list"),
   punchFixHint: $("punch-fix-hint"),
   myPunchReqs: $("my-punch-reqs"),
   punchReqs: $("punch-reqs"),
@@ -1027,6 +1027,8 @@ function renderMyClock() {
     : "You haven't clocked in yet today.";
 }
 
+const PUNCH_ROW_LABELS = { in: "Clock in", "lunch-out": "Lunch out", "lunch-in": "Lunch in", out: "Clock out" };
+
 function renderPunchTable() {
   const byMember = {};
   punches.forEach((p) => {
@@ -1038,7 +1040,7 @@ function renderPunchTable() {
   const dow = new Date(day + "T12:00:00").getDay(); // 1–5 = Mon–Fri
   const dayKey = dow >= 1 && dow <= 5 ? DAYS[dow - 1] : null;
 
-  els.punchTableBody.innerHTML = hubMembers()
+  els.punchList.innerHTML = hubMembers()
     .map((s) => {
       const mine = byMember[s.id] || {};
       const lastType = [...PUNCH_ORDER].reverse().find((t) => mine[t]) || "none";
@@ -1049,27 +1051,50 @@ function renderPunchTable() {
         (n) => n.note_type === "out" && n.staff_name === s.name && n.start_date <= day && noteEnd(n) >= day
       );
       const isOff = lastType === "none" && (timeOff || !scheduled);
+      const self = s.id === myProfile.id;
 
+      // Members see simple presence bubbles for teammates; admin sees full statuses.
+      if (!myProfile.is_admin) {
+        const inOffice = lastType === "in" || lastType === "lunch-in";
+        const bubble = `<span class="clock-state ${inOffice ? "st-in" : "st-out"}">${inOffice ? "In Office" : "Out of Office"}</span>`;
+        if (!self) {
+          return `<div class="punch-person punch-person-flat ${isOff ? "row-off" : ""}">
+            <span class="staff-name">${nameWithAvatar(s.name)}</span>${bubble}
+          </div>`;
+        }
+        const rows = PUNCH_ORDER.map((t) => {
+          const pend = pendingFor(s.id, t);
+          const shown = mine[t]
+            ? fmtTime(mine[t]) + (pend ? ` <span class="pend" title="Change to ${fmtTime(pend.requested_time)} awaiting approval">⏳</span>` : "")
+            : pend
+              ? `<span class="pend" title="Awaiting Karley's approval">⏳ ${fmtTime(pend.requested_time)}</span>`
+              : '<span class="cell-off">—</span>';
+          return `<div class="punch-row"><span class="punch-row-label">${PUNCH_ROW_LABELS[t]}</span><button class="punch-cell" data-member="${s.id}" data-mname="${esc(s.name)}" data-ptype="${t}" title="Tap to request a fix">${shown}</button></div>`;
+        }).join("");
+        return `<div class="punch-person ${isOff ? "row-off" : ""}">
+          <div class="punch-person-head"><span class="staff-name">${nameWithAvatar(s.name)}</span>${bubble}</div>
+          <div class="punch-rows">${rows}</div>
+        </div>`;
+      }
+
+      // Admin: collapsible per person — status on the summary, punches inside.
       const status = isOff
         ? { label: timeOff ? "Time off" : "Off today", cls: "st-offday" }
         : STATUS_AFTER[lastType];
-      const canTap = myProfile.is_admin || s.id === myProfile.id;
-      const cells = PUNCH_ORDER.map((t) => {
+      const rows = PUNCH_ORDER.map((t) => {
         const pend = pendingFor(s.id, t);
         const shown = mine[t]
           ? fmtTime(mine[t]) + (pend ? ` <span class="pend" title="Change to ${fmtTime(pend.requested_time)} awaiting approval">⏳</span>` : "")
           : pend
             ? `<span class="pend" title="Awaiting Karley's approval">⏳ ${fmtTime(pend.requested_time)}</span>`
             : '<span class="cell-off">—</span>';
-        return canTap
-          ? `<td><button class="punch-cell" data-member="${s.id}" data-mname="${esc(s.name)}" data-ptype="${t}" title="${myProfile.is_admin ? "Tap to set or fix this punch" : "Tap to request a fix"}">${shown}</button></td>`
-          : `<td><span class="punch-cell punch-cell-ro">${shown}</span></td>`;
+        return `<div class="punch-row"><span class="punch-row-label">${PUNCH_ROW_LABELS[t]}</span><button class="punch-cell" data-member="${s.id}" data-mname="${esc(s.name)}" data-ptype="${t}" title="Tap to set or fix this punch">${shown}</button></div>`;
       }).join("");
-      return `<tr class="${isOff ? "row-off" : ""}">
-        <td class="name-col"><span class="staff-name">${nameWithAvatar(s.name)}</span></td>
-        <td><span class="clock-state ${status.cls}">${status.label}</span></td>
-        ${cells}
-      </tr>`;
+      const wasOpen = els.punchList.querySelector(`details[data-person="${s.id}"]`)?.open;
+      return `<details class="punch-acc ${isOff ? "row-off" : ""}" data-person="${s.id}" ${wasOpen ? "open" : ""}>
+        <summary><span class="staff-name">${nameWithAvatar(s.name)}</span><span class="clock-state ${status.cls}">${status.label}</span></summary>
+        <div class="punch-rows">${rows}</div>
+      </details>`;
     })
     .join("");
 }
@@ -1127,7 +1152,7 @@ function parseClockTime(str) {
   return h * 60 + mins;
 }
 
-document.querySelector("#punch-table").addEventListener("click", async (e) => {
+document.querySelector("#punch-list").addEventListener("click", async (e) => {
   const cell = e.target.closest("button.punch-cell");
   if (!cell || !myProfile) return;
   const day = els.punchDate.value || todayStr();
