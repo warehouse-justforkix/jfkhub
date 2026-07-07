@@ -422,7 +422,7 @@ tr.row-off .staff-name { color: var(--ink-soft); }
 .punch-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin: .4rem 0 .7rem; }
 .punch-buttons .punch { padding: .38rem .4rem; white-space: nowrap; font-size: .82rem; }
 .punch-buttons #undo-punch { grid-column: 1 / -1; justify-self: start; }
-@media (max-width: 640px) { .punch-buttons { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .punch-buttons { grid-template-columns: 1fr; } }
 .my-punches { font-size: .85rem; color: var(--ink-soft); margin: 0 0 .4rem; }
 #punch-table { border-collapse: collapse; width: 100%; font-size: clamp(.6rem, 2.3vw, .78rem); table-layout: fixed; margin-top: .3rem; }
 #punch-table th, #punch-table td { border: 1px solid var(--line); padding: .4rem .4rem; text-align: left; overflow-wrap: break-word; }
