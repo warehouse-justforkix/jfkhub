@@ -539,7 +539,17 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 .msg-card .msg-thread { max-height: 46vh; }
 @media (max-width: 1080px) {
   .layout { flex-direction: column; }
-  .side-col { width: 100%; position: static; }
+  .side-col {
+    width: 100%;
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+    align-items: start;
+  }
+  .side-col .card { margin-bottom: 0; }
+  /* On a dedicated page (Admin Messages / Admin Directory) let the shown cards use full rows */
+  .layout.sidebar-only .side-col { grid-template-columns: 1fr; }
 }
 
 /* User chip avatar + profile editing */
