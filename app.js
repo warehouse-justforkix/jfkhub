@@ -934,16 +934,30 @@ function renderPunchTable() {
   punches.forEach((p) => {
     (byMember[p.profile_id] = byMember[p.profile_id] || {})[p.punch_type] = p.punched_at;
   });
+  const day = els.punchDate.value || todayStr();
+  const dow = new Date(day + "T12:00:00").getDay(); // 1–5 = Mon–Fri
+  const dayKey = dow >= 1 && dow <= 5 ? DAYS[dow - 1] : null;
+
   els.punchTableBody.innerHTML = hubMembers()
     .map((s) => {
       const mine = byMember[s.id] || {};
       const lastType = [...PUNCH_ORDER].reverse().find((t) => mine[t]) || "none";
-      const status = STATUS_AFTER[lastType];
+
+      // Off that day? (no scheduled hours, or time-off on the calendar)
+      const scheduled = dayKey ? ((hoursById[s.id] || {})[dayKey] || "").trim() : "";
+      const timeOff = notes.some(
+        (n) => n.note_type === "out" && n.staff_name === s.name && n.start_date <= day && noteEnd(n) >= day
+      );
+      const isOff = lastType === "none" && (timeOff || !scheduled);
+
+      const status = isOff
+        ? { label: timeOff ? "Time off" : "Off today", cls: "st-offday" }
+        : STATUS_AFTER[lastType];
       const cells = PUNCH_ORDER.map(
         (t) =>
           `<td><button class="punch-cell" data-member="${s.id}" data-mname="${esc(s.name)}" data-ptype="${t}" title="Tap to set or fix this punch">${mine[t] ? fmtTime(mine[t]) : '<span class="cell-off">—</span>'}</button></td>`
       ).join("");
-      return `<tr>
+      return `<tr class="${isOff ? "row-off" : ""}">
         <td class="name-col"><span class="staff-name">${nameWithAvatar(s.name)}</span></td>
         <td><span class="clock-state ${status.cls}">${status.label}</span></td>
         ${cells}

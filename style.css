@@ -359,6 +359,9 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
 .st-in { background: #d9f2db; color: #157347; }
 .st-lunch { background: #fff4e0; color: var(--diff); }
 .st-out { background: #fddfdd; color: #c62828; }
+.st-offday { background: #eee9ec; color: #8a8090; }
+tr.row-off { opacity: .5; }
+tr.row-off .staff-name { color: var(--ink-soft); }
 .punch-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin: .4rem 0 .7rem; }
 .punch-buttons .punch { padding: .38rem .4rem; white-space: nowrap; font-size: .82rem; }
 .punch-buttons #undo-punch { grid-column: 1 / -1; justify-self: start; }
