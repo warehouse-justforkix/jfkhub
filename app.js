@@ -940,7 +940,8 @@ function renderPunchTable() {
       const lastType = [...PUNCH_ORDER].reverse().find((t) => mine[t]) || "none";
       const status = STATUS_AFTER[lastType];
       const cells = PUNCH_ORDER.map(
-        (t) => `<td>${mine[t] ? fmtTime(mine[t]) : '<span class="cell-off">—</span>'}</td>`
+        (t) =>
+          `<td><button class="punch-cell" data-member="${s.id}" data-mname="${esc(s.name)}" data-ptype="${t}" title="Tap to set or fix this punch">${mine[t] ? fmtTime(mine[t]) : '<span class="cell-off">—</span>'}</button></td>`
       ).join("");
       return `<tr>
         <td class="name-col"><span class="staff-name">${nameWithAvatar(s.name)}</span></td>
@@ -987,6 +988,64 @@ els.undoPunch.addEventListener("click", async () => {
 });
 
 els.punchDate.addEventListener("change", loadPunches);
+
+// ---------- admin punch corrections ----------
+
+// "8:00 AM" / "4:30 pm" / "16:30" → minutes since midnight, or null.
+function parseClockTime(str) {
+  const m = /^\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*$/i.exec(str || "");
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const mins = m[2] ? parseInt(m[2], 10) : 0;
+  const mer = (m[3] || "").toLowerCase();
+  if (mer === "pm" && h < 12) h += 12;
+  if (mer === "am" && h === 12) h = 0;
+  if (!mer && h < 7) h += 12; // bare "4:30" on a day shift almost surely means PM
+  if (h > 23 || mins > 59) return null;
+  return h * 60 + mins;
+}
+
+document.querySelector("#punch-table").addEventListener("click", async (e) => {
+  const cell = e.target.closest("button.punch-cell");
+  if (!cell || !myProfile?.is_admin) return;
+  const day = els.punchDate.value || todayStr();
+  const [s, eEnd] = dayRange(day);
+  const existing = punches.find(
+    (p) => p.profile_id === cell.dataset.member && p.punch_type === cell.dataset.ptype &&
+           p.punched_at >= s && p.punched_at < eEnd
+  );
+  const label = PUNCH_LABELS[cell.dataset.ptype];
+  const answer = prompt(
+    `${cell.dataset.mname} — "${label}" on ${fmtDate(day)}.\n` +
+    `Enter a time like "8:00 AM" (leave empty and press OK to remove this punch):`,
+    existing ? fmtTime(existing.punched_at) : ""
+  );
+  if (answer === null) return; // cancelled
+  if (answer.trim() === "") {
+    if (existing && confirm(`Remove the "${label}" punch for ${cell.dataset.mname}?`)) {
+      await supabase.from("time_punches").delete().eq("id", existing.id);
+    }
+  } else {
+    const mins = parseClockTime(answer);
+    if (mins === null) {
+      alert('Couldn\'t read that time — use a format like "8:00 AM".');
+      return;
+    }
+    const [y, mo, d] = day.split("-").map(Number);
+    const ts = new Date(y, mo - 1, d, Math.floor(mins / 60), mins % 60).toISOString();
+    if (existing) {
+      await supabase.from("time_punches").update({ punched_at: ts }).eq("id", existing.id);
+    } else {
+      await supabase.from("time_punches").insert({
+        profile_id: cell.dataset.member,
+        punch_type: cell.dataset.ptype,
+        punched_at: ts,
+      });
+    }
+  }
+  await loadPunches();
+  loadWeekPunches();
+});
 
 // ---------- weekly worked-hours summary (admin) ----------
 

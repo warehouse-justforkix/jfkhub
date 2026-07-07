@@ -300,6 +300,10 @@ create policy "punch for self" on time_punches for insert
   to authenticated with check (profile_id = auth.uid() and public.is_member());
 create policy "own or admin delete punches" on time_punches for delete
   to authenticated using (profile_id = auth.uid() or public.is_admin());
+create policy "admin insert punches" on time_punches for insert
+  to authenticated with check (public.is_admin());
+create policy "admin update punches" on time_punches for update
+  to authenticated using (public.is_admin()) with check (public.is_admin());
 
 -- ---------- grants ----------
 -- Needed when this script runs via the Management API (default privileges
