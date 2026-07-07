@@ -694,7 +694,8 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 .cl-item.done .cl-label { text-decoration: line-through; color: var(--ink-soft); }
 .cl-by { font-size: .74rem; color: #157347; white-space: nowrap; }
 .cl-list .empty { color: var(--ink-soft); font-style: italic; font-size: .88rem; border: none; background: none; }
-.warn-item { border-color: #f0b9b3; background: #fff7f6; }
+.warn-item { border-color: #f0b9b3; background: #fff7f6; flex-wrap: wrap; font-size: .85rem; padding: .4rem .55rem; }
+.warn-item .cl-label { line-height: 1.4; }
 
 /* Messages */
 .msg-picker { display: flex; align-items: center; gap: .5rem; font-size: .85rem; color: var(--ink-soft); margin-bottom: .6rem; }

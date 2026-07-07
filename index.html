@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=24">
+  <link rel="stylesheet" href="style.css?v=25">
 </head>
 <body>
   <header class="site-header">
@@ -522,11 +522,22 @@
         </div>
         <p class="hint" id="warn-hint">Attendance records (no call/no show, late notice). These are private —
           each staff member sees only their own, and only Karley can add or remove them.</p>
-        <div id="warn-admin-form" class="cl-admin-form hidden">
-          <select id="warn-member"></select>
-          <input id="warn-date" type="date">
-          <input id="warn-reason" type="text" maxlength="200" placeholder="What happened? e.g. No call/no show for 8:00 shift">
-          <button id="warn-add" class="btn btn-primary" type="button">Add warning</button>
+        <div id="warn-admin-form" class="note-form hidden">
+          <div class="field">
+            <label for="warn-member">Member</label>
+            <select id="warn-member"></select>
+          </div>
+          <div class="field">
+            <label for="warn-date">Date</label>
+            <input id="warn-date" type="date">
+          </div>
+          <div class="field field-wide">
+            <label for="warn-reason">Reason</label>
+            <input id="warn-reason" type="text" maxlength="200" placeholder="What happened? No call/no show?">
+          </div>
+          <div class="field field-submit">
+            <button id="warn-add" class="btn btn-primary" type="button">Add warning</button>
+          </div>
         </div>
         <p id="warn-status" class="form-status" role="status"></p>
         <ul id="warn-list" class="cl-list"><li class="empty">Loading…</li></ul>
@@ -541,6 +552,6 @@
     <div class="wrap">Just For Kix · internal team tool</div>
   </footer>
 
-  <script type="module" src="app.js?v=24"></script>
+  <script type="module" src="app.js?v=25"></script>
 </body>
 </html>
