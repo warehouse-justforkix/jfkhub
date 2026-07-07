@@ -1132,7 +1132,7 @@ function showGoodbye() {
     const drift = (Math.random() * 16 - 8).toFixed(1);
     return `<span class="confetti" style="left:${left}%;width:${size}px;height:${(size * 0.45).toFixed(1)}px;background:${colors[i % colors.length]};animation-delay:${delay.toFixed(2)}s;animation-duration:${dur.toFixed(2)}s;--drift:${drift}vw"></span>`;
   }).join("");
-  div.innerHTML = `${confetti}<div class="goodbye-inner">🎉 Great Work Today, ${esc(myProfile.name)}! 🎉</div>`;
+  div.innerHTML = `${confetti}<div class="goodbye-inner">Great Work Today, ${esc(myProfile.name)}!</div>`;
   document.body.appendChild(div);
   div.addEventListener("click", () => div.remove());
   setTimeout(() => div.remove(), 4500);
