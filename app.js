@@ -957,13 +957,13 @@ els.clAdd.addEventListener("click", async () => {
 
 const PUNCH_ORDER = ["in", "lunch-out", "lunch-in", "out"];
 const PUNCH_LABELS = {
-  in: "Clock in",
-  "lunch-out": "Out to lunch",
-  "lunch-in": "Back from lunch",
-  out: "Clock out",
+  in: "Clock In",
+  "lunch-out": "Out to Lunch",
+  "lunch-in": "Back from Lunch",
+  out: "Clock Out",
 };
 const STATUS_AFTER = {
-  none: { label: "Not in yet", cls: "st-out" },
+  none: { label: "Not in Yet", cls: "st-out" },
   in: { label: "In", cls: "st-in" },
   "lunch-out": { label: "At lunch", cls: "st-lunch" },
   "lunch-in": { label: "In", cls: "st-in" },
@@ -1027,7 +1027,7 @@ function renderMyClock() {
     : "You haven't clocked in yet today.";
 }
 
-const PUNCH_ROW_LABELS = { in: "Clock in", "lunch-out": "Lunch out", "lunch-in": "Lunch in", out: "Clock out" };
+const PUNCH_ROW_LABELS = { in: "Clock In", "lunch-out": "Lunch Out", "lunch-in": "Lunch In", out: "Clock Out" };
 
 function renderPunchTable() {
   const byMember = {};
