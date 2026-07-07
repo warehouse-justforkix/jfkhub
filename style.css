@@ -354,7 +354,7 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      ". chip"
+      "chip chip"
       "title quick"
       "tag tag";
     gap: .45rem .6rem;
