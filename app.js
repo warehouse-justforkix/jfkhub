@@ -1040,7 +1040,10 @@ function renderPunchTable() {
   const dow = new Date(day + "T12:00:00").getDay(); // 1–5 = Mon–Fri
   const dayKey = dow >= 1 && dow <= 5 ? DAYS[dow - 1] : null;
 
-  els.punchList.innerHTML = hubMembers()
+  const people = myProfile.is_admin
+    ? hubMembers()
+    : [...hubMembers()].sort((a, b) => (b.id === myProfile.id) - (a.id === myProfile.id)); // self first
+  els.punchList.innerHTML = people
     .map((s) => {
       const mine = byMember[s.id] || {};
       const lastType = [...PUNCH_ORDER].reverse().find((t) => mine[t]) || "none";
