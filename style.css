@@ -694,6 +694,9 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 .cl-item.done .cl-label { text-decoration: line-through; color: var(--ink-soft); }
 .cl-by { font-size: .74rem; color: #157347; white-space: nowrap; }
 .cl-list .empty { color: var(--ink-soft); font-style: italic; font-size: .88rem; border: none; background: none; }
+#warn-admin-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#warn-admin-form .field-wide, #warn-admin-form .field-submit { grid-column: span 2; }
+#warn-admin-form .field select, #warn-admin-form .field input { width: 100%; }
 .warn-item { border-color: #f0b9b3; background: #fff7f6; flex-wrap: wrap; font-size: .85rem; padding: .4rem .55rem; }
 .warn-item .cl-label { line-height: 1.4; }
 
