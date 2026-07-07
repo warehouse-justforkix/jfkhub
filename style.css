@@ -352,17 +352,14 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
 @media (max-width: 720px) {
   .header-row { flex-direction: column-reverse; align-items: stretch; gap: .7rem; }
   .header-right {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: flex-start;
     width: 100%;
-    gap: .4rem;
+    gap: .45rem;
   }
   .user-chip { padding: .3rem .5rem; font-size: .78rem; gap: .35rem; }
   .user-chip #user-name { max-width: 6.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .user-chip .btn-mini { font-size: .72rem; padding: .2rem .5rem; }
-  .admin-quick { margin-left: auto; }
   .admin-quick a { font-size: .7rem; padding: .2rem .5rem; }
 }
 
