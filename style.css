@@ -352,17 +352,20 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
 @media (max-width: 720px) {
   .header-row {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
       ". chip"
-      "title quick";
-    gap: .55rem .6rem;
+      "title quick"
+      "tag tag";
+    gap: .45rem .6rem;
     align-items: start;
   }
-  .header-row > div:first-child { grid-area: title; }
+  .header-row > div:first-child { display: contents; }
+  .header-row h1 { grid-area: title; }
+  .header-row .tagline { grid-area: tag; margin: 0; }
   .header-right { display: contents; }
   .user-chip { grid-area: chip; justify-self: end; }
-  .admin-quick { grid-area: quick; justify-self: end; align-self: start; margin-top: .35rem; }
+  .admin-quick { grid-area: quick; justify-self: end; align-self: start; margin-top: .3rem; }
   .user-chip { padding: .3rem .5rem; font-size: .78rem; gap: .35rem; }
   .user-chip #user-name { max-width: 6.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .user-chip .btn-mini { font-size: .72rem; padding: .2rem .5rem; }
