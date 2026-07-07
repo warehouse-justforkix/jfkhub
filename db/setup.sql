@@ -82,6 +82,18 @@ create table if not exists time_punches (
   punched_at timestamptz not null default now()
 );
 
+-- Punch-correction requests: a member proposes a missed/wrong punch;
+-- it stays pending until the admin approves (writes the punch) or denies.
+create table if not exists punch_requests (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references profiles(id) on delete cascade,
+  day date not null,
+  punch_type text not null check (punch_type in ('in', 'lunch-out', 'lunch-in', 'out')),
+  requested_time timestamptz not null,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'denied')),
+  created_at timestamptz not null default now()
+);
+
 -- Daily & weekly checklists: items persist, checks are per-period
 -- (period = the date for daily items, the Monday of the week for weekly ones).
 create table if not exists checklist_items (
@@ -309,9 +321,16 @@ create policy "send message" on messages for insert
 create policy "admin delete messages" on messages for delete
   to authenticated using (public.is_admin());
 
--- time punches: you punch only for yourself; you see your own, admins see everyone's.
-create policy "own or admin read punches" on time_punches for select
-  to authenticated using (profile_id = auth.uid() or public.is_admin());
+-- time punches: you punch only for yourself; statuses are visible within your
+-- own team (same rule as hours); only admins can correct punches directly.
+create policy "team read punches" on time_punches for select
+  to authenticated using (
+    profile_id = auth.uid() or public.is_admin()
+    or exists (
+      select 1 from profiles t where t.id = time_punches.profile_id
+      and ((public.has_support() and t.support_access) or (public.has_warehouse() and t.warehouse_access))
+    )
+  );
 create policy "punch for self" on time_punches for insert
   to authenticated with check (profile_id = auth.uid() and public.is_member());
 create policy "own or admin delete punches" on time_punches for delete
@@ -319,6 +338,17 @@ create policy "own or admin delete punches" on time_punches for delete
 create policy "admin insert punches" on time_punches for insert
   to authenticated with check (public.is_admin());
 create policy "admin update punches" on time_punches for update
+  to authenticated using (public.is_admin()) with check (public.is_admin());
+
+-- punch requests: a member files/cancels their own pending fix; admin reviews.
+alter table punch_requests enable row level security;
+create policy "own or admin read punch requests" on punch_requests for select
+  to authenticated using (profile_id = auth.uid() or public.is_admin());
+create policy "request own punch fix" on punch_requests for insert
+  to authenticated with check (profile_id = auth.uid() and public.is_member() and status = 'pending');
+create policy "cancel own pending or admin delete" on punch_requests for delete
+  to authenticated using ((profile_id = auth.uid() and status = 'pending') or public.is_admin());
+create policy "admin review punch requests" on punch_requests for update
   to authenticated using (public.is_admin()) with check (public.is_admin());
 
 -- ---------- grants ----------

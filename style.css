@@ -440,6 +440,30 @@ tr.row-off .staff-name { color: var(--ink-soft); }
   border-radius: 5px;
 }
 .punch-cell:hover { background: #fdeaf4; outline: 1px dashed #eab4d1; }
+.punch-cell-ro { cursor: default; }
+.punch-cell-ro:hover { background: none; outline: none; }
+.pend { color: #b8860b; font-size: .78rem; white-space: nowrap; }
+
+/* Punch-fix requests */
+#punch-reqs { margin-top: 1rem; }
+#punch-reqs h3 { margin: 0 0 .45rem; }
+.punch-req {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdf3;
+  padding: .4rem .6rem;
+  margin-bottom: .4rem;
+  font-size: .82rem;
+}
+.punch-req .req-text { flex: 1; }
+.punch-req .btn { height: 1.9rem; padding: 0 .7rem; font-size: .72rem; }
+#my-punch-reqs { margin-top: .5rem; }
+.punch-req-mine { margin: .15rem 0; font-size: .78rem; color: var(--ink-soft); }
+.punch-req-mine.req-approved { color: #157347; }
+.punch-req-mine.req-denied { color: #c62828; }
 .hrs-short { color: #c62828; }
 .hrs-ok { color: #157347; }
 .hrs-open { color: var(--accent); margin-left: .15rem; }

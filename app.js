@@ -50,6 +50,10 @@ const els = {
   punchAdmin: $("punch-admin"),
   punchDate: $("punch-date"),
   punchTableBody: document.querySelector("#punch-table tbody"),
+  punchFixHint: $("punch-fix-hint"),
+  myPunchReqs: $("my-punch-reqs"),
+  punchReqs: $("punch-reqs"),
+  punchReqList: $("punch-req-list"),
   // announcements
   annForm: $("ann-form"),
   annBody: $("ann-body"),
@@ -129,6 +133,7 @@ let notes = [];
 let tasks = [];
 let invites = [];
 let punches = [];      // punches visible to me for the selected day
+let punchRequests = []; // punch-fix requests (mine, or all if admin)
 let messages = [];
 let editing = false;
 let calMonth = null;   // Date, first of displayed month
@@ -401,7 +406,9 @@ async function route() {
       : "Everyone's current weekly hours. You can edit your own row.";
     els.navAdmin.classList.toggle("hidden", !admin);
     els.adminSection.classList.toggle("hidden", !admin);
-    els.punchAdmin.classList.toggle("hidden", !admin);
+    els.punchAdmin.classList.remove("hidden"); // everyone sees who's in
+    els.punchFixHint.classList.toggle("hidden", admin);
+    if (!admin) els.punchReqs.classList.add("hidden"); // shown by renderPunchRequests when pending exist
     els.msgTitle.textContent = admin ? "Team & Chats" : "Message Karley";
     $("chip-msg-label").textContent = admin ? "Admin Messages" : "Message Karley";
     els.msgHint.textContent = admin
@@ -595,6 +602,7 @@ async function loadEverything() {
     loadNotes(),
     loadTasks(),
     loadPunches(),
+    loadPunchRequests(),
     loadWeekPunches(),
     loadAnnouncements(),
     loadMessages(),
@@ -1020,12 +1028,13 @@ function renderMyClock() {
 }
 
 function renderPunchTable() {
-  if (!myProfile.is_admin) return;
   const byMember = {};
   punches.forEach((p) => {
     (byMember[p.profile_id] = byMember[p.profile_id] || {})[p.punch_type] = p.punched_at;
   });
   const day = els.punchDate.value || todayStr();
+  const pendingFor = (memberId, ptype) =>
+    punchRequests.find((r) => r.status === "pending" && r.profile_id === memberId && r.day === day && r.punch_type === ptype);
   const dow = new Date(day + "T12:00:00").getDay(); // 1–5 = Mon–Fri
   const dayKey = dow >= 1 && dow <= 5 ? DAYS[dow - 1] : null;
 
@@ -1044,10 +1053,18 @@ function renderPunchTable() {
       const status = isOff
         ? { label: timeOff ? "Time off" : "Off today", cls: "st-offday" }
         : STATUS_AFTER[lastType];
-      const cells = PUNCH_ORDER.map(
-        (t) =>
-          `<td><button class="punch-cell" data-member="${s.id}" data-mname="${esc(s.name)}" data-ptype="${t}" title="Tap to set or fix this punch">${mine[t] ? fmtTime(mine[t]) : '<span class="cell-off">—</span>'}</button></td>`
-      ).join("");
+      const canTap = myProfile.is_admin || s.id === myProfile.id;
+      const cells = PUNCH_ORDER.map((t) => {
+        const pend = pendingFor(s.id, t);
+        const shown = mine[t]
+          ? fmtTime(mine[t]) + (pend ? ` <span class="pend" title="Change to ${fmtTime(pend.requested_time)} awaiting approval">⏳</span>` : "")
+          : pend
+            ? `<span class="pend" title="Awaiting Karley's approval">⏳ ${fmtTime(pend.requested_time)}</span>`
+            : '<span class="cell-off">—</span>';
+        return canTap
+          ? `<td><button class="punch-cell" data-member="${s.id}" data-mname="${esc(s.name)}" data-ptype="${t}" title="${myProfile.is_admin ? "Tap to set or fix this punch" : "Tap to request a fix"}">${shown}</button></td>`
+          : `<td><span class="punch-cell punch-cell-ro">${shown}</span></td>`;
+      }).join("");
       return `<tr class="${isOff ? "row-off" : ""}">
         <td class="name-col"><span class="staff-name">${nameWithAvatar(s.name)}</span></td>
         <td><span class="clock-state ${status.cls}">${status.label}</span></td>
@@ -1112,7 +1129,7 @@ function parseClockTime(str) {
 
 document.querySelector("#punch-table").addEventListener("click", async (e) => {
   const cell = e.target.closest("button.punch-cell");
-  if (!cell || !myProfile?.is_admin) return;
+  if (!cell || !myProfile) return;
   const day = els.punchDate.value || todayStr();
   const [s, eEnd] = dayRange(day);
   const existing = punches.find(
@@ -1120,6 +1137,35 @@ document.querySelector("#punch-table").addEventListener("click", async (e) => {
            p.punched_at >= s && p.punched_at < eEnd
   );
   const label = PUNCH_LABELS[cell.dataset.ptype];
+
+  // Members: propose a fix on their own row — pending until Karley approves.
+  if (!myProfile.is_admin) {
+    if (cell.dataset.member !== myProfile.id) return;
+    const answer = prompt(
+      `Request a fix — "${label}" on ${fmtDate(day)}.\n` +
+      `Enter the time it should be, like "8:00 AM". Karley will approve it:`,
+      existing ? fmtTime(existing.punched_at) : ""
+    );
+    if (answer === null || answer.trim() === "") return;
+    const mins = parseClockTime(answer);
+    if (mins === null) {
+      alert('Couldn\'t read that time — use a format like "8:00 AM".');
+      return;
+    }
+    const [y, mo, d] = day.split("-").map(Number);
+    const ts = new Date(y, mo - 1, d, Math.floor(mins / 60), mins % 60).toISOString();
+    const { error } = await supabase.from("punch_requests").insert({
+      profile_id: myProfile.id,
+      day,
+      punch_type: cell.dataset.ptype,
+      requested_time: ts,
+    });
+    if (error) alert(`Couldn't send the request: ${error.message}`);
+    else showToast("Sent to Karley for approval ⏳");
+    await loadPunchRequests();
+    return;
+  }
+
   const answer = prompt(
     `${cell.dataset.mname} — "${label}" on ${fmtDate(day)}.\n` +
     `Enter a time like "8:00 AM" (leave empty and press OK to remove this punch):`,
@@ -1149,6 +1195,79 @@ document.querySelector("#punch-table").addEventListener("click", async (e) => {
     }
   }
   await loadPunches();
+  loadWeekPunches();
+});
+
+// ---------- punch-fix requests (member proposes, admin approves) ----------
+
+async function loadPunchRequests() {
+  const { data, error } = await supabase
+    .from("punch_requests")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) return;
+  punchRequests = data || [];
+  renderPunchRequests();
+  renderPunchTable();
+}
+
+const REQ_STATUS = { pending: "⏳ waiting for approval", approved: "✅ approved", denied: "✖ denied" };
+
+function renderPunchRequests() {
+  if (!myProfile) return;
+  if (myProfile.is_admin) {
+    const pending = punchRequests.filter((r) => r.status === "pending");
+    els.punchReqs.classList.toggle("hidden", !pending.length);
+    els.punchReqList.innerHTML = pending
+      .map((r) => {
+        const who = staff.find((p) => p.id === r.profile_id);
+        return `<div class="punch-req">
+          <span class="req-text"><b>${esc(who ? who.name : "?")}</b> — ${PUNCH_LABELS[r.punch_type]} at <b>${fmtTime(r.requested_time)}</b> on ${fmtDate(r.day)}</span>
+          <button class="btn btn-primary btn-sm" data-req="${r.id}" data-act="approve" type="button">Approve</button>
+          <button class="btn btn-ghost btn-sm" data-req="${r.id}" data-act="deny" type="button">Deny</button>
+        </div>`;
+      })
+      .join("");
+    return;
+  }
+  // Member: show my requests from the last 7 days with their status.
+  const cutoff = new Date(Date.now() - 7 * 864e5).toISOString();
+  const mine = punchRequests.filter((r) => r.profile_id === myProfile.id && r.created_at >= cutoff);
+  els.myPunchReqs.classList.toggle("hidden", !mine.length);
+  els.myPunchReqs.innerHTML = mine
+    .map((r) => `<p class="punch-req-mine req-${r.status}">${PUNCH_LABELS[r.punch_type]} at <b>${fmtTime(r.requested_time)}</b> on ${fmtDate(r.day)} — ${REQ_STATUS[r.status]}</p>`)
+    .join("");
+}
+
+els.punchReqList.addEventListener("click", async (e) => {
+  const btn = e.target.closest("button[data-req]");
+  if (!btn || !myProfile?.is_admin) return;
+  const req = punchRequests.find((r) => r.id === btn.dataset.req);
+  if (!req) return;
+  btn.disabled = true;
+  if (btn.dataset.act === "approve") {
+    const [s, eEnd] = dayRange(req.day);
+    const { data: ex } = await supabase
+      .from("time_punches")
+      .select("id")
+      .eq("profile_id", req.profile_id)
+      .eq("punch_type", req.punch_type)
+      .gte("punched_at", s)
+      .lt("punched_at", eEnd)
+      .limit(1);
+    const write = ex && ex.length
+      ? await supabase.from("time_punches").update({ punched_at: req.requested_time }).eq("id", ex[0].id)
+      : await supabase.from("time_punches").insert({ profile_id: req.profile_id, punch_type: req.punch_type, punched_at: req.requested_time });
+    if (write.error) {
+      alert(`Couldn't apply the punch: ${write.error.message}`);
+      btn.disabled = false;
+      return;
+    }
+    await supabase.from("punch_requests").update({ status: "approved" }).eq("id", req.id);
+  } else {
+    await supabase.from("punch_requests").update({ status: "denied" }).eq("id", req.id);
+  }
+  await Promise.all([loadPunches(), loadPunchRequests()]);
   loadWeekPunches();
 });
 

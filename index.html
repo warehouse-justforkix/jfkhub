@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=61">
+  <link rel="stylesheet" href="style.css?v=62">
 </head>
 <body>
   <header class="site-header">
@@ -286,7 +286,7 @@
         </div>
         <p id="my-punches" class="my-punches"></p>
 
-        <!-- Admin-only: everyone's day -->
+        <!-- Everyone's day: statuses visible to the whole team; punch edits are admin-only -->
         <div id="punch-admin" class="hidden">
           <div class="notes-head">
             <h3>Who's in</h3>
@@ -300,6 +300,14 @@
               <tbody></tbody>
             </table>
           </div>
+          <p class="hint hidden" id="punch-fix-hint">Missed a punch? Tap the time cell on your own row to send Karley a correction — it stays pending until she approves it.</p>
+          <div id="my-punch-reqs" class="hidden"></div>
+        </div>
+
+        <!-- Admin-only: pending punch-change requests -->
+        <div id="punch-reqs" class="hidden">
+          <h3>Pending punch changes</h3>
+          <div id="punch-req-list"></div>
         </div>
       </section>
 
@@ -556,6 +564,6 @@
     <div class="wrap">Just For Kix · internal team tool</div>
   </footer>
 
-  <script type="module" src="app.js?v=61"></script>
+  <script type="module" src="app.js?v=62"></script>
 </body>
 </html>
