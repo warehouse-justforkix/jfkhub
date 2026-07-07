@@ -475,22 +475,18 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 .side-col .card.collapsed > *:not(.card-head):not(.admin-strip) { display: none; }
 .side-col .card.collapsed { padding-bottom: 1.1rem; }
 
-/* Yellow admin box at the top of a card — uniform size across all cards */
+/* Yellow admin strip across the top of a card */
 .admin-strip {
-  display: flex;
-  align-items: center;          /* text vertically centered */
-  justify-content: flex-start;  /* text flush left */
-  width: 100%;
-  height: 1.7rem;
-  box-sizing: border-box;
+  display: block;
   background: #ffe9a8;
   color: #7a5c00;
-  font-size: .68rem;            /* ~11px, matching the form fields */
+  font-size: .62rem;
   font-weight: 800;
-  letter-spacing: .07em;
-  padding: 0 .6rem;
-  margin: -.3rem 0 .8rem;
-  border-radius: 8px;
+  letter-spacing: .08em;
+  text-align: center;
+  padding: .3rem .6rem;
+  margin: -1.2rem -1.3rem .8rem;
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 .admin-strip.hidden { display: none; }
 
