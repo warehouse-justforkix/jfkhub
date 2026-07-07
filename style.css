@@ -374,7 +374,7 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
   .header-row .tagline { grid-area: tag; margin: 0; }
   .header-right { display: contents; }
   .user-chip { grid-area: chip; justify-self: end; }
-  .admin-quick { grid-area: quick; justify-self: end; align-self: start; margin-top: .3rem; }
+  .admin-quick { grid-area: quick; justify-self: end; align-self: start; margin-top: 0; }
   .user-chip { padding: .3rem .5rem; font-size: .78rem; gap: .35rem; }
   .user-chip #user-name { max-width: 6.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* Match the nav pills (Time Clock, Schedule, …) */
