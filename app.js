@@ -413,8 +413,12 @@ async function route() {
     els.clAdminForm.classList.toggle("hidden", !admin);
     const bothTeams = prof.support_access && prof.warehouse_access !== false;
     $("hub-toggle").classList.toggle("hidden", !(admin || bothTeams));
+    $("team-indicator").classList.toggle("hidden", admin || bothTeams);
+    if (!admin && !bothTeams) {
+      curHub = prof.support_access ? "support" : "warehouse";
+      $("team-indicator-label").textContent = prof.support_access ? "🎧 Customer Support" : "📦 Warehouse";
+    }
     $("hours-card").classList.toggle("hidden", !admin);
-    if (!admin && !bothTeams) curHub = prof.support_access ? "support" : "warehouse";
     showView(els.appView);
     await loadEverything();
     setHub(curHub);

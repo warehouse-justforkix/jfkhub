@@ -50,6 +50,15 @@ body {
   cursor: pointer;
 }
 .hub-toggle button.active { background: #fff; color: var(--brand-dark); }
+.team-pill {
+  display: inline-block;
+  font-size: .85rem;
+  font-weight: 700;
+  background: #fff;
+  color: var(--brand-dark);
+  border-radius: 99px;
+  padding: .35rem .9rem;
+}
 
 /* Page routing */
 .route-hidden { display: none !important; }
