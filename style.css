@@ -193,6 +193,7 @@ td.cell-off { color: var(--ink-soft); font-style: italic; }
 }
 input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
 .field-wide { grid-column: span 3; }
+#nf-vis, #nf-details { height: 2.2rem; }
 .field-submit { grid-column: span 1; }
 .form-status { min-height: 1.2em; font-size: .85rem; color: var(--brand-dark); margin: .5rem 0 0; }
 .form-status.error { color: var(--out); }
