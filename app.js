@@ -403,6 +403,7 @@ async function route() {
     els.adminSection.classList.toggle("hidden", !admin);
     els.punchAdmin.classList.toggle("hidden", !admin);
     els.msgTitle.textContent = admin ? "Team & Chats" : "Message Karley";
+    $("chip-msg-label").textContent = admin ? "💬 Admin Messages" : "💬 Message Karley";
     els.msgHint.textContent = admin
       ? "Your team — tap a person to open their private chat."
       : "Private line to the admins — only you and they can see this thread.";
