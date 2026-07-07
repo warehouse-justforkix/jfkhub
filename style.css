@@ -267,12 +267,11 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
 .col-sub { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--ink-soft); font-size: .78rem; }
 #supplies .col-sub { display: block; margin-top: .1rem; }
 #restocking .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-#restocking .cl-admin-form input[type="text"] { height: 2.2rem; }
-/* Checklist admin form matches the calendar fields */
-#cl-admin-form input[type="text"], #cl-admin-form select { height: 2.2rem; font-size: .88rem; }
+/* Restocking, checklist & supplies forms match the calendar fields */
+.cl-admin-form input[type="text"], .cl-admin-form select { height: 2.2rem; font-size: .88rem; }
 @media (max-width: 640px) {
-  #cl-admin-form input[type="text"], #cl-admin-form select { font-size: .72rem; }
-  #cl-admin-form input::placeholder { font-size: .72rem; }
+  .cl-admin-form input[type="text"], .cl-admin-form select { font-size: .72rem; }
+  .cl-admin-form input::placeholder { font-size: .72rem; }
 }
 @media (max-width: 800px) { #restocking .board { grid-template-columns: 1fr; } }
 
