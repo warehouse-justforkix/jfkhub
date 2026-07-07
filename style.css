@@ -713,6 +713,9 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 .cl-by { font-size: .74rem; color: #157347; white-space: nowrap; }
 .cl-list .empty { color: var(--ink-soft); font-style: italic; font-size: .88rem; border: none; background: none; }
 #warn-admin-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* MEMBER, DATE, REASON: identical size and identical gap above their boxes */
+#warn-admin-form .field { gap: .3rem; }
+#warn-admin-form .field label { font-size: .66rem; margin: 0; line-height: 1; }
 #warn-admin-form .field-wide, #warn-admin-form .field-submit { grid-column: span 2; }
 #warn-admin-form .field { min-width: 0; }
 #warn-admin-form .field select, #warn-admin-form .field input {
