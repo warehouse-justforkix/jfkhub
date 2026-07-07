@@ -747,8 +747,22 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 .msg-mine .msg-bubble { background: var(--brand); color: #fff; border-bottom-right-radius: 4px; }
 .msg-theirs .msg-bubble { background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 4px; }
 .msg-thread .empty { align-self: center; }
-.msg-form { display: flex; gap: .6rem; }
-.msg-form input { flex: 1; font: inherit; padding: .5rem .6rem; border: 1px solid #e8b7d1; border-radius: 8px; }
+.msg-form { display: flex; gap: .6rem; align-items: stretch; }
+.msg-form input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  height: 2.1rem;              /* matches the invitations email field */
+  padding: 0 .6rem;
+  border: 1px solid #e8b7d1;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+.msg-form .btn {
+  height: 2.1rem;              /* matches the Add Member button row height */
+  padding: 0 .85rem;
+  box-sizing: border-box;
+}
 
 /* Admin */
 .invite-form { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
@@ -768,7 +782,7 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
   text-align: left;
 }
 .invite-form input::placeholder { font-size: .68rem; }
-.invite-form .btn { grid-column: span 2; }
+.invite-form .btn { grid-column: span 2; height: 2.1rem; padding: 0 .85rem; box-sizing: border-box; }
 .inv-admin-label { font-size: .85rem; color: var(--ink-soft); white-space: nowrap; }
 .admin-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.1rem; }
 .admin-cols h3 { font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .5rem; }

@@ -407,7 +407,6 @@ async function route() {
       ? "Your team — tap a person to open their private chat."
       : "Private line to the admins — only you and they can see this thread.";
     els.roster.classList.toggle("hidden", !admin);
-    $("msg-admin-badge").classList.toggle("hidden", !admin);
     els.clAdminForm.classList.toggle("hidden", !admin);
     const bothTeams = prof.support_access && prof.warehouse_access !== false;
     $("hub-toggle").classList.toggle("hidden", !(admin || bothTeams));
