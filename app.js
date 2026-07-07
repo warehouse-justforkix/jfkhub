@@ -89,7 +89,6 @@ const els = {
   taskForm: $("task-form"),
   tfTitle: $("tf-title"),
   tfDue: $("tf-due"),
-  tfDetails: $("tf-details"),
   tfRecurrence: $("tf-recurrence"),
   tfAssign: $("tf-assign"),
   taskStatus: $("task-status"),
@@ -1925,7 +1924,6 @@ els.taskForm.addEventListener("submit", async (e) => {
   const { error } = await supabase.from("tasks").insert({
     team: curTeam,
     title: els.tfTitle.value.trim(),
-    details: els.tfDetails.value.trim() || null,
     due_date: els.tfDue.value || null,
     recurrence: els.tfRecurrence.value,
     assigned_to: els.tfAssign.value || null,
