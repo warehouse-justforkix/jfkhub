@@ -2135,8 +2135,8 @@ function maybeAskNotifications() {
 // ---------- page routing (nav buttons = pages; logo = homepage) ----------
 
 const PAGE_ROUTES = ["home", "clock", "calendar", "schedules", "announcements", "tasks", "restocking", "checklists", "supplies", "messages", "admin"];
-const HOME_ONLY = ["today-callout", "reminders", "warnings-card"];
-const MAIN_SECTIONS = ["today-callout", "reminders", "clock", "calendar", "schedules", "announcements", "tasks", "restocking", "checklists", "supplies", "warnings-card"];
+const HOME_ONLY = ["today-callout", "reminders"];
+const MAIN_SECTIONS = ["today-callout", "reminders", "clock", "calendar", "schedules", "announcements", "tasks", "restocking", "checklists", "supplies"];
 
 function currentPage() {
   const h = (location.hash || "#home").slice(1);
@@ -2157,7 +2157,7 @@ function applyPage() {
   document.querySelector(".layout").classList.toggle("sidebar-only", sidebarOnly);
   // In sidebar-only mode, show just the requested card(s):
   // Admin Messages → chats only; Admin → invitations + hours.
-  ["messages", "admin", "hours-card"].forEach((id) => {
+  ["messages", "admin", "hours-card", "warnings-card"].forEach((id) => {
     const el = $(id);
     if (!el) return;
     const show = !sidebarOnly || (page === "messages" ? id === "messages" : id !== "messages");
@@ -2178,7 +2178,7 @@ window.addEventListener("hashchange", applyPage);
 
 // ---------- collapsible sidebar cards ----------
 
-["messages", "admin", "hours-card"].forEach((id) => {
+["messages", "admin", "hours-card", "warnings-card"].forEach((id) => {
   const card = $(id);
   const head = card?.querySelector(".card-head");
   if (!head) return;
