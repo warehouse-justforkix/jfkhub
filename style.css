@@ -748,8 +748,23 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 
 /* Admin */
 .invite-form { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
-.invite-form input[type="email"] { flex: 1; min-width: 180px; font: inherit; padding: .5rem .6rem; border: 1px solid #e8b7d1; border-radius: 8px; }
-.invite-form select { font: inherit; padding: .45rem .5rem; border: 1px solid #e8b7d1; border-radius: 8px; background: #fff; }
+/* Invitations form: email + team split 50/50, fields matching the warnings form (0.68rem ≈ 11px) */
+.invite-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+.invite-form input[type="email"], .invite-form select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  height: 2.1rem;
+  font: inherit;
+  font-size: .68rem;
+  padding: 0 .4rem;
+  border: 1px solid #e8b7d1;
+  border-radius: 8px;
+  background: #fff;
+  text-align: left;
+}
+.invite-form input::placeholder { font-size: .68rem; }
+.invite-form .btn { grid-column: span 2; }
 .inv-admin-label { font-size: .85rem; color: var(--ink-soft); white-space: nowrap; }
 .admin-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.1rem; }
 .admin-cols h3 { font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .5rem; }
