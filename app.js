@@ -1442,6 +1442,7 @@ function photoPicker(btnId, inputId, statusId) {
   };
   btn.addEventListener("click", (e) => {
     e.preventDefault();
+    if (statusEl) setStatus(statusEl, "Opening photo picker…");
     input.click();
   });
   input.addEventListener("change", async () => {
