@@ -1061,7 +1061,7 @@ function renderPunchTable() {
       // Off that day? (no scheduled hours, or time-off on the calendar)
       const scheduled = dayKey ? ((hoursById[s.id] || {})[dayKey] || "").trim() : "";
       const timeOff = notes.some(
-        (n) => n.note_type === "out" && n.staff_name === s.name && n.start_date <= day && noteEnd(n) >= day
+        (n) => n.note_type === "out" && n.staff_name === s.name && noteOnDay(n, day)
       );
       const isOff = lastType === "none" && (timeOff || !scheduled);
       const self = s.id === myProfile.id;
@@ -1661,6 +1661,21 @@ function noteDateLabel(n) {
   return fmtDate(n.start_date);
 }
 
+// Does a note apply on the given day? Directly, or via its recurrence
+// (weekly = same weekday, biweekly = every 14 days, monthly = same day-of-month).
+const NOTE_RECUR_LABELS = { weekly: "weekly", biweekly: "every 2 weeks", monthly: "monthly" };
+function noteOnDay(n, iso) {
+  if (n.start_date <= iso && noteEnd(n) >= iso) return true;
+  if (!n.recurrence || n.recurrence === "none" || iso <= n.start_date) return false;
+  const d0 = new Date(n.start_date + "T12:00:00");
+  const d1 = new Date(iso + "T12:00:00");
+  const days = Math.round((d1 - d0) / 864e5);
+  if (n.recurrence === "weekly") return days % 7 === 0;
+  if (n.recurrence === "biweekly") return days % 14 === 0;
+  if (n.recurrence === "monthly") return d0.getDate() === d1.getDate();
+  return false;
+}
+
 async function loadNotes() {
   const { data, error } = await supabase
     .from("schedule_notes")
@@ -1681,7 +1696,7 @@ async function loadNotes() {
 function renderNotes() {
   const today = todayStr();
   const showPast = els.showPast.checked;
-  const visible = notes.filter((n) => showPast || noteEnd(n) >= today);
+  const visible = notes.filter((n) => showPast || noteEnd(n) >= today || (n.recurrence && n.recurrence !== "none"));
 
   if (!visible.length) {
     els.notesList.innerHTML = `<li class="empty">Nothing coming up — everyone's on their normal schedule. 🎉</li>`;
@@ -1696,8 +1711,9 @@ function renderNotes() {
         <span class="note-type type-${n.note_type}">${TYPE_LABELS[n.note_type] || n.note_type}</span>
         <span class="note-name">${esc(n.staff_name)}${n.visibility === "admin" ? ' <span title="Only visible to you">🔒</span>' : ""}</span>
         ${n.event_time ? `<span class="note-details">${esc(n.event_time)}</span>` : ""}
+        ${n.recurrence && n.recurrence !== "none" ? `<span class="note-details">↻ ${NOTE_RECUR_LABELS[n.recurrence]}</span>` : ""}
         ${n.details ? `<span class="note-details">${esc(n.details)}</span>` : ""}
-        <button class="note-delete" data-id="${n.id}" title="Remove this entry" aria-label="Remove entry">✕</button>
+        <button class="note-delete" data-id="${n.id}" title="Remove this entry${n.recurrence && n.recurrence !== "none" ? " (removes every repeat)" : ""}" aria-label="Remove entry">✕</button>
       </li>`;
     })
     .join("");
@@ -1705,7 +1721,7 @@ function renderNotes() {
 
 function renderTodayCallout() {
   const today = todayStr();
-  const todays = notes.filter((n) => n.start_date <= today && noteEnd(n) >= today);
+  const todays = notes.filter((n) => noteOnDay(n, today));
   if (!todays.length) {
     els.todayCallout.classList.add("hidden");
     return;
@@ -1743,7 +1759,7 @@ function renderCalendar() {
 
   for (let day = 1; day <= daysInMonth; day++) {
     const iso = dateToStr(new Date(y, m, day));
-    const dayNotes = notes.filter((n) => n.start_date <= iso && noteEnd(n) >= iso);
+    const dayNotes = notes.filter((n) => noteOnDay(n, iso));
     const chips = dayNotes
       .slice(0, 4)
       .map(
@@ -1807,6 +1823,7 @@ els.form.addEventListener("submit", async (e) => {
     event_time: els.nfTime.value.trim() || null,
     details: els.nfDetails.value.trim() || null,
     visibility: myProfile.is_admin ? els.nfVis.value : "team",
+    recurrence: $("nf-recur").value,
   });
 
   if (error) {
@@ -1883,7 +1900,7 @@ function renderReminders() {
   const today = todayStr();
   const myTasks = tasks.filter((t) => t.status === "open" && t.assigned_to === myProfile.name);
   const myNotes = notes.filter(
-    (n) => n.staff_name === myProfile.name && n.start_date <= today && noteEnd(n) >= today
+    (n) => n.staff_name === myProfile.name && noteOnDay(n, today)
   );
   if (!myTasks.length && !myNotes.length) {
     els.remindersBanner.classList.add("hidden");

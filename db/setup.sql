@@ -51,6 +51,7 @@ create table if not exists schedule_notes (
   event_time text,                      -- freeform, mainly for meetings ("2:00–3:00 PM")
   details text,
   visibility text not null default 'team' check (visibility in ('team', 'admin')),
+  recurrence text not null default 'none' check (recurrence in ('none', 'weekly', 'biweekly', 'monthly')),
   created_at timestamptz not null default now()
 );
 

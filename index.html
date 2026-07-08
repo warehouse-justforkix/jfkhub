@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=97">
+  <link rel="stylesheet" href="style.css?v=98">
   <script>
     // Surface script errors in the footer so problems are visible without devtools.
     window.addEventListener("error", function (e) {
@@ -380,6 +380,15 @@
             <label for="nf-time">Start Time</label>
             <input id="nf-time" type="text" maxlength="40" placeholder="Meetings, etc">
           </div>
+          <div class="field">
+            <label for="nf-recur">Repeats</label>
+            <select id="nf-recur">
+              <option value="none" selected>Doesn't repeat</option>
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Every 2 weeks</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
           <div class="field field-wide hidden" id="nf-vis-field">
             <label for="nf-vis">Visible To</label>
             <select id="nf-vis">
@@ -577,9 +586,9 @@
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">Just For Kix · internal team tool · v97</div>
+    <div class="wrap">Just For Kix · internal team tool · v98</div>
   </footer>
 
-  <script type="module" src="app.js?v=97"></script>
+  <script type="module" src="app.js?v=98"></script>
 </body>
 </html>
