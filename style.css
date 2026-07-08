@@ -637,6 +637,7 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 @media (max-width: 1080px) {
   .layout { flex-direction: column; gap: 0; }
   .side-col { width: 100%; position: static; }
+  .main-col { width: 100%; }
   /* uniform 10px rhythm between every section on mobile */
   .main-col .card, .today-callout, .reminders { margin-bottom: .65rem; }
 }
