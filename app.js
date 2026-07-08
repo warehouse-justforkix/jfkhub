@@ -1427,9 +1427,10 @@ async function resizePhoto(file) {
 }
 
 // Wire a 📷 label to its file input; the picked photo rides along on the next add.
-// (The label opens the picker natively — no scripting — so it works in every browser.)
-function photoPicker(btnId, inputId) {
-  const btn = $(btnId), input = $(inputId);
+// The label opens the picker natively; the click handler is a scripted backup
+// (preventDefault stops the native path so only one dialog ever opens).
+function photoPicker(btnId, inputId, statusId) {
+  const btn = $(btnId), input = $(inputId), statusEl = statusId ? $(statusId) : null;
   const state = {
     uri: null,
     clear() {
@@ -1439,6 +1440,10 @@ function photoPicker(btnId, inputId) {
       btn.title = "Attach a photo";
     },
   };
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    input.click();
+  });
   input.addEventListener("change", async () => {
     const file = input.files[0];
     if (!file) return;
@@ -1446,6 +1451,7 @@ function photoPicker(btnId, inputId) {
       state.uri = await resizePhoto(file);
       btn.classList.add("has-photo");
       btn.title = "Photo attached — tap to change";
+      if (statusEl) setStatus(statusEl, "Photo attached ✔ — it'll post with this entry.");
     } catch (err) {
       alert(err.message);
       state.clear();
@@ -1454,11 +1460,11 @@ function photoPicker(btnId, inputId) {
   return state;
 }
 
-const annPhoto = photoPicker("ann-photo-btn", "ann-photo");
-const tfPhoto = photoPicker("tf-photo-btn", "tf-photo");
-const rsPhoto = photoPicker("rs-photo-btn", "rs-photo");
-const clPhoto = photoPicker("cl-photo-btn", "cl-photo");
-const supPhoto = photoPicker("sup-photo-btn", "sup-photo");
+const annPhoto = photoPicker("ann-photo-btn", "ann-photo", "ann-status");
+const tfPhoto = photoPicker("tf-photo-btn", "tf-photo", "task-status");
+const rsPhoto = photoPicker("rs-photo-btn", "rs-photo", "rs-status");
+const clPhoto = photoPicker("cl-photo-btn", "cl-photo", "cl-status");
+const supPhoto = photoPicker("sup-photo-btn", "sup-photo", "sup-status");
 
 const photoThumb = (src, small) =>
   src ? `<img class="entry-photo${small ? " entry-photo-sm" : ""}" src="${esc(src)}" alt="Attached photo" title="Tap to view">` : "";
