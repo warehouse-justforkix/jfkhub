@@ -470,6 +470,9 @@ details.punch-acc .punch-rows { padding: 0 .65rem .55rem; }
 
 /* Photo attachments */
 .photo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 2.2rem;
   width: 2.5rem;
   flex: 0 0 auto;
@@ -479,6 +482,17 @@ details.punch-acc .punch-rows { padding: 0 .65rem .55rem; }
   border: 1px solid #e8b7d1;
   border-radius: 8px;
   cursor: pointer;
+  user-select: none;
+}
+/* keep the file input focusable/clickable via its label, but visually hidden
+   (display:none breaks the picker in some Safari versions) */
+.photo-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 .photo-btn:hover { background: #fdeaf4; }
 .photo-btn.has-photo { background: #ffe9a8; border-color: #e0c26a; }

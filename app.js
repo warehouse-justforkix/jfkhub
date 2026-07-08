@@ -1426,7 +1426,8 @@ async function resizePhoto(file) {
   return canvas.toDataURL("image/jpeg", 0.75);
 }
 
-// Wire a 📷 button to a hidden file input; the picked photo rides along on the next add.
+// Wire a 📷 label to its file input; the picked photo rides along on the next add.
+// (The label opens the picker natively — no scripting — so it works in every browser.)
 function photoPicker(btnId, inputId) {
   const btn = $(btnId), input = $(inputId);
   const state = {
@@ -1438,7 +1439,6 @@ function photoPicker(btnId, inputId) {
       btn.title = "Attach a photo";
     },
   };
-  btn.addEventListener("click", () => input.click());
   input.addEventListener("change", async () => {
     const file = input.files[0];
     if (!file) return;
