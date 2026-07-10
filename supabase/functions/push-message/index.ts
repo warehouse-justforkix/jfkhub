@@ -32,10 +32,11 @@ Deno.serve(async (req) => {
   }
   if (!recipientIds.length) return new Response("no recipients");
 
-  const { data: subs } = await supabase
+  const { data: subs, error: subsError } = await supabase
     .from("push_subscriptions")
     .select("id, subscription")
     .in("profile_id", recipientIds);
+  if (subsError) return new Response(JSON.stringify({ subsError: subsError.message, recipientIds }), { status: 500 });
 
   const body = JSON.stringify({
     title: `New message from ${m.sender_name}`,
@@ -44,18 +45,20 @@ Deno.serve(async (req) => {
   });
 
   let sent = 0;
+  const errors: string[] = [];
   await Promise.all(
     (subs ?? []).map(async (s: { id: string; subscription: object }) => {
       try {
         await webpush.sendNotification(s.subscription, body);
         sent++;
       } catch (e) {
-        const code = (e as { statusCode?: number }).statusCode;
-        if (code === 404 || code === 410) {
+        const err = e as { statusCode?: number; body?: string; message?: string };
+        errors.push(`${err.statusCode ?? "?"}: ${(err.body || err.message || "").slice(0, 200)}`);
+        if (err.statusCode === 404 || err.statusCode === 410) {
           await supabase.from("push_subscriptions").delete().eq("id", s.id);
         }
       }
     })
   );
-  return new Response(`sent ${sent}`);
+  return new Response(JSON.stringify({ sent, errors }));
 });
