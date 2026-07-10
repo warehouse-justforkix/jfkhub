@@ -379,7 +379,9 @@ create policy "admin review punch requests" on punch_requests for update
 -- don't apply there the way they do in the dashboard SQL editor).
 grant usage on schema public to anon, authenticated;
 grant select, insert, update, delete on all tables in schema public to authenticated;
-grant all on push_subscriptions to service_role;  -- the push-message edge function reads these
+-- The push-message edge function (service_role) reads profiles + push_subscriptions.
+grant select, insert, update, delete on all tables in schema public to service_role;
+alter default privileges in schema public grant select, insert, update, delete on tables to service_role;
 grant execute on all functions in schema public to authenticated;
 alter default privileges in schema public grant select, insert, update, delete on tables to authenticated;
 alter default privileges in schema public grant execute on functions to authenticated;
