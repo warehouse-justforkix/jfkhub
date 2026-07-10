@@ -155,6 +155,18 @@ create table if not exists supply_requests (
   updated_at timestamptz not null default now()
 );
 
+-- One row per device that opted in to push notifications.
+create table if not exists push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references profiles(id) on delete cascade,
+  endpoint text unique not null,
+  subscription jsonb not null,
+  created_at timestamptz not null default now()
+);
+-- (RLS: "own push subs" policy — each user manages only their own devices.
+--  Pushes are SENT by the push-message edge function via a pg_net trigger on
+--  messages; VAPID keys + trigger secret live in Supabase function secrets.)
+
 -- One thread per member; from_admin marks which side sent it.
 create table if not exists messages (
   id uuid primary key default gen_random_uuid(),

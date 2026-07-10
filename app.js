@@ -441,6 +441,7 @@ async function route() {
     await loadEverything();
     setHub(curHub);
     maybeAskNotifications();
+    enablePush(); // (re)register this device for push if permission is already granted
     checkShiftReminders();
     return;
   }
@@ -2519,7 +2520,38 @@ setInterval(() => {
 // even when the tab is in the background.
 function maybeAskNotifications() {
   if ("Notification" in window && Notification.permission === "default") {
-    Notification.requestPermission().catch(() => {});
+    Notification.requestPermission().then((p) => {
+      if (p === "granted") enablePush();
+    }).catch(() => {});
+  }
+}
+
+// ---------- push notifications (arrive even when the app is closed) ----------
+
+const VAPID_PUBLIC_KEY = "BDi981JGUQQj-XjQ61ONOw7Mq2T2m3KIJKJN2G_tgtwBYyAyF57sPxTvC_OwWZrWOzmszV5tJPXATI5zGDNFHd0";
+
+function urlB64ToUint8Array(s) {
+  const pad = "=".repeat((4 - (s.length % 4)) % 4);
+  const b = atob((s + pad).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from([...b].map((c) => c.charCodeAt(0)));
+}
+
+// Register this device for pushes and save its subscription under my profile.
+async function enablePush() {
+  try {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    if (!myProfile || Notification.permission !== "granted") return;
+    const reg = await navigator.serviceWorker.register("sw.js");
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY),
+    });
+    await supabase.from("push_subscriptions").upsert(
+      { profile_id: myProfile.id, endpoint: sub.endpoint, subscription: sub.toJSON() },
+      { onConflict: "endpoint" }
+    );
+  } catch {
+    // push isn't supported everywhere (e.g. iPhone browser tab) — fail quietly
   }
 }
 
