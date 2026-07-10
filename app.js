@@ -441,7 +441,9 @@ async function route() {
     await loadEverything();
     setHub(curHub);
     maybeAskNotifications();
-    enablePush(); // (re)register this device for push if permission is already granted
+    // (re)register this device for push if permission is already granted,
+    // then show the "Turn On Notifications" banner if it still isn't set up
+    enablePush().then(() => updateNotifBanner());
     checkShiftReminders();
     return;
   }
@@ -2556,7 +2558,6 @@ async function enablePush() {
   } catch {
     // push isn't supported everywhere (e.g. iPhone browser tab) — fail quietly
   }
-  updateNotifBanner();
 }
 
 // Show the "Turn On Notifications" banner when this device isn't registered yet.
