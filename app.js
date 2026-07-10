@@ -2542,13 +2542,21 @@ async function enablePush() {
       userVisibleOnly: true,
       applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY),
     });
-    await supabase.from("push_subscriptions").upsert(
+    const { error } = await supabase.from("push_subscriptions").upsert(
       { profile_id: myProfile.id, endpoint: sub.endpoint, subscription: sub.toJSON() },
       { onConflict: "endpoint" }
     );
+    if (error) {
+      showToast(`Couldn't save notification setup: ${error.message}`);
+      return;
+    }
     pushActive = true;
-  } catch {
-    // push isn't supported everywhere (e.g. iPhone browser tab) — fail quietly
+  } catch (err) {
+    // push isn't supported everywhere (e.g. iPhone browser tab) — usually fine,
+    // but surface real failures so they're not invisible
+    if (Notification.permission === "granted" && err?.message) {
+      showToast(`Notification setup problem: ${String(err.message).slice(0, 90)}`);
+    }
   }
 }
 
@@ -2569,7 +2577,17 @@ async function updateNotifBanner() {
     } else {
       const reg = await navigator.serviceWorker.getRegistration().catch(() => null);
       const sub = reg ? await reg.pushManager.getSubscription().catch(() => null) : null;
-      show = !sub;
+      if (!sub) {
+        show = true;
+      } else {
+        // browser thinks it's subscribed — make sure the hub actually has it on file
+        const { data } = await supabase
+          .from("push_subscriptions")
+          .select("id")
+          .eq("endpoint", sub.endpoint)
+          .maybeSingle();
+        show = !data;
+      }
     }
   }
   el.classList.toggle("hidden", !show);
