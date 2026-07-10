@@ -2141,15 +2141,7 @@ function renderRoster() {
       </div>
     </details></li>`;
   };
-  const warehouse = members.filter((p) => p.warehouse_access !== false);
-  const support = members.filter((p) => p.support_access);
-  els.roster.innerHTML =
-    (warehouse.length
-      ? `<li class="roster-group">Warehouse Team</li>` + warehouse.map(item).join("")
-      : "") +
-    (support.length
-      ? `<li class="roster-group">Customer Support Team</li>` + support.map(item).join("")
-      : "");
+  els.roster.innerHTML = members.map(item).join("");
   els.roster.querySelectorAll(".chat-thread").forEach((ul) => (ul.scrollTop = ul.scrollHeight));
 }
 
