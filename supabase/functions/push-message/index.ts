@@ -1,7 +1,9 @@
-// Sends a web-push notification to the recipient's devices when a chat
-// message is inserted (triggered by a database trigger via pg_net).
-// Staff → admin messages notify every admin device; admin → staff messages
-// notify that member's devices. Dead subscriptions are pruned automatically.
+// Sends web-push notifications, triggered by pg_net database triggers:
+//  - messages:      staff → all admin devices; admin → that member's devices
+//  - announcements: notifies admins (unless an admin posted it)
+//  - tasks:         notifies admins (unless an admin posted it; auto re-posts
+//                   from recurring tasks are skipped — they have no created_by)
+// Dead subscriptions are pruned automatically.
 import webpush from "npm:web-push@3.6.7";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -16,33 +18,56 @@ webpush.setVapidDetails(
   Deno.env.get("VAPID_PRIVATE_KEY")!
 );
 
+const SITE = "https://warehouse-justforkix.github.io/jfkhub/";
+
 Deno.serve(async (req) => {
   if (req.headers.get("x-push-secret") !== Deno.env.get("PUSH_TRIGGER_SECRET")) {
     return new Response("unauthorized", { status: 401 });
   }
   const payload = await req.json();
+  const table = payload.table ?? "messages";
   const m = payload.record ?? payload;
 
+  const { data: adminRows, error: adminErr } = await supabase
+    .from("profiles")
+    .select("id, name")
+    .eq("is_admin", true);
+  if (adminErr) return new Response(JSON.stringify({ adminErr: adminErr.message }), { status: 500 });
+  const admins = adminRows ?? [];
+
   let recipientIds: string[] = [];
-  if (m.from_admin) {
-    recipientIds = [m.member_id];
+  let title = "";
+  let text = "";
+  let url = SITE;
+
+  if (table === "messages") {
+    recipientIds = m.from_admin ? [m.member_id] : admins.map((a) => a.id);
+    title = `New message from ${m.sender_name}`;
+    text = String(m.body ?? "").slice(0, 140);
+    url += "#messages";
+  } else if (table === "announcements") {
+    recipientIds = admins.filter((a) => a.id !== m.author_id).map((a) => a.id);
+    title = `New announcement from ${m.author_name}`;
+    text = String(m.body ?? "").slice(0, 140);
+    url += "#announcements";
+  } else if (table === "tasks") {
+    if (!m.created_by) return new Response("auto repost — skipped");
+    recipientIds = admins.filter((a) => a.name !== m.created_by).map((a) => a.id);
+    title = `New task from ${m.created_by}`;
+    text = String(m.title ?? "").slice(0, 140);
+    url += "#tasks";
   } else {
-    const { data } = await supabase.from("profiles").select("id").eq("is_admin", true);
-    recipientIds = (data ?? []).map((r: { id: string }) => r.id);
+    return new Response("unknown table — skipped");
   }
+
   if (!recipientIds.length) return new Response("no recipients");
 
-  const { data: subs, error: subsError } = await supabase
+  const { data: subs } = await supabase
     .from("push_subscriptions")
     .select("id, subscription")
     .in("profile_id", recipientIds);
-  if (subsError) return new Response(JSON.stringify({ subsError: subsError.message, recipientIds }), { status: 500 });
 
-  const body = JSON.stringify({
-    title: `New message from ${m.sender_name}`,
-    body: String(m.body ?? "").slice(0, 140),
-    url: "https://warehouse-justforkix.github.io/jfkhub/#messages",
-  });
+  const body = JSON.stringify({ title, body: text, url });
 
   let sent = 0;
   const errors: string[] = [];

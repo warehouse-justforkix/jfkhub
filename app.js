@@ -2050,6 +2050,7 @@ els.taskForm.addEventListener("submit", async (e) => {
     recurrence: els.tfRecurrence.value,
     assigned_to: els.tfAssign.value || null,
     photo: tfPhoto.uri,
+    created_by: myProfile.name,
   });
 
   if (error) {
@@ -2123,12 +2124,11 @@ function renderRoster() {
   const open = new Set([...els.roster.querySelectorAll("details[open]")].map((d) => d.dataset.id));
 
   const item = (p) => {
-    const presence = presenceOf(p.id);
     return `<li><details class="chat-acc" data-id="${p.id}" ${open.has(p.id) ? "open" : ""}>
       <summary>
-        <span class="roster-avatar presence-${presence}">${avatarHtml(p)}</span>
+        <span class="roster-avatar">${avatarHtml(p)}</span>
         <span class="roster-name">${esc(p.name)}</span>
-        ${threadUnread(p.id) ? '<span class="msg-pop-inline">💬</span>' : ""}
+        ${threadUnread(p.id) ? '<span class="new-chat-pill">New Chat</span>' : ""}
       </summary>
       <div class="chat-body">
         <ul class="msg-thread chat-thread">${threadHtml(p.id)}</ul>
@@ -2158,7 +2158,7 @@ els.roster.addEventListener(
     const d = e.target;
     if (!d.matches?.("details.chat-acc") || !d.open) return;
     localStorage.setItem(threadSeenKey(d.dataset.id), new Date().toISOString());
-    d.querySelector(".msg-pop-inline")?.remove();
+    d.querySelector(".new-chat-pill")?.remove();
     const ul = d.querySelector(".chat-thread");
     if (ul) ul.scrollTop = ul.scrollHeight;
     const anyUnread = staff.some((p) => p.id !== myProfile.id && threadUnread(p.id));
@@ -2215,6 +2215,7 @@ function updateAppBadge() {
 }
 
 function notifyNewMessages(fresh) {
+  if (pushActive) return; // real push notifications already cover these devices
   if (!("Notification" in window) || Notification.permission !== "granted") return;
   fresh.slice(-3).forEach((m) => {
     // skip if she's clearly looking at that conversation right now
@@ -2537,6 +2538,7 @@ function urlB64ToUint8Array(s) {
 }
 
 // Register this device for pushes and save its subscription under my profile.
+let pushActive = false; // when true, real push handles banners — skip in-app ones
 async function enablePush() {
   try {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
@@ -2550,6 +2552,7 @@ async function enablePush() {
       { profile_id: myProfile.id, endpoint: sub.endpoint, subscription: sub.toJSON() },
       { onConflict: "endpoint" }
     );
+    pushActive = true;
   } catch {
     // push isn't supported everywhere (e.g. iPhone browser tab) — fail quietly
   }

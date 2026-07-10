@@ -815,21 +815,20 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 .roster .empty { padding: .6rem; color: var(--ink-soft); font-style: italic; font-size: .85rem; }
 .unread-dot { color: var(--accent); font-size: .75rem; }
 
-/* Presence bubble on roster avatars */
 .roster-avatar { position: relative; display: inline-flex; }
-.roster-avatar::after {
-  content: "";
-  position: absolute;
-  right: -1px;
-  bottom: -1px;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  border: 2px solid #fff;
+
+/* Green "New Chat" pill on a contact with unread messages */
+.new-chat-pill {
+  background: #d9f2db;
+  color: #157347;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: .14rem .5rem;
+  border-radius: 99px;
+  white-space: nowrap;
 }
-.presence-in::after { background: #22a54a; }
-.presence-lunch::after { background: #f0a500; }
-.presence-out::after { background: #e03131; }
 
 .thread-with { font-size: .85rem; font-weight: 600; color: var(--brand-dark); margin-bottom: .4rem; }
 
