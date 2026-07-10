@@ -2556,7 +2556,44 @@ async function enablePush() {
   } catch {
     // push isn't supported everywhere (e.g. iPhone browser tab) — fail quietly
   }
+  updateNotifBanner();
 }
+
+// Show the "Turn On Notifications" banner when this device isn't registered yet.
+async function updateNotifBanner() {
+  const el = $("notif-banner");
+  if (!el) return;
+  let show = false;
+  if (
+    myProfile &&
+    "Notification" in window &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window &&
+    Notification.permission !== "denied"
+  ) {
+    if (Notification.permission === "default") {
+      show = true;
+    } else {
+      const reg = await navigator.serviceWorker.getRegistration().catch(() => null);
+      const sub = reg ? await reg.pushManager.getSubscription().catch(() => null) : null;
+      show = !sub;
+    }
+  }
+  el.classList.toggle("hidden", !show);
+}
+
+$("notif-enable").addEventListener("click", async () => {
+  try {
+    const p = await Notification.requestPermission();
+    if (p === "granted") {
+      await enablePush();
+      showToast("Notifications are on for this device 🔔");
+    } else if (p === "denied") {
+      alert("Notifications are blocked for this site in your browser settings — allow them there, then tap this again.");
+    }
+  } catch {}
+  updateNotifBanner();
+});
 
 // ---------- page routing (nav buttons = pages; logo = homepage) ----------
 

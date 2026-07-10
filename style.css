@@ -717,6 +717,24 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 .reminders { background: #fff8e6; border-color: #f0dfae; }
 .reminders strong { color: #8a6d00; }
 
+/* Notification opt-in banner */
+.notif-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .8rem;
+  flex-wrap: wrap;
+  background: #fffdf3;
+  border: 1px solid #e8d590;
+  color: #6b5410;
+  border-radius: 10px;
+  padding: .55rem 1rem;
+  font-size: .88rem;
+  margin-bottom: .65rem;
+}
+.notif-banner.hidden { display: none; }
+.notif-banner .btn { height: 2rem; padding: 0 .9rem; font-size: .78rem; }
+
 /* Policy notice */
 .policy-note {
   background: #fdecea;
