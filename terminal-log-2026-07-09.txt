@@ -1,0 +1,61 @@
+Last login: Thu Jul  2 13:02:20 on ttys007
+karleyhansen@Karleys-MacBook-Air Scheduling % claude
+
+  ⎿  Added 1 line, removed 1 line
+      1758
+      1759    for (let day = 1; day <= daysInMonth; day++) {
+      1760      const iso = dateToStr(new Date(y, m, day));
+      1761 -    const dayNotes = notes.filter((n) => n.start_date <= iso && noteEnd(n) >= iso);
+      1761 +    const dayNotes = notes.filter((n) => noteOnDay(n, iso));
+      1762      const chips = dayNotes
+      1763        .slice(0, 4)
+      1764        .map(
+
+⏺ Update(app.js)
+  ⎿  Added 1 line, removed 1 line
+      1899    const today = todayStr();
+      1900    const myTasks = tasks.filter((t) => t.status === "open" && t.assigned_to === myProfile.name);
+      1901    const myNotes = notes.filter(
+      1902 -    (n) => n.staff_name === myProfile.name && n.start_date <= today && noteEnd(n) >= today
+      1902 +    (n) => n.staff_name === myProfile.name && noteOnDay(n, today)
+      1903    );
+      1904    if (!myTasks.length && !myNotes.length) {
+      1905      els.remindersBanner.classList.add("hidden");
+
+⏺ Update(app.js)
+  ⎿  Added 2 lines, removed 1 line
+      1711          <span class="note-type type-${n.note_type}">${TYPE_LABELS[n.note_type] || n.note_type}</span>
+      1712          <span class="note-name">${esc(n.staff_name)}${n.visibility === "admin" ? ' <span title="Only visible to you">🔒</span>' : ""}</span>
+      1713          ${n.event_time ? `<span class="note-details">${esc(n.event_time)}</span>` : ""}
+      1714 +        ${n.recurrence && n.recurrence !== "none" ? `<span class="note-details">↻ ${NOTE_RECUR_LABELS[n.recurrence]}</span>` : ""}
+      1715          ${n.details ? `<span class="note-details">${esc(n.details)}</span>` : ""}
+      1715 -        <button class="note-delete" data-id="${n.id}" title="Remove this entry" aria-label="Remove entry">✕</button>
+      1716 +        <button class="note-delete" data-id="${n.id}" title="Remove this entry${n.recurrence && n.recurrence !== "none" ? " (removes every repeat)" : ""}" aria-label="Remove entry">✕</button>
+      1717        </li>`;
+      1718      })
+      1719      .join("");
+
+  Called playwright 3 times, ran 1 shell command
+
+⏺ Everything checks out. Closing my test browser as promised:
+
+  Ran 1 shell command
+
+⏺ The Repeats option is live on the calendar (v98 — check your footer after a refresh). Here's what you got:
+
+  - A new Repeats dropdown in the calendar form — Doesn't repeat / Weekly / Every 2 weeks / Monthly — sitting right after Start
+  Time, with exactly the same box height and text size as the other fields (verified: identical to the Type dropdown).
+  - A repeating entry automatically appears on all its future dates: post a Monday meeting as Weekly and every Monday shows it
+  on the calendar, in the Today banner, and in personal reminders. Monthly repeats land on the same day each month.
+  - In the Upcoming list, repeating entries are tagged with ↻ weekly / ↻ every 2 weeks / ↻ monthly and stay listed instead of
+  aging off.
+  - Deleting the entry removes the entire series (the ✕ tooltip says so).
+  - It works with everything else — types, Start Time, and your Only Me visibility, so you can have a private recurring
+  reminder too. Recurring "Time off" entries even grey people out in Who's In on each repeat day.
+
+  And it's in my test browser's window no longer — that's fully closed again, so any browser you're looking at is your own.
+
+✻ Baked for 3m 26s
+
+※ recap: Building your JFK Warehouse Hub; latest addition was the calendar Repeats dropdown (weekly/biweekly/monthly), now live
+  in v98. Next: refresh your browser, confirm the footer says v98, and try posting a recurring entry.

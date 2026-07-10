@@ -126,6 +126,13 @@ const els = {
   memberList: $("member-list"),
 };
 
+// ---------- feature flags ----------
+// Time Clock is OFF for now (punch buttons, Who's In, pending punch changes,
+// Hours This Week, and clock-in/out reminders). All the code and data stay in
+// place — set this to true to bring the whole thing back.
+// See archive/README-time-clock.md for details.
+const FEATURE_TIME_CLOCK = false;
+
 let session = null;
 let myProfile = null;
 let staff = [];        // all profiles (names/roles — no hours)
@@ -427,7 +434,9 @@ async function route() {
       curHub = prof.support_access ? "support" : "warehouse";
       $("team-indicator-label").textContent = prof.support_access ? "🎧 Customer Support" : "📦 Warehouse";
     }
-    $("hours-card").classList.toggle("hidden", !admin);
+    $("hours-card").classList.toggle("hidden", !admin || !FEATURE_TIME_CLOCK);
+    $("clock").classList.toggle("hidden", !FEATURE_TIME_CLOCK);
+    $("nav-clock").classList.toggle("hidden", !FEATURE_TIME_CLOCK);
     showView(els.appView);
     await loadEverything();
     setHub(curHub);
@@ -603,9 +612,7 @@ async function loadEverything() {
     loadHours(),
     loadNotes(),
     loadTasks(),
-    loadPunches(),
-    loadPunchRequests(),
-    loadWeekPunches(),
+    ...(FEATURE_TIME_CLOCK ? [loadPunches(), loadPunchRequests(), loadWeekPunches()] : []),
     loadAnnouncements(),
     loadMessages(),
     loadChecklists(),
@@ -2412,6 +2419,7 @@ function showToast(text) {
 }
 
 function checkShiftReminders() {
+  if (!FEATURE_TIME_CLOCK) return;
   if (!myProfile) return;
   const dayIdx = new Date().getDay(); // 1–5 = Mon–Fri
   if (dayIdx < 1 || dayIdx > 5) return;
@@ -2457,6 +2465,7 @@ function maybeAskNotifications() {
 // ---------- page routing (nav buttons = pages; logo = homepage) ----------
 
 const PAGE_ROUTES = ["home", "clock", "calendar", "schedules", "announcements", "tasks", "restocking", "checklists", "supplies", "messages", "admin"];
+if (!FEATURE_TIME_CLOCK) PAGE_ROUTES.splice(PAGE_ROUTES.indexOf("clock"), 1); // #clock falls back to home
 const HOME_ONLY = ["today-callout", "reminders"];
 const MAIN_SECTIONS = ["today-callout", "reminders", "sick-note", "clock", "calendar", "schedules", "announcements", "tasks", "restocking", "checklists", "supplies"];
 
