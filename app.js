@@ -2163,6 +2163,7 @@ els.roster.addEventListener(
     const anyUnread = staff.some((p) => p.id !== myProfile.id && threadUnread(p.id));
     els.msgBadge.classList.toggle("hidden", !anyUnread);
     $("chip-msg-dot").classList.toggle("hidden", !anyUnread);
+    updateAppBadge();
   },
   true
 );
@@ -2189,6 +2190,54 @@ els.roster.addEventListener("submit", async (e) => {
   await loadMessages();
 });
 
+// Desktop notifications + app-icon badge for new incoming messages.
+let lastInboundAt = null; // newest inbound message we've already seen this session
+
+function myInbound() {
+  return messages.filter((m) =>
+    myProfile.is_admin ? !m.from_admin : m.from_admin && m.member_id === myProfile.id
+  );
+}
+
+function unreadThreadCount() {
+  if (!myProfile) return 0;
+  return myProfile.is_admin
+    ? staff.filter((p) => p.id !== myProfile.id && threadUnread(p.id)).length
+    : threadUnread(myProfile.id) ? 1 : 0;
+}
+
+function updateAppBadge() {
+  if (!("setAppBadge" in navigator)) return; // installed-app icon bubble (Chrome PWA)
+  const n = unreadThreadCount();
+  if (n > 0) navigator.setAppBadge(n).catch(() => {});
+  else navigator.clearAppBadge?.().catch(() => {});
+}
+
+function notifyNewMessages(fresh) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  fresh.slice(-3).forEach((m) => {
+    // skip if she's clearly looking at that conversation right now
+    const viewing =
+      document.visibilityState === "visible" &&
+      (myProfile.is_admin
+        ? !!els.roster.querySelector(`details[data-id="${m.member_id}"][open]`)
+        : currentPage() === "messages");
+    if (viewing) return;
+    try {
+      const n = new Notification(`💬 New message from ${m.sender_name}`, {
+        body: m.body.slice(0, 140),
+        icon: "icons/icon-192.png",
+        tag: `jfk-msg-${m.member_id}`, // one banner per conversation
+      });
+      n.onclick = () => {
+        window.focus();
+        location.hash = "#messages";
+        n.close();
+      };
+    } catch {}
+  });
+}
+
 async function loadMessages() {
   const { data, error } = await supabase
     .from("messages")
@@ -2202,12 +2251,24 @@ async function loadMessages() {
   renderRoster();
   renderThread();
 
-  const anyUnread = myProfile.is_admin
-    ? staff.some((p) => p.id !== myProfile.id && threadUnread(p.id))
-    : threadUnread(myProfile.id);
+  // banner for anything that arrived since the last check (not on first load)
+  const inbound = myInbound();
+  const newest = inbound.length ? inbound[inbound.length - 1].created_at : "";
+  if (lastInboundAt !== null && newest > lastInboundAt) {
+    notifyNewMessages(inbound.filter((m) => m.created_at > lastInboundAt));
+  }
+  lastInboundAt = newest;
+
+  const anyUnread = unreadThreadCount() > 0;
   els.msgBadge.classList.toggle("hidden", !anyUnread);
   $("chip-msg-dot").classList.toggle("hidden", !anyUnread);
+  updateAppBadge();
 }
+
+// Check for new messages on a timer so banners arrive without a refresh.
+setInterval(() => {
+  if (myProfile) loadMessages();
+}, 45_000);
 
 function renderThread() {
   if (myProfile.is_admin) return; // admin uses the per-contact accordions
