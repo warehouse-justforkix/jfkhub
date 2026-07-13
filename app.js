@@ -2593,6 +2593,27 @@ async function updateNotifBanner() {
   el.classList.toggle("hidden", !show);
 }
 
+// Hidden self-test: click the version number in the footer to make THIS device
+// show a banner locally (no push involved) — separates display problems from
+// delivery problems.
+document.querySelector(".site-footer .wrap").addEventListener("click", async () => {
+  if (!myProfile || !("Notification" in window)) return;
+  if (Notification.permission !== "granted") {
+    showToast("Notifications aren't allowed in this browser yet.");
+    return;
+  }
+  const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration().catch(() => null) : null;
+  if (reg) {
+    reg.showNotification("Local test from this device", {
+      body: "If you can see this banner, your computer can display them.",
+      icon: "icons/icon-192.png",
+    });
+  } else {
+    try { new Notification("Local test from this device", { body: "If you can see this banner, your computer can display them." }); } catch {}
+  }
+  showToast("Local test banner sent — did it appear?");
+});
+
 $("notif-enable").addEventListener("click", async () => {
   try {
     const p = await Notification.requestPermission();
