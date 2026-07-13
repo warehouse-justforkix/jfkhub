@@ -245,6 +245,17 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
   padding: 0 .3rem;
 }
 .note-delete:hover { color: var(--out); }
+.note-edit {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #b9aec4;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 .3rem;
+}
+.note-edit:hover { color: var(--brand-dark); }
+.note-edit + .note-delete { margin-left: 0; }
 
 /* Task board */
 .me-picker { font-size: .85rem; color: var(--ink-soft); display: flex; align-items: center; gap: .45rem; white-space: nowrap; }

@@ -1706,7 +1706,22 @@ async function loadNotes() {
 function renderNotes() {
   const today = todayStr();
   const showPast = els.showPast.checked;
-  const visible = notes.filter((n) => showPast || noteEnd(n) >= today || (n.recurrence && n.recurrence !== "none"));
+  // Upcoming shows only the next 2 weeks (tick "show past entries" to see everything)
+  const horizon = new Date();
+  horizon.setDate(horizon.getDate() + 14);
+  const twoWeeksOut = dateToStr(horizon);
+  const inWindow = (n) => {
+    if (n.start_date <= twoWeeksOut && noteEnd(n) >= today) return true;
+    if (n.recurrence && n.recurrence !== "none") {
+      for (let i = 0; i <= 14; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() + i);
+        if (noteOnDay(n, dateToStr(d))) return true;
+      }
+    }
+    return false;
+  };
+  const visible = notes.filter((n) => showPast || inWindow(n));
 
   if (!visible.length) {
     els.notesList.innerHTML = `<li class="empty">Nothing coming up — everyone's on their normal schedule. 🎉</li>`;
@@ -1723,6 +1738,7 @@ function renderNotes() {
         ${n.event_time ? `<span class="note-details">${esc(n.event_time)}</span>` : ""}
         ${n.recurrence && n.recurrence !== "none" ? `<span class="note-details">↻ ${NOTE_RECUR_LABELS[n.recurrence]}</span>` : ""}
         ${n.details ? `<span class="note-details">${esc(n.details)}</span>` : ""}
+        <button class="note-edit" data-edit="${n.id}" title="Edit this entry" aria-label="Edit entry">✎</button>
         <button class="note-delete" data-id="${n.id}" title="Remove this entry${n.recurrence && n.recurrence !== "none" ? " (removes every repeat)" : ""}" aria-label="Remove entry">✕</button>
       </li>`;
     })
@@ -1805,10 +1821,45 @@ els.calGrid.addEventListener("click", (e) => {
 
 els.showPast.addEventListener("change", renderNotes);
 
+// Editing state: which entry the form is currently updating (null = new entry)
+let editingNoteId = null;
+
+function startNoteEdit(n) {
+  editingNoteId = n.id;
+  els.nfType.value = n.note_type;
+  els.nfStart.value = n.start_date;
+  els.nfEnd.value = n.end_date || "";
+  els.nfTime.value = n.event_time || "";
+  els.nfDetails.value = n.details || "";
+  $("nf-recur").value = n.recurrence || "none";
+  if (myProfile.is_admin) els.nfVis.value = n.visibility || "team";
+  $("nf-submit").textContent = "Save Changes";
+  $("nf-cancel").classList.remove("hidden");
+  setStatus(els.formStatus, `Editing "${TYPE_LABELS[n.note_type] || n.note_type}" for ${n.staff_name} — make your changes above and hit Save.`);
+  els.nfStart.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function cancelNoteEdit() {
+  editingNoteId = null;
+  els.form.reset();
+  $("nf-submit").textContent = "Post it";
+  $("nf-cancel").classList.add("hidden");
+  setStatus(els.formStatus, "");
+}
+
+$("nf-cancel").addEventListener("click", cancelNoteEdit);
+
 els.notesList.addEventListener("click", async (e) => {
+  const editBtn = e.target.closest("button[data-edit]");
+  if (editBtn) {
+    const n = notes.find((x) => x.id === editBtn.dataset.edit);
+    if (n) startNoteEdit(n);
+    return;
+  }
   const btn = e.target.closest(".note-delete");
   if (!btn) return;
   if (!confirm("Remove this entry?")) return;
+  if (btn.dataset.id === editingNoteId) cancelNoteEdit();
   const { error } = await supabase.from("schedule_notes").delete().eq("id", btn.dataset.id);
   if (error) alert(`Couldn't remove it: ${error.message}`);
   await loadNotes();
@@ -1825,8 +1876,7 @@ els.form.addEventListener("submit", async (e) => {
     return;
   }
 
-  const { error } = await supabase.from("schedule_notes").insert({
-    staff_name: myProfile.name,
+  const row = {
     note_type: els.nfType.value,
     start_date: start,
     end_date: end,
@@ -1834,14 +1884,19 @@ els.form.addEventListener("submit", async (e) => {
     details: els.nfDetails.value.trim() || null,
     visibility: myProfile.is_admin ? els.nfVis.value : "team",
     recurrence: $("nf-recur").value,
-  });
+  };
+
+  const { error } = editingNoteId
+    ? await supabase.from("schedule_notes").update(row).eq("id", editingNoteId)
+    : await supabase.from("schedule_notes").insert({ ...row, staff_name: myProfile.name });
 
   if (error) {
-    setStatus(els.formStatus, `Couldn't post: ${error.message}`, true);
+    setStatus(els.formStatus, `Couldn't ${editingNoteId ? "save" : "post"}: ${error.message}`, true);
     return;
   }
-  setStatus(els.formStatus, "Posted! ✔");
-  els.form.reset();
+  const wasEditing = !!editingNoteId;
+  cancelNoteEdit();
+  setStatus(els.formStatus, wasEditing ? "Changes saved! ✔" : "Posted! ✔");
   await loadNotes();
 });
 
