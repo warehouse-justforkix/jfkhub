@@ -16,6 +16,7 @@ create table if not exists invited_emails (
   is_admin boolean not null default false,
   support_access boolean not null default false,   -- customer-support hub access
   warehouse_access boolean not null default true,    -- warehouse hub access (true+support = both)
+  on_schedule boolean not null default true,         -- false = view/add only, no schedule row (Justin/Jerad)
   invited_at timestamptz not null default now()
 );
 
@@ -27,6 +28,7 @@ create table if not exists profiles (
   is_admin boolean not null default false,
   support_access boolean not null default false,   -- customer-support hub access
   warehouse_access boolean not null default true,    -- warehouse hub access
+  on_schedule boolean not null default true,         -- false = view/add only, no schedule row
   avatar text not null default '🙂',              -- emoji profile icon
   avatar_options jsonb,                           -- custom character avatar (DiceBear options); overrides emoji when set
   reminders boolean not null default false,       -- opt-in on-open reminders
@@ -204,8 +206,8 @@ create or replace function public.profiles_set_admin_flag() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
   new.email := lower(new.email);
-  select coalesce(i.is_admin, false), coalesce(i.support_access, false), coalesce(i.warehouse_access, true)
-    into new.is_admin, new.support_access, new.warehouse_access
+  select coalesce(i.is_admin, false), coalesce(i.support_access, false), coalesce(i.warehouse_access, true), coalesce(i.on_schedule, true)
+    into new.is_admin, new.support_access, new.warehouse_access, new.on_schedule
     from (select 1) x
     left join invited_emails i on i.email = new.email;
   return new;
@@ -223,6 +225,7 @@ begin
     new.is_admin := old.is_admin;
     new.support_access := old.support_access;
     new.warehouse_access := old.warehouse_access;
+    new.on_schedule := old.on_schedule;
   end if;
   new.email := old.email;  -- email is fixed to the auth account
   return new;

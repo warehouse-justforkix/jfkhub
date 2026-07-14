@@ -544,6 +544,8 @@ els.editProfile.addEventListener("click", () => {
   els.pfReminders.checked = !!myProfile.reminders;
   const hours = hoursById[myProfile.id] || {};
   DAYS.forEach((d) => ($(`pf-${d}`).value = hours[d] || ""));
+  // off-schedule members (view/add-only) don't fill in weekly hours
+  $("pf-mon").closest("fieldset").classList.toggle("hidden", myProfile.on_schedule === false);
   els.profileBack.classList.remove("hidden");
   showView(els.profileView);
 });
@@ -1579,7 +1581,8 @@ async function loadHours() {
 }
 
 function scheduleRows() {
-  return hubMembers();
+  // members flagged off-schedule (e.g. Justin & Jerad) don't get a row
+  return hubMembers().filter((p) => p.on_schedule !== false);
 }
 
 function canEditRow(p) {
@@ -2190,7 +2193,7 @@ function renderRoster() {
       <div class="chat-body">
         <ul class="msg-thread chat-thread">${threadHtml(p.id)}</ul>
         <form class="msg-form" data-member="${p.id}">
-          <input type="text" maxlength="1000" required placeholder="Type a message…">
+          <textarea rows="1" maxlength="1000" required placeholder="Type a message…"></textarea>
           <button class="btn btn-primary" type="submit">Send</button>
         </form>
       </div>
@@ -2222,7 +2225,7 @@ els.roster.addEventListener("submit", async (e) => {
   const form = e.target.closest("form[data-member]");
   if (!form) return;
   e.preventDefault();
-  const input = form.querySelector("input");
+  const input = form.querySelector("textarea");
   const body = input.value.trim();
   if (!body) return;
   const { error } = await supabase.from("messages").insert({
@@ -2236,8 +2239,24 @@ els.roster.addEventListener("submit", async (e) => {
     return;
   }
   input.value = "";
+  input.style.height = "";
   localStorage.setItem(threadSeenKey(form.dataset.member), new Date().toISOString());
   await loadMessages();
+});
+
+// Message boxes grow as you type (up to ~5 lines) and Enter sends —
+// Shift+Enter makes a new line.
+document.addEventListener("input", (e) => {
+  if (!e.target.matches(".msg-form textarea")) return;
+  e.target.style.height = "auto";
+  e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+});
+document.addEventListener("keydown", (e) => {
+  if (!e.target.matches(".msg-form textarea")) return;
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    e.target.closest("form").requestSubmit();
+  }
 });
 
 // Desktop notifications + app-icon badge for new incoming messages.
@@ -2369,6 +2388,7 @@ els.msgForm.addEventListener("submit", async (e) => {
     return;
   }
   els.msgForm.reset();
+  els.msgBody.style.height = "";
   await loadMessages();
 });
 
@@ -2412,8 +2432,9 @@ function renderAdmin() {
         .join("")
     : `<li class="empty">No pending invites.</li>`;
 
-  els.memberList.innerHTML = staff.length
-    ? staff
+  const memberOrder = [...staff].sort((a, b) => (b.is_admin ? 1 : 0) - (a.is_admin ? 1 : 0));
+  els.memberList.innerHTML = memberOrder.length
+    ? memberOrder
         .map(
           (p) => `<li>
             <span>${nameWithAvatar(p.name)}

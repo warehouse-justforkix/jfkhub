@@ -975,7 +975,8 @@ details.chat-acc[open] summary::after { content: "▾"; }
 .msg-theirs .msg-bubble { background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 4px; }
 .msg-thread .empty { align-self: center; }
 .msg-form { display: flex; gap: .6rem; align-items: stretch; }
-.msg-form input {
+.msg-form input,
+.msg-form textarea {
   flex: 1;
   min-width: 0;
   font: inherit;
@@ -984,6 +985,14 @@ details.chat-acc[open] summary::after { content: "▾"; }
   border: 1px solid #e8b7d1;
   border-radius: 8px;
   box-sizing: border-box;
+}
+.msg-form textarea {
+  resize: none;
+  overflow-y: auto;
+  padding-top: .38rem;
+  padding-bottom: .38rem;
+  line-height: 1.3;
+  max-height: 120px;           /* grows as you type, up to ~5 lines */
 }
 .msg-form .btn {
   height: 2.1rem;              /* matches the Add Member button row height */
@@ -1014,11 +1023,14 @@ details.chat-acc[open] summary::after { content: "▾"; }
 .admin-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.1rem; }
 .admin-cols h3 { font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .5rem; }
 .admin-list { list-style: none; margin: 0; padding: 0; }
-.admin-list li { display: flex; justify-content: space-between; align-items: center; gap: .6rem; padding: .5rem .1rem; border-bottom: 1px solid var(--line); font-size: .9rem; }
+.admin-list li { display: flex; justify-content: space-between; align-items: center; gap: .4rem; padding: .35rem .1rem; border-bottom: 1px solid var(--line); font-size: .78rem; }
+.admin-list li > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: .3rem; min-width: 0; }
+.admin-list .role-badge { font-size: .58rem; padding: .1rem .3rem; }
+.admin-list .btn-mini { font-size: .66rem; padding: .18rem .45rem; }
 .admin-list li:last-child { border-bottom: none; }
 .admin-list .empty { color: var(--ink-soft); font-style: italic; }
 .admin-actions { display: flex; gap: .4rem; flex-shrink: 0; align-items: center; }
-.team-select { font: inherit; font-size: .76rem; padding: .2rem .25rem; border: 1px solid #eab4d1; border-radius: 6px; background: #fff; color: var(--brand-dark); }
+.team-select { font: inherit; font-size: .66rem; padding: .15rem .2rem; border: 1px solid #eab4d1; border-radius: 6px; background: #fff; color: var(--brand-dark); }
 @media (max-width: 700px) { .admin-cols { grid-template-columns: 1fr; } }
 
 .site-footer {
