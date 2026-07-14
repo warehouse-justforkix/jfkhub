@@ -1674,6 +1674,31 @@ function noteDateLabel(n) {
   return fmtDate(n.start_date);
 }
 
+// Each person gets their own calendar color (assigned alphabetically, so it's
+// stable unless the roster changes).
+const PERSON_COLORS = [
+  { bg: "#fde2ec", fg: "#b3005f" },
+  { bg: "#e3ecfd", fg: "#2b4bab" },
+  { bg: "#e2f6e5", fg: "#157347" },
+  { bg: "#fdf3d8", fg: "#8a6d0a" },
+  { bg: "#f0e4fb", fg: "#6d28a8" },
+  { bg: "#fde8dd", fg: "#b5490f" },
+  { bg: "#ddf4f6", fg: "#0f6f7a" },
+  { bg: "#f6e0e0", fg: "#a02929" },
+  { bg: "#e8e8f0", fg: "#4a4a6a" },
+  { bg: "#e6f0dc", fg: "#4a7016" },
+];
+function personColor(name) {
+  const names = [...new Set(staff.map((s) => s.name))].sort();
+  let idx = names.indexOf(name);
+  if (idx === -1) {
+    let h = 0;
+    for (const c of String(name || "")) h = (h * 31 + c.charCodeAt(0)) | 0;
+    idx = Math.abs(h);
+  }
+  return PERSON_COLORS[idx % PERSON_COLORS.length];
+}
+
 // Does a note apply on the given day? Directly, or via its recurrence
 // (weekly = same weekday, biweekly = every 14 days, monthly = same day-of-month).
 const NOTE_RECUR_LABELS = { weekly: "weekly", biweekly: "every 2 weeks", monthly: "monthly" };
@@ -1737,7 +1762,7 @@ function renderNotes() {
       return `<li class="${isPast ? "past" : ""}">
         <span class="note-date">${noteDateLabel(n)}</span>
         <span class="note-type type-${n.note_type}">${TYPE_LABELS[n.note_type] || n.note_type}</span>
-        <span class="note-name">${esc(n.staff_name)}${n.visibility === "admin" ? ' <span title="Only visible to you">🔒</span>' : ""}</span>
+        <span class="note-name" style="background:${personColor(n.staff_name).bg};color:${personColor(n.staff_name).fg}">${esc(n.staff_name)}${n.visibility === "admin" ? ' <span title="Only visible to you">🔒</span>' : ""}</span>
         ${n.event_time ? `<span class="note-details">${esc(n.event_time)}</span>` : ""}
         ${n.recurrence && n.recurrence !== "none" ? `<span class="note-details">↻ ${NOTE_RECUR_LABELS[n.recurrence]}</span>` : ""}
         ${n.details ? `<span class="note-details">${esc(n.details)}</span>` : ""}
@@ -1793,7 +1818,7 @@ function renderCalendar() {
       .slice(0, 4)
       .map(
         (n) =>
-          `<div class="cal-chip type-${n.note_type}" title="${esc(n.staff_name)} — ${TYPE_LABELS[n.note_type]}${n.event_time ? " " + esc(n.event_time) : ""}${n.details ? ": " + esc(n.details) : ""}${n.visibility === "admin" ? " (only visible to you)" : ""}">${n.visibility === "admin" ? "🔒 " : ""}${esc(n.staff_name)}${n.note_type === "meeting" && n.event_time ? " · " + esc(n.event_time) : ""}</div>`
+          `<div class="cal-chip" style="background:${personColor(n.staff_name).bg};color:${personColor(n.staff_name).fg}" title="${esc(n.staff_name)} — ${TYPE_LABELS[n.note_type]}${n.event_time ? " " + esc(n.event_time) : ""}${n.details ? ": " + esc(n.details) : ""}${n.visibility === "admin" ? " (only visible to you)" : ""}">${n.visibility === "admin" ? "🔒 " : ""}${esc(n.staff_name)}${n.note_type === "meeting" && n.event_time ? " · " + esc(n.event_time) : ""}</div>`
       )
       .join("");
     const more = dayNotes.length > 4 ? `<div class="cal-more">+${dayNotes.length - 4} more</div>` : "";
@@ -1803,6 +1828,17 @@ function renderCalendar() {
   }
 
   els.calGrid.innerHTML = html;
+
+  // color legend: who's who on the calendar
+  const legend = $("cal-legend");
+  if (legend) {
+    legend.innerHTML = hubMembers()
+      .map((p) => {
+        const c = personColor(p.name);
+        return `<span><i class="cal-dot" style="background:${c.fg}"></i>${esc(p.name)}</span>`;
+      })
+      .join("");
+  }
 }
 
 els.calPrev.addEventListener("click", () => {

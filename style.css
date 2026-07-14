@@ -233,7 +233,12 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
 .type-out { background: #fdecea; color: var(--out); }
 .type-different-hours { background: #fff4e0; color: var(--diff); }
 .type-other { background: #e9edfb; color: var(--other); }
-.note-name { font-weight: 600; }
+.note-name { font-weight: 600; padding: .05rem .45rem; border-radius: 99px; }
+
+/* Calendar color legend */
+.cal-legend { display: flex; flex-wrap: wrap; gap: .3rem .9rem; margin: .5rem 0 .9rem; font-size: .74rem; color: var(--ink-soft); }
+.cal-legend span { display: inline-flex; align-items: center; gap: .3rem; font-weight: 600; }
+.cal-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .note-details { color: var(--ink-soft); }
 .note-delete {
   margin-left: auto;
