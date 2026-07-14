@@ -2468,25 +2468,28 @@ function renderAdmin() {
         .join("")
     : `<li class="empty">No pending invites.</li>`;
 
+  // tap a name to open their team setting + Remove button
+  const openMembers = new Set([...els.memberList.querySelectorAll("details[open]")].map((d) => d.dataset.id));
   const memberOrder = [...staff].sort((a, b) => (b.is_admin ? 1 : 0) - (a.is_admin ? 1 : 0));
   els.memberList.innerHTML = memberOrder.length
     ? memberOrder
-        .map(
-          (p) => `<li>
-            <span>${nameWithAvatar(p.name)}
+        .map((p) => {
+          const summary = `${nameWithAvatar(p.name)}
               <span class="role-badge role-${p.role}">${p.role === "full-time" ? "FT" : "PT"}</span>
-              ${p.is_admin ? '<span class="role-badge badge-admin">ADMIN</span>' : teamBadge(p.support_access, p.warehouse_access)}
-            </span>
-            <span class="admin-actions">
-              ${p.is_admin ? "" : `<select class="team-select" data-teamsel="${p.id}">
+              ${p.is_admin ? '<span class="role-badge badge-admin">ADMIN</span>' : teamBadge(p.support_access, p.warehouse_access)}`;
+          if (p.is_admin) return `<li><span class="member-plain">${summary}</span></li>`;
+          return `<li><details class="member-acc" data-id="${p.id}" ${openMembers.has(p.id) ? "open" : ""}>
+            <summary>${summary}</summary>
+            <div class="member-body">
+              <select class="team-select" data-teamsel="${p.id}">
                 <option value="warehouse" ${teamValue(p) === "warehouse" ? "selected" : ""}>Warehouse</option>
                 <option value="support" ${teamValue(p) === "support" ? "selected" : ""}>Cust. Support</option>
                 <option value="both" ${teamValue(p) === "both" ? "selected" : ""}>Both</option>
-              </select>`}
-              ${p.id !== myProfile.id ? `<button class="btn-mini danger" data-unmember="${p.id}" data-email="${esc(p.email)}" data-name="${esc(p.name)}">Remove</button>` : ""}
-            </span>
-          </li>`
-        )
+              </select>
+              <button class="btn-mini danger" data-unmember="${p.id}" data-email="${esc(p.email)}" data-name="${esc(p.name)}">Remove</button>
+            </div>
+          </details></li>`;
+        })
         .join("")
     : `<li class="empty">No members yet.</li>`;
 }

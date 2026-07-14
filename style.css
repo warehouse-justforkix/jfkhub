@@ -1032,6 +1032,24 @@ details.chat-acc[open] summary::after { content: "▾"; }
 .admin-list li > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: .3rem; min-width: 0; }
 .admin-list .role-badge { font-size: .58rem; padding: .1rem .3rem; }
 .admin-list .btn-mini { font-size: .58rem; padding: .12rem .32rem; white-space: nowrap; line-height: 1.2; }
+.admin-list li:has(.member-acc) { display: block; }
+.member-acc summary {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  cursor: pointer;
+  list-style: none;
+}
+.member-acc summary::-webkit-details-marker { display: none; }
+.member-acc summary::after { content: "▸"; margin-left: auto; color: var(--ink-soft); font-size: .8rem; }
+.member-acc[open] summary::after { content: "▾"; }
+.member-plain { display: flex; align-items: center; gap: .3rem; }
+.member-body {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .35rem 0 .15rem 1.4rem;
+}
 .admin-list li:last-child { border-bottom: none; }
 .admin-list .empty { color: var(--ink-soft); font-style: italic; }
 .admin-actions { display: flex; gap: .4rem; flex-shrink: 0; align-items: center; }
