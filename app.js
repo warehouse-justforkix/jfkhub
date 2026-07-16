@@ -172,6 +172,10 @@ function setHub(hub) {
   renderPunchTable();
   renderHoursTable();
   renderChecklists();
+  // calendar shows only the current hub's people
+  renderCalendar();
+  renderNotes();
+  renderTodayCallout();
 }
 
 $("hub-toggle").addEventListener("click", (e) => {
@@ -1699,6 +1703,15 @@ function personColor(name) {
   return PERSON_COLORS[idx % PERSON_COLORS.length];
 }
 
+// Calendar entries belong to the hub their author is on — the Customer Support
+// view doesn't show warehouse people's entries (and vice versa). Admins and
+// unmatched names show in both.
+function noteInHub(n) {
+  const p = staff.find((s) => s.name === n.staff_name);
+  if (!p || p.is_admin) return true;
+  return curHub === "support" ? !!p.support_access : p.warehouse_access !== false;
+}
+
 // Does a note apply on the given day? Directly, or via its recurrence
 // (weekly = same weekday, biweekly = every 14 days, monthly = same day-of-month).
 const NOTE_RECUR_LABELS = { weekly: "weekly", biweekly: "every 2 weeks", monthly: "monthly" };
@@ -1749,7 +1762,7 @@ function renderNotes() {
     }
     return false;
   };
-  const visible = notes.filter((n) => showPast || inWindow(n));
+  const visible = notes.filter((n) => noteInHub(n) && (showPast || inWindow(n)));
 
   if (!visible.length) {
     els.notesList.innerHTML = `<li class="empty">Nothing coming up — everyone's on their normal schedule. 🎉</li>`;
@@ -1775,7 +1788,7 @@ function renderNotes() {
 
 function renderTodayCallout() {
   const today = todayStr();
-  const todays = notes.filter((n) => noteOnDay(n, today));
+  const todays = notes.filter((n) => noteInHub(n) && noteOnDay(n, today));
   if (!todays.length) {
     els.todayCallout.classList.add("hidden");
     return;
@@ -1813,7 +1826,7 @@ function renderCalendar() {
 
   for (let day = 1; day <= daysInMonth; day++) {
     const iso = dateToStr(new Date(y, m, day));
-    const dayNotes = notes.filter((n) => noteOnDay(n, iso));
+    const dayNotes = notes.filter((n) => noteInHub(n) && noteOnDay(n, iso));
     const chips = dayNotes
       .slice(0, 4)
       .map(
@@ -2038,10 +2051,21 @@ function taskCard(t) {
   let actions = "";
   if (t.status === "open") {
     const mine = t.assigned_to && t.assigned_to === myProfile.name;
+    // admin can hand any open task to anyone on this board's team
+    const assignSel = myProfile.is_admin
+      ? `<select class="team-select" data-assign="${t.id}" title="Assign this task">
+          <option value="">Assign to…</option>
+          ${staff
+            .filter((p) => (curTeam === "support" ? p.support_access || p.is_admin : p.warehouse_access !== false || p.is_admin))
+            .map((p) => `<option value="${esc(p.name)}" ${t.assigned_to === p.name ? "selected" : ""}>${esc(p.name)}</option>`)
+            .join("")}
+        </select>`
+      : "";
     actions = [
       !t.assigned_to ? `<button class="btn-mini primary" data-act="claim" data-id="${t.id}">Claim</button>` : "",
       `<button class="btn-mini ${t.assigned_to ? "primary" : ""}" data-act="done" data-id="${t.id}">Done ✓</button>`,
       mine ? `<button class="btn-mini" data-act="unclaim" data-id="${t.id}">Unclaim</button>` : "",
+      assignSel,
       `<button class="btn-mini danger" data-act="delete" data-id="${t.id}">Remove</button>`,
     ]
       .filter(Boolean)
@@ -2133,6 +2157,18 @@ async function taskAction(act, id) {
 $("tasks").addEventListener("click", (e) => {
   const btn = e.target.closest("button[data-act]");
   if (btn) taskAction(btn.dataset.act, btn.dataset.id);
+});
+
+// admin reassigns an open task from the card's dropdown
+$("tasks").addEventListener("change", async (e) => {
+  const sel = e.target.closest("select[data-assign]");
+  if (!sel || !myProfile.is_admin) return;
+  const { error } = await supabase
+    .from("tasks")
+    .update({ assigned_to: sel.value || null })
+    .eq("id", sel.dataset.assign);
+  if (error) alert(`Couldn't assign: ${error.message}`);
+  await loadTasks();
 });
 
 els.taskForm.addEventListener("submit", async (e) => {
