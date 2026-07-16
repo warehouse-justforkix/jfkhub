@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=115">
+  <link rel="stylesheet" href="style.css?v=116">
   <script>
     // Surface script errors in the footer so problems are visible without devtools.
     window.addEventListener("error", function (e) {
@@ -57,6 +57,7 @@
         <a href="#restocking" id="nav-restocking">Restocking</a>
         <a href="#checklists">Checklists</a>
         <a href="#supplies">Supplies</a>
+        <a href="#mynotes">My Notes</a>
       </nav>
     </div>
   </header>
@@ -590,15 +591,31 @@
         </div>
       </section>
 
+      <!-- Personal notes: private to each person -->
+      <section id="mynotes" class="card">
+        <div class="card-head">
+          <h2>My Notes</h2>
+        </div>
+        <p class="hint">Your private notepad — only you can see what's saved here.</p>
+        <div class="cl-admin-form">
+          <textarea id="pn-body" rows="1" maxlength="2000" placeholder="Write a note…"></textarea>
+          <label class="photo-btn" id="pn-photo-btn" for="pn-photo" title="Attach a photo">📷</label>
+          <input type="file" id="pn-photo" accept="image/*" class="photo-file">
+          <button id="pn-add" class="btn btn-primary" type="button">Add</button>
+        </div>
+        <p id="pn-status" class="form-status" role="status"></p>
+        <ul id="pn-list" class="cl-list"><li class="empty">Loading…</li></ul>
+      </section>
+
       </div><!-- /main-col -->
      </div><!-- /layout -->
     </div>
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">Just For Kix · internal team tool · v115</div>
+    <div class="wrap">Just For Kix · internal team tool · v116</div>
   </footer>
 
-  <script type="module" src="app.js?v=115"></script>
+  <script type="module" src="app.js?v=116"></script>
 </body>
 </html>

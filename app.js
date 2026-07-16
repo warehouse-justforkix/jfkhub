@@ -629,6 +629,7 @@ async function loadEverything() {
     loadRestock(),
     loadWarnings(),
     loadAdmin(),
+    loadPersonalNotes(),
   ]);
 }
 
@@ -1478,6 +1479,7 @@ function photoPicker(btnId, inputId, statusId) {
 }
 
 const annPhoto = photoPicker("ann-photo-btn", "ann-photo", "ann-status");
+const pnPhoto = photoPicker("pn-photo-btn", "pn-photo", "pn-status");
 const tfPhoto = photoPicker("tf-photo-btn", "tf-photo", "task-status");
 const rsPhoto = photoPicker("rs-photo-btn", "rs-photo", "rs-status");
 const clPhoto = photoPicker("cl-photo-btn", "cl-photo", "cl-status");
@@ -1500,6 +1502,67 @@ function showPhoto(src) {
 document.addEventListener("click", (e) => {
   const img = e.target.closest("img.entry-photo");
   if (img) showPhoto(img.src);
+});
+
+// ---------- personal notes (private to each person) ----------
+
+let personalNotes = [];
+
+async function loadPersonalNotes() {
+  const { data, error } = await supabase
+    .from("personal_notes")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) {
+    $("pn-list").innerHTML = `<li class="empty">Couldn't load: ${esc(error.message)}</li>`;
+    return;
+  }
+  personalNotes = data;
+  renderPersonalNotes();
+}
+
+function renderPersonalNotes() {
+  $("pn-list").innerHTML = personalNotes.length
+    ? personalNotes
+        .map(
+          (n) => `<li class="cl-item">
+            <span class="cl-label" style="flex:1">
+              ${n.body ? `<span class="pn-text">${esc(n.body)}</span>` : ""}
+              ${photoThumb(n.photo, true)}
+              <span class="cl-by" style="color:var(--ink-soft)">· ${fmtDate(n.created_at.slice(0, 10))}</span>
+            </span>
+            <button class="note-delete" data-pn-del="${n.id}" title="Delete note">✕</button>
+          </li>`
+        )
+        .join("")
+    : `<li class="empty">No notes yet — jot anything down, it's just for you.</li>`;
+}
+
+$("pn-add").addEventListener("click", async () => {
+  const body = $("pn-body").value.trim();
+  if (!body && !pnPhoto.uri) return;
+  const { error } = await supabase.from("personal_notes").insert({
+    profile_id: myProfile.id,
+    body: body || null,
+    photo: pnPhoto.uri,
+  });
+  if (error) {
+    setStatus($("pn-status"), `Couldn't save: ${error.message}`, true);
+    return;
+  }
+  $("pn-body").value = "";
+  $("pn-body").style.height = "";
+  pnPhoto.clear();
+  setStatus($("pn-status"), "Saved ✔ — only you can see it.");
+  await loadPersonalNotes();
+});
+
+$("pn-list").addEventListener("click", async (e) => {
+  const del = e.target.closest("button[data-pn-del]");
+  if (!del) return;
+  if (!confirm("Delete this note?")) return;
+  await supabase.from("personal_notes").delete().eq("id", del.dataset.pnDel);
+  await loadPersonalNotes();
 });
 
 // ---------- announcements ----------
@@ -2344,7 +2407,7 @@ els.roster.addEventListener("submit", async (e) => {
 // Message boxes grow as you type (up to ~5 lines) and Enter sends —
 // Shift+Enter makes a new line.
 document.addEventListener("input", (e) => {
-  if (!e.target.matches(".msg-form textarea")) return;
+  if (!e.target.matches(".msg-form textarea, #pn-body")) return;
   e.target.style.height = "auto";
   e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
 });
@@ -2805,10 +2868,10 @@ $("notif-enable").addEventListener("click", async () => {
 
 // ---------- page routing (nav buttons = pages; logo = homepage) ----------
 
-const PAGE_ROUTES = ["home", "clock", "calendar", "schedules", "announcements", "tasks", "restocking", "checklists", "supplies", "messages", "admin"];
+const PAGE_ROUTES = ["home", "clock", "calendar", "schedules", "announcements", "tasks", "restocking", "checklists", "supplies", "mynotes", "messages", "admin"];
 if (!FEATURE_TIME_CLOCK) PAGE_ROUTES.splice(PAGE_ROUTES.indexOf("clock"), 1); // #clock falls back to home
 const HOME_ONLY = ["today-callout", "reminders"];
-const MAIN_SECTIONS = ["today-callout", "reminders", "sick-note", "clock", "calendar", "schedules", "announcements", "tasks", "restocking", "checklists", "supplies"];
+const MAIN_SECTIONS = ["today-callout", "reminders", "sick-note", "clock", "calendar", "schedules", "announcements", "tasks", "restocking", "checklists", "supplies", "mynotes"];
 
 function currentPage() {
   const h = (location.hash || "#home").slice(1);

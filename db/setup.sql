@@ -400,3 +400,15 @@ insert into tasks (title, details, recurrence, due_date) values
   ('Restock shipping supplies', 'Boxes, tape, poly mailers at the pack stations', 'weekly', current_date + 1),
   ('Empty trash & sweep pack area', null, 'daily', current_date),
   ('Cycle count — one aisle', 'Pick the next aisle on the clipboard list', 'weekdays', current_date);
+
+-- Personal notes: a private notepad per person — owner-only (not even admins).
+create table if not exists personal_notes (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references profiles(id) on delete cascade,
+  body text,
+  photo text,                     -- optional attached photo (resized data URI)
+  created_at timestamptz not null default now()
+);
+alter table personal_notes enable row level security;
+create policy "own notes only" on personal_notes for all
+  to authenticated using (profile_id = auth.uid()) with check (profile_id = auth.uid());
