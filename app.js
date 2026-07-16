@@ -2254,6 +2254,16 @@ function renderRoster() {
   }
   // preserve which chats are open across re-renders
   const open = new Set([...els.roster.querySelectorAll("details[open]")].map((d) => d.dataset.id));
+  // ...and preserve any message you're in the middle of typing (incl. cursor)
+  const drafts = {};
+  let focusDraft = null;
+  els.roster.querySelectorAll("form[data-member] textarea").forEach((ta) => {
+    const id = ta.closest("form").dataset.member;
+    if (ta.value) drafts[id] = ta.value;
+    if (document.activeElement === ta) {
+      focusDraft = { id, start: ta.selectionStart, end: ta.selectionEnd };
+    }
+  });
 
   const item = (p) => {
     return `<li><details class="chat-acc" data-id="${p.id}" ${open.has(p.id) ? "open" : ""}>
@@ -2265,7 +2275,7 @@ function renderRoster() {
       <div class="chat-body">
         <ul class="msg-thread chat-thread">${threadHtml(p.id)}</ul>
         <form class="msg-form" data-member="${p.id}">
-          <textarea rows="1" maxlength="1000" required placeholder="Type a message…"></textarea>
+          <textarea rows="1" maxlength="4000" required placeholder="Type a message…"></textarea>
           <button class="btn btn-primary" type="submit">Send</button>
         </form>
       </div>
@@ -2273,6 +2283,21 @@ function renderRoster() {
   };
   els.roster.innerHTML = members.map(item).join("");
   els.roster.querySelectorAll(".chat-thread").forEach((ul) => (ul.scrollTop = ul.scrollHeight));
+  // restore in-progress drafts after the re-render
+  Object.entries(drafts).forEach(([id, val]) => {
+    const ta = els.roster.querySelector(`form[data-member="${id}"] textarea`);
+    if (!ta) return;
+    ta.value = val;
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
+  });
+  if (focusDraft) {
+    const ta = els.roster.querySelector(`form[data-member="${focusDraft.id}"] textarea`);
+    if (ta) {
+      ta.focus();
+      ta.setSelectionRange(focusDraft.start, focusDraft.end);
+    }
+  }
 }
 
 // Opening a chat marks it read; sending goes to that member's thread.
