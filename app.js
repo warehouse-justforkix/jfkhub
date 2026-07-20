@@ -680,11 +680,14 @@ function restockLine(r) {
 
 function renderRestock() {
   const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
-  const open = restock.filter((r) => r.status === "open");
+  const unclaimed = restock.filter((r) => r.status === "open" && !r.assigned_to);
+  const claimed = restock.filter((r) => r.status === "open" && r.assigned_to);
   const done = restock.filter((r) => r.status === "done" && (r.completed_at || "") >= weekAgo);
-  $("rs-open").innerHTML = open.length ? open.map(restockLine).join("") : `<li class="empty">Nothing waiting to be restocked. 🎉</li>`;
+  $("rs-open").innerHTML = unclaimed.length ? unclaimed.map(restockLine).join("") : `<li class="empty">Nothing waiting to be restocked. 🎉</li>`;
+  $("rs-claimed").innerHTML = claimed.length ? claimed.map(restockLine).join("") : `<li class="empty">Nothing claimed right now.</li>`;
   $("rs-done").innerHTML = done.length ? done.map(restockLine).join("") : `<li class="empty">Nothing restocked this week yet.</li>`;
-  $("rs-count").textContent = open.length ? `(${open.length})` : "";
+  $("rs-count").textContent = unclaimed.length ? `(${unclaimed.length})` : "";
+  $("rs-count-claimed").textContent = claimed.length ? `(${claimed.length})` : "";
 }
 
 $("rs-add").addEventListener("click", async () => {
