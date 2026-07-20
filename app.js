@@ -820,6 +820,111 @@ $("warnings-card").addEventListener("click", async (e) => {
 
 let supplies = [];
 
+// Quick-add catalog from the Uline order sheet — category → list of items.
+const SUPPLY_CATALOG = {
+  "Boxes": [
+    "12x12x10 - S-4126",
+    "14x12x12 - S-4407",
+    "18x12x12 - S-4181",
+    "18x10x10 - S-4496 (boxes for shelves)",
+    "20x14x14 - S-4207",
+    "24x14x14 - S-4654",
+    "10x8x5 - S-4517",
+  ],
+  "Clear Resealable Bags (Uni's)": [
+    "6x8 - S-5065",
+    "8x10 - S-14477",
+    "12x12 - S-10611",
+    "12x15 - S-11064",
+    "14x16 - S-20314",
+  ],
+  "Polyethylene Mailers (Catalog)": [
+    "14.5x19 - S-12910",
+    "12x15.5 - S-12909",
+    "7x10.5 - S-20785",
+    "10x13 - S-12908",
+  ],
+  "Labels": [
+    "Dymo - 2 5/16x4",
+    "Returns - 4x2",
+    "US Mail labels - 4x6",
+    "Boxing labels 4x4",
+  ],
+  "Miscellaneous Items": [
+    "Brown Paper",
+    "Bubble Wrap S-10551",
+    "Tape - 2in - S-423",
+    "Tape - 3in - S-4-445",
+    "Roll Tubes- S-3388",
+    "Disinfecting Wipes",
+    "Stretch Wrap - S-3212",
+    "Clear Binder Sleeves",
+    "Rhinestone Glue",
+    "Lint Rollers",
+    "Try-On Socks",
+    "Highlighters",
+    "Pens",
+    "Sharpies",
+    "Paper Clips",
+    "Rubber Bands",
+    "Invisible Tape - S-12640",
+    "Bags for walk-ins - S-7258P",
+    "Box cutters H-64",
+  ],
+};
+
+renderSupplyCatalog();
+
+function renderSupplyCatalog() {
+  const el = $("sup-catalog");
+  if (!el) return;
+  el.innerHTML = Object.entries(SUPPLY_CATALOG)
+    .map(([cat, items], i) => {
+      const catId = `sup-cat-${i}`;
+      return `<div class="sup-cat-row" data-cat="${esc(cat)}">
+        <label class="sup-cat-label">${esc(cat)}</label>
+        <select id="${catId}-sel" class="sup-cat-select">
+          <option value="">Add an item…</option>
+          ${items.map((it) => `<option value="${esc(it)}">${esc(it)}</option>`).join("")}
+          <option value="__other__">Other (write in)</option>
+        </select>
+        <input type="text" id="${catId}-other" class="sup-cat-other hidden" placeholder="Type item…">
+        <button class="btn btn-primary btn-mini sup-cat-add" type="button" data-catsel="${catId}-sel" data-catother="${catId}-other">Add</button>
+      </div>`;
+    })
+    .join("");
+}
+
+document.addEventListener("change", (e) => {
+  if (!e.target.matches(".sup-cat-select")) return;
+  const other = e.target.closest(".sup-cat-row").querySelector(".sup-cat-other");
+  const isOther = e.target.value === "__other__";
+  other.classList.toggle("hidden", !isOther);
+  if (isOther) other.focus();
+});
+
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".sup-cat-add");
+  if (!btn) return;
+  const sel = $(btn.dataset.catsel);
+  const other = $(btn.dataset.catother);
+  const item = sel.value === "__other__" ? other.value.trim() : sel.value;
+  if (!item) return;
+  const { error } = await supabase.from("supply_requests").insert({
+    item,
+    requested_by: myProfile.name,
+  });
+  if (error) {
+    alert(`Couldn't add: ${error.message}`);
+    return;
+  }
+  sel.value = "";
+  other.value = "";
+  other.classList.add("hidden");
+  setStatus($("sup-status"), `Added "${item}" ✔`);
+  await loadSupplies();
+});
+
 async function loadSupplies() {
   const { data, error } = await supabase
     .from("supply_requests")
@@ -859,7 +964,59 @@ function renderSupplies() {
   $("sup-ordered").innerHTML = ordered.length ? ordered.map(supplyLine).join("") : `<li class="empty">Nothing on order.</li>`;
   $("sup-received").innerHTML = received.length ? received.map(supplyLine).join("") : `<li class="empty">Nothing received lately.</li>`;
   $("sup-count").textContent = needed.length ? `(${needed.length})` : "";
+  $("sup-confirm-order").classList.toggle("hidden", !needed.length);
+  renderOrderReceipts();
 }
+
+// Order Receipts: every item carries the batch id + timestamp it was ordered
+// under, so a "receipt" is just every item sharing that batch id.
+function renderOrderReceipts() {
+  const el = $("sup-receipts");
+  if (!el) return;
+  const batches = new Map();
+  supplies.forEach((s) => {
+    if (!s.order_batch_id) return;
+    if (!batches.has(s.order_batch_id)) batches.set(s.order_batch_id, []);
+    batches.get(s.order_batch_id).push(s);
+  });
+  const ordered = [...batches.entries()].sort(
+    (a, b) => (b[1][0]?.updated_at || "").localeCompare(a[1][0]?.updated_at || "")
+  );
+  if (!ordered.length) {
+    el.innerHTML = `<p class="empty-hint">No orders confirmed yet.</p>`;
+    return;
+  }
+  const wasOpen = new Set([...el.querySelectorAll("details[open]")].map((d) => d.dataset.batch));
+  el.innerHTML = ordered
+    .map(([batchId, items]) => {
+      const when = items[0].updated_at;
+      const who = items[0].ordered_by;
+      const rows = items
+        .map((s) => `<li class="cl-item"><span class="cl-label" style="flex:1"><b>${esc(s.item)}</b>${s.note ? ` — ${esc(s.note)}` : ""}${photoThumb(s.photo, true)}</span></li>`)
+        .join("");
+      return `<details class="hrs-acc" data-batch="${batchId}" ${wasOpen.has(batchId) ? "open" : ""}>
+        <summary><span class="roster-name">Order — ${fmtDate(when.slice(0, 10))} at ${fmtTime(when)}</span><span class="cl-by">${items.length} item${items.length === 1 ? "" : "s"} · ${esc(who || "")}</span></summary>
+        <ul class="cl-list" style="margin-top:.4rem">${rows}</ul>
+      </details>`;
+    })
+    .join("");
+}
+
+$("sup-confirm-order").addEventListener("click", async () => {
+  const needed = supplies.filter((s) => s.status === "needed");
+  if (!needed.length) return;
+  if (!confirm(`Confirm order for ${needed.length} item${needed.length === 1 ? "" : "s"}? They'll move to Ordered and a receipt will be saved below.`)) return;
+  const batchId = crypto.randomUUID();
+  const { error } = await supabase
+    .from("supply_requests")
+    .update({ status: "ordered", order_batch_id: batchId, ordered_by: myProfile.name, updated_at: new Date().toISOString() })
+    .in("id", needed.map((s) => s.id));
+  if (error) {
+    alert(`Couldn't confirm the order: ${error.message}`);
+    return;
+  }
+  await loadSupplies();
+});
 
 $("sup-add").addEventListener("click", async () => {
   const item = $("sup-item").value.trim();

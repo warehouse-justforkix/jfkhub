@@ -153,6 +153,8 @@ create table if not exists supply_requests (
   requested_by text not null,
   status text not null default 'needed' check (status in ('needed', 'ordered', 'received')),
   photo text,                     -- optional attached photo (resized data URI)
+  order_batch_id uuid,             -- groups items confirmed together into one order receipt
+  ordered_by text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

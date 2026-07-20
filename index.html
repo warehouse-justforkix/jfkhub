@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=119">
+  <link rel="stylesheet" href="style.css?v=120">
   <script>
     // Surface script errors in the footer so problems are visible without devtools.
     window.addEventListener("error", function (e) {
@@ -571,6 +571,10 @@
           <h2>Supplies to Order</h2>
         </div>
         <p class="hint">Running low on something? Add it here. Karley marks items as ordered and received.</p>
+
+        <div id="sup-catalog"></div>
+
+        <p class="hint sup-other-hint">Don't see it above? Add it by hand:</p>
         <div class="cl-admin-form">
           <input id="sup-item" type="text" maxlength="120" placeholder="What do we need?">
           <input id="sup-note" type="text" maxlength="200" placeholder="Qty / brand / notes (optional)">
@@ -583,6 +587,7 @@
           <div class="board-col">
             <h3>Needed <span id="sup-count" class="col-count"></span></h3>
             <ul id="sup-needed" class="cl-list"><li class="empty">Loading…</li></ul>
+            <button id="sup-confirm-order" class="btn btn-primary sup-order-btn" type="button">Confirm Order</button>
           </div>
           <div class="board-col">
             <h3>Ordered</h3>
@@ -593,6 +598,11 @@
             <ul id="sup-received" class="cl-list"><li class="empty">—</li></ul>
           </div>
         </div>
+
+        <div class="notes-head">
+          <h3>Order Receipts</h3>
+        </div>
+        <div id="sup-receipts"><p class="empty-hint">No orders confirmed yet.</p></div>
       </section>
 
       <!-- Personal notes: private to each person -->
@@ -617,9 +627,9 @@
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">Just For Kix · internal team tool · v119</div>
+    <div class="wrap">Just For Kix · internal team tool · v120</div>
   </footer>
 
-  <script type="module" src="app.js?v=119"></script>
+  <script type="module" src="app.js?v=120"></script>
 </body>
 </html>
