@@ -2114,16 +2114,14 @@ function taskCard(t) {
   let actions = "";
   if (t.status === "open") {
     const mine = t.assigned_to && t.assigned_to === myProfile.name;
-    // admin can hand any open task to anyone on this board's team
-    const assignSel = myProfile.is_admin
-      ? `<select class="team-select" data-assign="${t.id}" title="Assign this task">
+    // anyone can hand an open task to a teammate on this board's team
+    const assignSel = `<select class="team-select" data-assign="${t.id}" title="Assign this task">
           <option value="">Assign to…</option>
           ${staff
             .filter((p) => (curTeam === "support" ? p.support_access || p.is_admin : p.warehouse_access !== false || p.is_admin))
             .map((p) => `<option value="${esc(p.name)}" ${t.assigned_to === p.name ? "selected" : ""}>${esc(p.name)}</option>`)
             .join("")}
-        </select>`
-      : "";
+        </select>`;
     actions = [
       !t.assigned_to ? `<button class="btn-mini primary" data-act="claim" data-id="${t.id}">Claim</button>` : "",
       `<button class="btn-mini ${t.assigned_to ? "primary" : ""}" data-act="done" data-id="${t.id}">Done ✓</button>`,
@@ -2222,10 +2220,10 @@ $("tasks").addEventListener("click", (e) => {
   if (btn) taskAction(btn.dataset.act, btn.dataset.id);
 });
 
-// admin reassigns an open task from the card's dropdown
+// anyone reassigns an open task to a teammate from the card's dropdown
 $("tasks").addEventListener("change", async (e) => {
   const sel = e.target.closest("select[data-assign]");
-  if (!sel || !myProfile.is_admin) return;
+  if (!sel) return;
   const { error } = await supabase
     .from("tasks")
     .update({ assigned_to: sel.value || null })
