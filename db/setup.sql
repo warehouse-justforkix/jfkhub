@@ -32,6 +32,7 @@ create table if not exists profiles (
   avatar text not null default '🙂',              -- emoji profile icon
   avatar_options jsonb,                           -- custom character avatar (DiceBear options); overrides emoji when set
   reminders boolean not null default false,       -- opt-in on-open reminders
+  notify_new_tasks boolean not null default false, -- opt-in push when a new task is posted
   created_at timestamptz not null default now()
 );
 

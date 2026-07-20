@@ -1,8 +1,10 @@
 // Sends web-push notifications, triggered by pg_net database triggers:
 //  - messages:      staff → all admin devices; admin → that member's devices
 //  - announcements: notifies admins (unless an admin posted it)
-//  - tasks:         notifies admins (unless an admin posted it; auto re-posts
-//                   from recurring tasks are skipped — they have no created_by)
+//  - tasks:         notifies admins, PLUS any teammate on that task's team who
+//                   opted in via "notify_new_tasks" on their profile (unless
+//                   an admin posted it; auto re-posts from recurring tasks are
+//                   skipped — they have no created_by)
 // Dead subscriptions are pruned automatically.
 import webpush from "npm:web-push@3.6.7";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -52,7 +54,17 @@ Deno.serve(async (req) => {
     url += "#announcements";
   } else if (table === "tasks") {
     if (!m.created_by) return new Response("auto repost — skipped");
-    recipientIds = admins.filter((a) => a.name !== m.created_by).map((a) => a.id);
+    const adminIds = admins.filter((a) => a.name !== m.created_by).map((a) => a.id);
+
+    const { data: optedIn, error: optErr } = await supabase
+      .from("profiles")
+      .select("id, name")
+      .eq("notify_new_tasks", true)
+      .eq(m.team === "support" ? "support_access" : "warehouse_access", true);
+    if (optErr) return new Response(JSON.stringify({ optErr: optErr.message }), { status: 500 });
+
+    const optedInIds = (optedIn ?? []).filter((p) => p.name !== m.created_by).map((p) => p.id);
+    recipientIds = [...new Set([...adminIds, ...optedInIds])];
     title = `New task from ${m.created_by}`;
     text = String(m.title ?? "").slice(0, 140);
     url += "#tasks";

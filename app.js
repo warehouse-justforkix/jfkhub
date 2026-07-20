@@ -36,6 +36,7 @@ const els = {
   pfRole: $("pf-role"),
   pfAvatar: $("pf-avatar"),
   pfReminders: $("pf-reminders"),
+  pfNotifyTasks: $("pf-notify-tasks"),
   profileStatus: $("profile-status"),
   profileBack: $("profile-back"),
   editProfile: $("edit-profile"),
@@ -546,6 +547,7 @@ els.editProfile.addEventListener("click", () => {
   if (opts && opts.style !== "image") cbSet(opts);
   setAvatarMode(opts?.style === "image" ? "image" : opts ? "character" : "emoji");
   els.pfReminders.checked = !!myProfile.reminders;
+  els.pfNotifyTasks.checked = !!myProfile.notify_new_tasks;
   const hours = hoursById[myProfile.id] || {};
   DAYS.forEach((d) => ($(`pf-${d}`).value = hours[d] || ""));
   // off-schedule members (view/add-only) don't fill in weekly hours
@@ -584,6 +586,7 @@ els.profileForm.addEventListener("submit", async (e) => {
     avatar: els.pfAvatar.value.trim() || "🙂",
     avatar_options: avatarOptions,
     reminders: els.pfReminders.checked,
+    notify_new_tasks: els.pfNotifyTasks.checked,
   };
 
   const { error } = myProfile
