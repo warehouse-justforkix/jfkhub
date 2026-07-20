@@ -652,11 +652,19 @@ async function loadRestock() {
 
 function restockLine(r) {
   const mine = r.assigned_to === myProfile.name;
+  const assignSel = `<select class="team-select" data-rs-assign="${r.id}" title="Assign this item">
+        <option value="">Assign to…</option>
+        ${staff
+          .filter((p) => p.warehouse_access !== false || p.is_admin)
+          .map((p) => `<option value="${esc(p.name)}" ${r.assigned_to === p.name ? "selected" : ""}>${esc(p.name)}</option>`)
+          .join("")}
+      </select>`;
   const buttons =
     r.status === "open"
       ? [
           !r.assigned_to ? `<button class="btn-mini primary" data-rs-claim="${r.id}">I'll do it</button>` : "",
           mine ? `<button class="btn-mini" data-rs-unclaim="${r.id}">Unclaim</button>` : "",
+          assignSel,
           `<button class="btn-mini ${r.assigned_to ? "primary" : ""}" data-rs-done="${r.id}">Done ✓</button>`,
         ].filter(Boolean).join("")
       : `<button class="btn-mini" data-rs-reopen="${r.id}">Reopen</button>`;
@@ -714,6 +722,18 @@ $("restocking").addEventListener("click", async (e) => {
     if (!confirm("Remove this restock item?")) return;
     await supabase.from("restock_items").delete().eq("id", del);
   } else return;
+  await loadRestock();
+});
+
+// anyone reassigns an open restock item to a teammate from its dropdown
+$("restocking").addEventListener("change", async (e) => {
+  const sel = e.target.closest("select[data-rs-assign]");
+  if (!sel) return;
+  const { error } = await supabase
+    .from("restock_items")
+    .update({ assigned_to: sel.value || null })
+    .eq("id", sel.dataset.rsAssign);
+  if (error) alert(`Couldn't assign: ${error.message}`);
   await loadRestock();
 });
 
