@@ -146,6 +146,16 @@ create table if not exists restock_items (
   completed_at timestamptz
 );
 
+-- Comments on a restock item — any member can comment, not just the requester
+-- or whoever claimed it.
+create table if not exists restock_comments (
+  id uuid primary key default gen_random_uuid(),
+  restock_item_id uuid not null references restock_items(id) on delete cascade,
+  author_name text not null,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
 -- Supplies-to-order list: needed → ordered → received.
 create table if not exists supply_requests (
   id uuid primary key default gen_random_uuid(),
@@ -262,6 +272,15 @@ create policy "member checklist checks" on checklist_checks for all
 alter table supply_requests enable row level security;
 create policy "member all supplies" on supply_requests for all
   to authenticated using (public.is_member()) with check (public.is_member());
+
+-- restock comments: any member reads/posts; delete own comment or admin deletes any.
+alter table restock_comments enable row level security;
+create policy "member read restock comments" on restock_comments for select
+  to authenticated using (public.is_member());
+create policy "member post restock comments" on restock_comments for insert
+  to authenticated with check (public.is_member());
+create policy "own or admin delete restock comments" on restock_comments for delete
+  to authenticated using (author_name = (select name from profiles where id = auth.uid()) or public.is_admin());
 
 alter table restock_items enable row level security;
 create policy "member all restock" on restock_items for all

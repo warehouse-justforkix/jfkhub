@@ -639,17 +639,19 @@ async function loadEverything() {
 // ---------- restocking list ----------
 
 let restock = [];
+let restockComments = [];
 
 async function loadRestock() {
-  const { data, error } = await supabase
-    .from("restock_items")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error) {
-    $("rs-open").innerHTML = `<li class="empty">Couldn't load: ${esc(error.message)}</li>`;
+  const [itemsRes, commentsRes] = await Promise.all([
+    supabase.from("restock_items").select("*").order("created_at", { ascending: false }),
+    supabase.from("restock_comments").select("*").order("created_at", { ascending: true }),
+  ]);
+  if (itemsRes.error) {
+    $("rs-open").innerHTML = `<li class="empty">Couldn't load: ${esc(itemsRes.error.message)}</li>`;
     return;
   }
-  restock = data;
+  restock = itemsRes.data;
+  restockComments = commentsRes.data || [];
   renderRestock();
 }
 
@@ -671,13 +673,37 @@ function restockLine(r) {
           `<button class="btn-mini ${r.assigned_to ? "primary" : ""}" data-rs-done="${r.id}">Done ✓</button>`,
         ].filter(Boolean).join("")
       : `<button class="btn-mini" data-rs-reopen="${r.id}">Reopen</button>`;
-  return `<li class="cl-item ${r.status === "done" ? "done" : ""}">
-    <span class="cl-label" style="flex:1;text-align:left"><b>${esc(r.item)}</b>${r.note ? ` — ${esc(r.note)}` : ""}
-      <span class="cl-by" style="color:var(--ink-soft)">· ${esc(r.requested_by)}</span>
-      ${r.assigned_to ? `<span class="task-owner">${nameWithAvatar(r.assigned_to)}</span>` : ""}
-      ${photoThumb(r.photo, true)}</span>
-    ${buttons}
-    <button class="note-delete" data-rs-del="${r.id}" title="Remove">✕</button>
+
+  const comments = restockComments.filter((c) => c.restock_item_id === r.id);
+  const commentRows = comments
+    .map(
+      (c) => `<li class="rs-comment">
+        <span class="rs-comment-body">${esc(c.body)}</span>
+        <span class="cl-by">${esc(c.author_name)} · ${fmtTime(c.created_at)} ${new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+        ${c.author_name === myProfile.name || myProfile.is_admin ? `<button class="note-delete" data-rs-comment-del="${c.id}" title="Delete comment">✕</button>` : ""}
+      </li>`
+    )
+    .join("");
+
+  return `<li class="cl-item rs-line ${r.status === "done" ? "done" : ""}">
+    <div class="rs-line-top">
+      <span class="cl-label" style="flex:1;text-align:left"><b>${esc(r.item)}</b>${r.note ? ` — ${esc(r.note)}` : ""}
+        <span class="cl-by" style="color:var(--ink-soft)">· ${esc(r.requested_by)}</span>
+        ${r.assigned_to ? `<span class="task-owner">${nameWithAvatar(r.assigned_to)}</span>` : ""}
+        ${photoThumb(r.photo, true)}</span>
+      ${buttons}
+      <button class="note-delete" data-rs-del="${r.id}" title="Remove">✕</button>
+    </div>
+    <details class="rs-comments-acc" data-rsid="${r.id}">
+      <summary>💬 Comments <span class="cl-by">${comments.length ? `(${comments.length})` : ""}</span></summary>
+      <div class="rs-comments-body">
+        <ul class="rs-comment-list">${commentRows || `<li class="empty">No comments yet.</li>`}</ul>
+        <form class="rs-comment-form" data-rsid="${r.id}">
+          <input type="text" maxlength="500" required placeholder="Add a comment…">
+          <button class="btn-mini primary" type="submit">Post</button>
+        </form>
+      </div>
+    </details>
   </li>`;
 }
 
@@ -686,12 +712,49 @@ function renderRestock() {
   const unclaimed = restock.filter((r) => r.status === "open" && !r.assigned_to);
   const claimed = restock.filter((r) => r.status === "open" && r.assigned_to);
   const done = restock.filter((r) => r.status === "done" && (r.completed_at || "") >= weekAgo);
+
+  // preserve which comment threads are open (and any draft being typed) across re-renders
+  const board = $("restocking");
+  const openIds = new Set([...board.querySelectorAll(".rs-comments-acc[open]")].map((d) => d.dataset.rsid));
+  const drafts = {};
+  board.querySelectorAll(".rs-comment-form input").forEach((inp) => {
+    if (inp.value) drafts[inp.closest("form").dataset.rsid] = inp.value;
+  });
+
   $("rs-open").innerHTML = unclaimed.length ? unclaimed.map(restockLine).join("") : `<li class="empty">Nothing waiting to be restocked. 🎉</li>`;
   $("rs-claimed").innerHTML = claimed.length ? claimed.map(restockLine).join("") : `<li class="empty">Nothing claimed right now.</li>`;
   $("rs-done").innerHTML = done.length ? done.map(restockLine).join("") : `<li class="empty">Nothing restocked this week yet.</li>`;
   $("rs-count").textContent = unclaimed.length ? `(${unclaimed.length})` : "";
   $("rs-count-claimed").textContent = claimed.length ? `(${claimed.length})` : "";
+
+  openIds.forEach((id) => {
+    const d = board.querySelector(`.rs-comments-acc[data-rsid="${id}"]`);
+    if (d) d.open = true;
+  });
+  Object.entries(drafts).forEach(([id, val]) => {
+    const inp = board.querySelector(`.rs-comment-form[data-rsid="${id}"] input`);
+    if (inp) inp.value = val;
+  });
 }
+
+$("restocking").addEventListener("submit", async (e) => {
+  const form = e.target.closest(".rs-comment-form");
+  if (!form) return;
+  e.preventDefault();
+  const input = form.querySelector("input");
+  const body = input.value.trim();
+  if (!body) return;
+  const { error } = await supabase.from("restock_comments").insert({
+    restock_item_id: form.dataset.rsid,
+    author_name: myProfile.name,
+    body,
+  });
+  if (error) {
+    alert(`Couldn't post comment: ${error.message}`);
+    return;
+  }
+  await loadRestock();
+});
 
 $("rs-add").addEventListener("click", async () => {
   const item = $("rs-item").value.trim();
@@ -720,6 +783,7 @@ $("restocking").addEventListener("click", async (e) => {
   const done = act("data-rs-done");
   const reopen = act("data-rs-reopen");
   const del = act("data-rs-del");
+  const commentDel = act("data-rs-comment-del");
   if (claim) await supabase.from("restock_items").update({ assigned_to: myProfile.name }).eq("id", claim);
   else if (unclaim) await supabase.from("restock_items").update({ assigned_to: null }).eq("id", unclaim);
   else if (done) await supabase.from("restock_items").update({ status: "done", assigned_to: myProfile.name, completed_at: new Date().toISOString() }).eq("id", done);
@@ -727,6 +791,9 @@ $("restocking").addEventListener("click", async (e) => {
   else if (del) {
     if (!confirm("Remove this restock item?")) return;
     await supabase.from("restock_items").delete().eq("id", del);
+  } else if (commentDel) {
+    if (!confirm("Delete this comment?")) return;
+    await supabase.from("restock_comments").delete().eq("id", commentDel);
   } else return;
   await loadRestock();
 });
