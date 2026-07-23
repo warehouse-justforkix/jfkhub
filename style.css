@@ -1137,10 +1137,13 @@ details.chat-acc[open] summary::after { content: "▾"; }
 .sup-order-btn { display: block; width: 100%; margin-top: .6rem; }
 #sup-receipts { margin-top: .5rem; }
 
-/* Restocking: per-item comments — always visible, no click needed */
+/* Restocking rows: info / photo / action buttons / comments each get their
+   own row so a block-level photo never shares wrapping space with the
+   buttons (that mixing is what caused them to visually collide). */
 .rs-line { display: flex; flex-direction: column; align-items: stretch; gap: .4rem; min-width: 0; }
-.rs-line-top { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; min-width: 0; }
-.rs-line-top .cl-label { min-width: 0; overflow-wrap: break-word; }
+.rs-line-info { min-width: 0; overflow-wrap: break-word; text-align: left; }
+.rs-line-photo { min-width: 0; }
+.rs-line-actions { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; min-width: 0; }
 .rs-comments-block { border-top: 1px solid var(--line); padding-top: .4rem; display: flex; flex-direction: column; gap: .3rem; }
 .rs-comment {
   display: flex;

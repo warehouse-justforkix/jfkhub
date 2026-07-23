@@ -686,12 +686,18 @@ function restockLine(r) {
     )
     .join("");
 
+  // Info text, photo, action buttons, and comments each get their own row —
+  // keeping the photo (a block-level image) out of the same wrapping flex
+  // row as the buttons is what stops them from visually colliding at
+  // narrower column widths.
   return `<li class="cl-item rs-line ${r.status === "done" ? "done" : ""}">
-    <div class="rs-line-top">
-      <span class="cl-label" style="flex:1;text-align:left"><b>${esc(r.item)}</b>${r.note ? ` — ${esc(r.note)}` : ""}
-        <span class="cl-by" style="color:var(--ink-soft)">· ${esc(r.requested_by)}</span>
-        ${r.assigned_to ? `<span class="task-owner">${nameWithAvatar(r.assigned_to)}</span>` : ""}
-        ${photoThumb(r.photo, true)}</span>
+    <div class="rs-line-info">
+      <b>${esc(r.item)}</b>${r.note ? ` — ${esc(r.note)}` : ""}
+      <span class="cl-by" style="color:var(--ink-soft)">· ${esc(r.requested_by)}</span>
+      ${r.assigned_to ? `<span class="task-owner">${nameWithAvatar(r.assigned_to)}</span>` : ""}
+    </div>
+    ${r.photo ? `<div class="rs-line-photo">${photoThumb(r.photo, true)}</div>` : ""}
+    <div class="rs-line-actions">
       ${buttons}
       <button class="note-delete" data-rs-del="${r.id}" title="Remove">✕</button>
     </div>
