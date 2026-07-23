@@ -298,6 +298,10 @@ create policy "member post restock comments" on restock_comments for insert
   to authenticated with check (public.is_member());
 create policy "own or admin delete restock comments" on restock_comments for delete
   to authenticated using (author_name = (select name from profiles where id = auth.uid()) or public.is_admin());
+create policy "own or admin update restock comments" on restock_comments for update
+  to authenticated
+  using (author_name = (select name from profiles where id = auth.uid()) or public.is_admin())
+  with check (author_name = (select name from profiles where id = auth.uid()) or public.is_admin());
 
 -- attachments (legacy Postgres-table PDFs): any member can save/read.
 alter table attachments enable row level security;

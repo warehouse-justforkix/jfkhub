@@ -252,6 +252,9 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
   padding: 0 .3rem;
 }
 .note-delete:hover { color: var(--out); }
+/* Calendar Upcoming: a plain red ✕ instead of text */
+.note-delete-x { color: var(--out); font-size: 1rem; font-weight: 400; }
+.note-delete-x:hover { color: #8f2318; }
 .note-edit {
   margin-left: auto;
   background: none;

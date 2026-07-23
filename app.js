@@ -676,11 +676,11 @@ function restockLine(r) {
           : ""}
         <div class="rs-action-row">
           <button class="btn-mini ${r.assigned_to ? "primary" : ""}" data-rs-done="${r.id}">Done ✓</button>
-          <button class="note-delete" data-rs-del="${r.id}" title="Remove">Remove</button>
+          <button class="btn-mini danger" data-rs-del="${r.id}" title="Remove">Remove</button>
         </div>`
       : `<div class="rs-action-row">
           <button class="btn-mini" data-rs-reopen="${r.id}">Reopen</button>
-          <button class="note-delete" data-rs-del="${r.id}" title="Remove">Remove</button>
+          <button class="btn-mini danger" data-rs-del="${r.id}" title="Remove">Remove</button>
         </div>`;
 
   const comments = restockComments.filter((c) => c.restock_item_id === r.id);
@@ -689,7 +689,7 @@ function restockLine(r) {
       (c) => `<div class="rs-comment">
         <span class="rs-comments-label">Comments:</span> <span class="rs-comment-green">${esc(c.body)}</span>
         <span class="cl-by">${esc(c.author_name)} · ${fmtTime(c.created_at)} ${new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-        ${c.author_name === myProfile.name || myProfile.is_admin ? `<button class="note-delete" data-rs-comment-del="${c.id}" title="Delete comment">Remove</button>` : ""}
+        ${c.author_name === myProfile.name || myProfile.is_admin ? `<button class="note-edit" data-rs-comment-edit="${c.id}" title="Edit comment (clear it and save to delete)">✎</button>` : ""}
       </div>`
     )
     .join("");
@@ -789,7 +789,7 @@ $("restocking").addEventListener("click", async (e) => {
   const done = act("data-rs-done");
   const reopen = act("data-rs-reopen");
   const del = act("data-rs-del");
-  const commentDel = act("data-rs-comment-del");
+  const commentEdit = act("data-rs-comment-edit");
   if (claim) await supabase.from("restock_items").update({ assigned_to: myProfile.name }).eq("id", claim);
   else if (unclaim) await supabase.from("restock_items").update({ assigned_to: null }).eq("id", unclaim);
   else if (done) await supabase.from("restock_items").update({ status: "done", assigned_to: myProfile.name, completed_at: new Date().toISOString() }).eq("id", done);
@@ -797,9 +797,16 @@ $("restocking").addEventListener("click", async (e) => {
   else if (del) {
     if (!confirm("Remove this restock item?")) return;
     await supabase.from("restock_items").delete().eq("id", del);
-  } else if (commentDel) {
-    if (!confirm("Delete this comment?")) return;
-    await supabase.from("restock_comments").delete().eq("id", commentDel);
+  } else if (commentEdit) {
+    const existing = restockComments.find((c) => c.id === commentEdit);
+    if (!existing) return;
+    const updated = prompt("Edit your comment — clear it and save to delete:", existing.body);
+    if (updated === null) return; // cancelled, leave it as-is
+    if (updated.trim() === "") {
+      await supabase.from("restock_comments").delete().eq("id", commentEdit);
+    } else {
+      await supabase.from("restock_comments").update({ body: updated.trim() }).eq("id", commentEdit);
+    }
   } else return;
   await loadRestock();
 });
@@ -856,7 +863,7 @@ function renderWarnings() {
           ${admin && person ? `— ${nameWithAvatar(person.name)}` : ""}
           — ${esc(w.reason)}
           <span class="cl-by" style="color:var(--ink-soft)">· logged by ${esc(w.created_by)}</span></span>
-        ${admin ? `<button class="note-delete" data-warn-del="${w.id}" title="Remove warning">Remove</button>` : ""}
+        ${admin ? `<button class="btn-mini danger" data-warn-del="${w.id}" title="Remove warning">Remove</button>` : ""}
       </li>`;
     })
     .join("");
@@ -1027,7 +1034,7 @@ function supplyLine(s) {
       <span class="cl-by" style="color:var(--ink-soft)">· ${esc(s.requested_by)}</span>
       ${photoThumb(s.photo, true)}</span>
     ${advance}
-    <button class="note-delete" data-sup-del="${s.id}" title="Remove">Remove</button>
+    <button class="btn-mini danger" data-sup-del="${s.id}" title="Remove">Remove</button>
   </li>`;
 }
 
@@ -1181,7 +1188,7 @@ function renderChecklists() {
             ${i.team === "support" ? '<span class="role-badge role-part-time">CS</span>' : ""}
           </label>
           ${check ? `<span class="cl-by">✓ ${esc(check.checked_by)}</span>` : ""}
-          ${myProfile.is_admin ? `<button class="note-delete" data-del-item="${i.id}" title="Delete item">Remove</button>` : ""}
+          ${myProfile.is_admin ? `<button class="btn-mini danger" data-del-item="${i.id}" title="Delete item">Remove</button>` : ""}
         </li>`;
       })
       .join("");
@@ -1895,7 +1902,7 @@ function renderPersonalNotes() {
               ${photoThumb(n.photo, true)}
               <span class="cl-by" style="color:var(--ink-soft)">· ${fmtDate(n.created_at.slice(0, 10))}</span>
             </span>
-            <button class="note-delete" data-pn-del="${n.id}" title="Delete note">Remove</button>
+            <button class="btn-mini danger" data-pn-del="${n.id}" title="Delete note">Remove</button>
           </li>`
         )
         .join("")
@@ -1951,7 +1958,7 @@ async function loadAnnouncements() {
           return `<li>
             <div class="ann-meta"><span class="note-name">${nameWithAvatar(a.author_name)}</span>
               <span class="ann-when">${when} ${fmtTime(a.created_at)}</span>
-              ${canDelete ? `<button class="note-delete" data-ann="${a.id}" title="Delete announcement">Remove</button>` : ""}
+              ${canDelete ? `<button class="btn-mini danger" data-ann="${a.id}" title="Delete announcement">Remove</button>` : ""}
             </div>
             <div class="ann-body">${esc(a.body)}</div>
             ${photoThumb(a.photo)}
@@ -2238,7 +2245,7 @@ function renderNotes() {
         ${n.recurrence && n.recurrence !== "none" ? `<span class="note-details">↻ ${NOTE_RECUR_LABELS[n.recurrence]}</span>` : ""}
         ${n.details ? `<span class="note-details">${esc(n.details)}</span>` : ""}
         <button class="note-edit" data-edit="${n.id}" title="Edit this entry" aria-label="Edit entry">✎</button>
-        <button class="note-delete" data-id="${n.id}" title="Remove this entry${n.recurrence && n.recurrence !== "none" ? " (removes every repeat)" : ""}" aria-label="Remove entry">Remove</button>
+        <button class="note-delete note-delete-x" data-id="${n.id}" title="Remove this entry${n.recurrence && n.recurrence !== "none" ? " (removes every repeat)" : ""}" aria-label="Remove entry">✕</button>
       </li>`;
     })
     .join("");
