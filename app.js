@@ -678,11 +678,11 @@ function restockLine(r) {
   const comments = restockComments.filter((c) => c.restock_item_id === r.id);
   const commentRows = comments
     .map(
-      (c) => `<li class="rs-comment">
-        <span class="rs-comment-body">${esc(c.body)}</span>
+      (c) => `<div class="rs-comment">
+        <span class="rs-comments-label">Comments:</span> <span class="rs-comment-green">${esc(c.body)}</span>
         <span class="cl-by">${esc(c.author_name)} · ${fmtTime(c.created_at)} ${new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
         ${c.author_name === myProfile.name || myProfile.is_admin ? `<button class="note-delete" data-rs-comment-del="${c.id}" title="Delete comment">✕</button>` : ""}
-      </li>`
+      </div>`
     )
     .join("");
 
@@ -695,16 +695,13 @@ function restockLine(r) {
       ${buttons}
       <button class="note-delete" data-rs-del="${r.id}" title="Remove">✕</button>
     </div>
-    <details class="rs-comments-acc" data-rsid="${r.id}">
-      <summary>💬 Comments <span class="cl-by">${comments.length ? `(${comments.length})` : ""}</span></summary>
-      <div class="rs-comments-body">
-        <ul class="rs-comment-list">${commentRows || `<li class="empty">No comments yet.</li>`}</ul>
-        <form class="rs-comment-form" data-rsid="${r.id}">
-          <input type="text" maxlength="500" required placeholder="Add a comment…">
-          <button class="btn-mini primary" type="submit">Post</button>
-        </form>
-      </div>
-    </details>
+    <div class="rs-comments-block" data-rsid="${r.id}">
+      ${commentRows}
+      <form class="rs-comment-form" data-rsid="${r.id}">
+        <input type="text" maxlength="500" required placeholder="Add a comment…">
+        <button class="btn-mini primary" type="submit">Post</button>
+      </form>
+    </div>
   </li>`;
 }
 
@@ -714,9 +711,9 @@ function renderRestock() {
   const claimed = restock.filter((r) => r.status === "open" && r.assigned_to);
   const done = restock.filter((r) => r.status === "done" && (r.completed_at || "") >= weekAgo);
 
-  // preserve which comment threads are open (and any draft being typed) across re-renders
+  // preserve any comment draft being typed across re-renders (comments are
+  // always visible now, so there's no open/closed state to remember)
   const board = $("restocking");
-  const openIds = new Set([...board.querySelectorAll(".rs-comments-acc[open]")].map((d) => d.dataset.rsid));
   const drafts = {};
   board.querySelectorAll(".rs-comment-form input").forEach((inp) => {
     if (inp.value) drafts[inp.closest("form").dataset.rsid] = inp.value;
@@ -728,10 +725,6 @@ function renderRestock() {
   $("rs-count").textContent = unclaimed.length ? `(${unclaimed.length})` : "";
   $("rs-count-claimed").textContent = claimed.length ? `(${claimed.length})` : "";
 
-  openIds.forEach((id) => {
-    const d = board.querySelector(`.rs-comments-acc[data-rsid="${id}"]`);
-    if (d) d.open = true;
-  });
   Object.entries(drafts).forEach(([id, val]) => {
     const inp = board.querySelector(`.rs-comment-form[data-rsid="${id}"] input`);
     if (inp) inp.value = val;
@@ -2093,6 +2086,35 @@ function noteEnd(n) {
   return n.end_date || n.start_date;
 }
 
+// Pulls the first clock time out of freeform event_time text (handles ranges
+// like "2:00–3:00 PM" by reading the first number; a bare hour under 7 is
+// assumed PM, same heuristic used for shift times elsewhere in the app).
+function firstTimeInText(str) {
+  const m = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i.exec(str || "");
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const mins = m[2] ? parseInt(m[2], 10) : 0;
+  const mer = (m[3] || "").toLowerCase();
+  if (mer === "pm" && h < 12) h += 12;
+  if (mer === "am" && h === 12) h = 0;
+  if (!mer && h < 7) h += 12;
+  if (h > 23 || mins > 59) return null;
+  return h * 60 + mins;
+}
+
+// True once a non-recurring entry's listed day AND time have fully passed —
+// so it drops off Upcoming the moment it's over instead of lingering until
+// midnight (or longer). Entries with no parseable time just go by day.
+function noteHasPassed(n, today) {
+  const end = noteEnd(n);
+  if (end < today) return true;
+  if (end > today || (n.recurrence && n.recurrence !== "none")) return false;
+  const mins = firstTimeInText(n.event_time);
+  if (mins == null) return false;
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes() >= mins;
+}
+
 function noteDateLabel(n) {
   if (n.end_date && n.end_date !== n.start_date) {
     return `${fmtDate(n.start_date)} – ${fmtDate(n.end_date)}`;
@@ -2184,7 +2206,9 @@ function renderNotes() {
     }
     return false;
   };
-  const visible = notes.filter((n) => noteInHub(n) && (showPast || inWindow(n)));
+  // Once an entry's day+time has passed, drop it from Upcoming right away
+  // instead of leaving it greyed out until the day rolls over.
+  const visible = notes.filter((n) => noteInHub(n) && (showPast || (inWindow(n) && !noteHasPassed(n, today))));
 
   if (!visible.length) {
     els.notesList.innerHTML = `<li class="empty">Nothing coming up — everyone's on their normal schedule. 🎉</li>`;
@@ -2859,6 +2883,12 @@ async function loadMessages() {
 setInterval(() => {
   if (myProfile && document.visibilityState === "visible") loadMessages();
 }, 45_000);
+
+// Re-check "has this passed" every minute — no new data needed, just re-runs
+// the same filter — so Upcoming entries drop off live as their time passes.
+setInterval(() => {
+  if (myProfile && document.visibilityState === "visible") renderNotes();
+}, 60_000);
 
 function renderThread() {
   if (myProfile.is_admin) return; // admin uses the per-contact accordions
