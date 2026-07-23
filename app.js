@@ -1029,12 +1029,14 @@ function supplyLine(s) {
       : s.status === "ordered" && canAdvance
         ? `<button class="btn-mini primary" data-sup-status="received" data-sup="${s.id}">Received</button>`
         : "";
-  return `<li class="cl-item ${s.status === "received" ? "done" : ""}">
-    <span class="cl-label" style="flex:1"><b>${esc(s.item)}</b>${s.note ? ` — ${esc(s.note)}` : ""}
+  return `<li class="cl-item sup-line ${s.status === "received" ? "done" : ""}">
+    <span class="cl-label sup-line-info"><b>${esc(s.item)}</b>${s.note ? ` — ${esc(s.note)}` : ""}
       <span class="cl-by" style="color:var(--ink-soft)">· ${esc(s.requested_by)}</span>
       ${photoThumb(s.photo, true)}</span>
-    ${advance}
-    <button class="btn-mini danger" data-sup-del="${s.id}" title="Remove">Remove</button>
+    <span class="sup-line-actions">
+      ${advance}
+      <button class="btn-mini danger" data-sup-del="${s.id}" title="Remove">Remove</button>
+    </span>
   </li>`;
 }
 

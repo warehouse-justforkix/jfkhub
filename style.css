@@ -998,6 +998,17 @@ details.chat-acc[open] summary::after { content: "▾"; }
 }
 .cl-item.done .entry-photo { opacity: .6; }
 .cl-item.done .rs-item-title { text-decoration: line-through; }
+
+/* Supplies "Needed" row: on mobile this stays exactly as it was (info +
+   buttons in one row). On desktop, where the column is much narrower, stack
+   info above the action buttons so Remove can't overflow past the card. */
+.sup-line-info { flex: 1; }
+.sup-line-actions { display: inline-flex; align-items: center; gap: .4rem; }
+@media (min-width: 641px) {
+  .sup-line { flex-direction: column; align-items: stretch; gap: .35rem; min-width: 0; }
+  .sup-line-info { min-width: 0; overflow-wrap: break-word; }
+  .sup-line-actions { flex-wrap: wrap; }
+}
 .cl-by { font-size: .74rem; color: #157347; white-space: nowrap; }
 .cl-list .empty { color: var(--ink-soft); font-style: italic; font-size: .88rem; border: none; background: none; }
 #warn-admin-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
