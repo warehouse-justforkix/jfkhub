@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=123">
+  <link rel="stylesheet" href="style.css?v=124">
   <script>
     // Surface script errors in the footer so problems are visible without devtools.
     window.addEventListener("error", function (e) {
@@ -438,7 +438,7 @@
         <p class="hint">Post things the whole team should know.</p>
         <form id="ann-form" class="ann-form">
           <textarea id="ann-body" rows="2" maxlength="1000" required placeholder="Share something with the team…"></textarea>
-          <label class="photo-btn" id="ann-photo-btn" for="ann-photo" title="Attach a photo">📷</label>
+          <button type="button" class="photo-btn" id="ann-photo-btn" title="Attach a photo">📷</button>
           <input type="file" id="ann-photo" accept="image/*" class="photo-file">
           <button class="btn btn-primary" type="submit">Post</button>
         </form>
@@ -486,7 +486,7 @@
           </div>
           <div class="field field-submit">
             <div class="submit-row">
-              <label class="photo-btn" id="tf-photo-btn" for="tf-photo" title="Attach a photo">📷</label>
+              <button type="button" class="photo-btn" id="tf-photo-btn" title="Attach a photo">📷</button>
               <button class="btn btn-primary" type="submit">Add task</button>
             </div>
           </div>
@@ -519,7 +519,7 @@
         <div class="cl-admin-form">
           <input id="rs-item" type="text" maxlength="120" placeholder="What needs restocking?">
           <input id="rs-note" type="text" maxlength="200" placeholder="Qty / location (optional)">
-          <label class="photo-btn" id="rs-photo-btn" for="rs-photo" title="Attach a photo">📷</label>
+          <button type="button" class="photo-btn" id="rs-photo-btn" title="Attach a photo">📷</button>
           <input type="file" id="rs-photo" accept="image/*" class="photo-file">
           <button id="rs-add" class="btn btn-primary" type="button">Add</button>
         </div>
@@ -556,7 +556,7 @@
             <option value="warehouse" selected>Warehouse</option>
             <option value="support">Customer Support</option>
           </select>
-          <label class="photo-btn" id="cl-photo-btn" for="cl-photo" title="Attach a photo">📷</label>
+          <button type="button" class="photo-btn" id="cl-photo-btn" title="Attach a photo">📷</button>
           <input type="file" id="cl-photo" accept="image/*" class="photo-file">
           <button id="cl-add" class="btn btn-primary" type="button">Add</button>
         </div>
@@ -586,7 +586,7 @@
         <div class="cl-admin-form">
           <input id="sup-item" type="text" maxlength="120" placeholder="What do we need?">
           <input id="sup-note" type="text" maxlength="200" placeholder="Qty / brand / notes (optional)">
-          <label class="photo-btn" id="sup-photo-btn" for="sup-photo" title="Attach a photo">📷</label>
+          <button type="button" class="photo-btn" id="sup-photo-btn" title="Attach a photo">📷</button>
           <input type="file" id="sup-photo" accept="image/*" class="photo-file">
           <button id="sup-add" class="btn btn-primary" type="button">Add</button>
         </div>
@@ -621,7 +621,7 @@
         <p class="hint">Your private notepad — only you can see what's saved here.</p>
         <div class="cl-admin-form">
           <textarea id="pn-body" rows="1" maxlength="2000" placeholder="Write a note…"></textarea>
-          <label class="photo-btn" id="pn-photo-btn" for="pn-photo" title="Attach a photo">📷</label>
+          <button type="button" class="photo-btn" id="pn-photo-btn" title="Attach a photo">📷</button>
           <input type="file" id="pn-photo" accept="image/*" class="photo-file">
           <button id="pn-add" class="btn btn-primary" type="button">Add</button>
         </div>
@@ -635,9 +635,9 @@
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">Just For Kix · internal team tool · v123</div>
+    <div class="wrap">Just For Kix · internal team tool · v124</div>
   </footer>
 
-  <script type="module" src="app.js?v=123"></script>
+  <script type="module" src="app.js?v=124"></script>
 </body>
 </html>

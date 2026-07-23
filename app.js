@@ -1708,12 +1708,13 @@ function photoPicker(btnId, inputId, statusId) {
       btn.title = "Attach a photo";
     },
   };
-  // The label's native "for" behavior alone opens the file picker in every
-  // browser — don't also call input.click() here. Doing both caused desktop
-  // Chrome to fire two open requests back-to-back, which can cancel the
-  // dialog out before it ever appears. Just show the status text alongside.
+  // A real <button> with a single, direct input.click() call — the standard,
+  // most reliable way to open a file picker across browsers (no dependency
+  // on a <label for> element's native default-action forwarding, which some
+  // desktop/PWA setups don't fire consistently).
   btn.addEventListener("click", () => {
     if (statusEl) setStatus(statusEl, "Opening photo picker…");
+    input.click();
   });
   input.addEventListener("change", async () => {
     const file = input.files[0];
