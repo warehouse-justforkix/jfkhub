@@ -92,6 +92,7 @@ const els = {
   tfDue: $("tf-due"),
   tfRecurrence: $("tf-recurrence"),
   tfAssign: $("tf-assign"),
+  tfDetails: $("tf-details"),
   taskStatus: $("task-status"),
   colOpen: $("col-open"),
   colClaimed: $("col-claimed"),
@@ -1707,10 +1708,12 @@ function photoPicker(btnId, inputId, statusId) {
       btn.title = "Attach a photo";
     },
   };
-  btn.addEventListener("click", (e) => {
-    e.preventDefault();
+  // The label's native "for" behavior alone opens the file picker in every
+  // browser — don't also call input.click() here. Doing both caused desktop
+  // Chrome to fire two open requests back-to-back, which can cancel the
+  // dialog out before it ever appears. Just show the status text alongside.
+  btn.addEventListener("click", () => {
     if (statusEl) setStatus(statusEl, "Opening photo picker…");
-    input.click();
   });
   input.addEventListener("change", async () => {
     const file = input.files[0];
@@ -2492,6 +2495,7 @@ els.taskForm.addEventListener("submit", async (e) => {
     due_date: els.tfDue.value || null,
     recurrence: els.tfRecurrence.value,
     assigned_to: els.tfAssign.value || null,
+    details: els.tfDetails.value.trim() || null,
     photo: tfPhoto.uri,
     created_by: myProfile.name,
   });
