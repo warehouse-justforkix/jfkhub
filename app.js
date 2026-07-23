@@ -1760,10 +1760,22 @@ const supPhoto = photoPicker("sup-photo-btn", "sup-photo", "sup-status");
 const photoThumb = (src, small) => {
   if (!src) return "";
   if (src.startsWith("data:application/pdf")) {
-    return `<a class="entry-pdf${small ? " entry-pdf-sm" : ""}" href="${esc(src)}" target="_blank" rel="noopener">📄 View PDF</a>`;
+    // Chrome blocks direct navigation to data: URLs (a phishing-prevention
+    // rule) — the button below converts to a Blob URL on click instead,
+    // which isn't restricted the same way.
+    return `<button type="button" class="entry-pdf${small ? " entry-pdf-sm" : ""}" data-pdf-src="${esc(src)}">📄 View PDF</button>`;
   }
   return `<img class="entry-photo${small ? " entry-photo-sm" : ""}" src="${esc(src)}" alt="Attached photo" title="Tap to view">`;
 };
+
+function dataUriToBlob(dataUri) {
+  const [header, base64] = dataUri.split(",");
+  const mime = /data:(.*?);base64/.exec(header)?.[1] || "application/octet-stream";
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
 
 // Tap any thumbnail to view it full-screen.
 function showPhoto(src) {
@@ -1779,6 +1791,18 @@ function showPhoto(src) {
 document.addEventListener("click", (e) => {
   const img = e.target.closest("img.entry-photo");
   if (img) showPhoto(img.src);
+});
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".entry-pdf");
+  if (!btn) return;
+  try {
+    const url = URL.createObjectURL(dataUriToBlob(btn.dataset.pdfSrc));
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  } catch {
+    alert("Couldn't open that PDF.");
+  }
 });
 
 // ---------- personal notes (private to each person) ----------
