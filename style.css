@@ -1143,7 +1143,10 @@ details.chat-acc[open] summary::after { content: "▾"; }
 .rs-line { display: flex; flex-direction: column; align-items: stretch; gap: .4rem; min-width: 0; }
 .rs-line-info { min-width: 0; overflow-wrap: break-word; text-align: left; }
 .rs-line-photo { min-width: 0; }
-.rs-line-actions { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; min-width: 0; }
+/* Stacked one-per-row: I'll do it / Assign to / claimed-by / Done */
+.rs-line-actions { display: flex; flex-direction: column; align-items: flex-start; gap: .35rem; min-width: 0; }
+.rs-line-actions > .btn-mini, .rs-line-actions > select { align-self: flex-start; }
+.rs-action-row { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
 .rs-comments-block { border-top: 1px solid var(--line); padding-top: .4rem; display: flex; flex-direction: column; gap: .3rem; }
 .rs-comment {
   display: flex;

@@ -665,15 +665,23 @@ function restockLine(r) {
           .map((p) => `<option value="${esc(p.name)}" ${r.assigned_to === p.name ? "selected" : ""}>${esc(p.name)}</option>`)
           .join("")}
       </select>`;
-  const buttons =
+  // Stacked order: I'll do it, then Assign to, then (once claimed) who
+  // claimed it, then Done — one action per row.
+  const actionsHtml =
     r.status === "open"
-      ? [
-          !r.assigned_to ? `<button class="btn-mini primary" data-rs-claim="${r.id}">I'll do it</button>` : "",
-          mine ? `<button class="btn-mini" data-rs-unclaim="${r.id}">Unclaim</button>` : "",
-          assignSel,
-          `<button class="btn-mini ${r.assigned_to ? "primary" : ""}" data-rs-done="${r.id}">Done ✓</button>`,
-        ].filter(Boolean).join("")
-      : `<button class="btn-mini" data-rs-reopen="${r.id}">Reopen</button>`;
+      ? `${!r.assigned_to ? `<button class="btn-mini primary" data-rs-claim="${r.id}">I'll do it</button>` : ""}
+        ${assignSel}
+        ${r.assigned_to
+          ? `<div class="rs-action-row"><span class="task-owner">${nameWithAvatar(r.assigned_to)}</span>${mine ? `<button class="btn-mini" data-rs-unclaim="${r.id}">Unclaim</button>` : ""}</div>`
+          : ""}
+        <div class="rs-action-row">
+          <button class="btn-mini ${r.assigned_to ? "primary" : ""}" data-rs-done="${r.id}">Done ✓</button>
+          <button class="note-delete" data-rs-del="${r.id}" title="Remove">✕</button>
+        </div>`
+      : `<div class="rs-action-row">
+          <button class="btn-mini" data-rs-reopen="${r.id}">Reopen</button>
+          <button class="note-delete" data-rs-del="${r.id}" title="Remove">✕</button>
+        </div>`;
 
   const comments = restockComments.filter((c) => c.restock_item_id === r.id);
   const commentRows = comments
@@ -694,12 +702,10 @@ function restockLine(r) {
     <div class="rs-line-info">
       <b>${esc(r.item)}</b>${r.note ? ` — ${esc(r.note)}` : ""}
       <span class="cl-by" style="color:var(--ink-soft)">· ${esc(r.requested_by)}</span>
-      ${r.assigned_to ? `<span class="task-owner">${nameWithAvatar(r.assigned_to)}</span>` : ""}
     </div>
     ${r.photo ? `<div class="rs-line-photo">${photoThumb(r.photo, true)}</div>` : ""}
     <div class="rs-line-actions">
-      ${buttons}
-      <button class="note-delete" data-rs-del="${r.id}" title="Remove">✕</button>
+      ${actionsHtml}
     </div>
     <div class="rs-comments-block" data-rsid="${r.id}">
       ${commentRows}
