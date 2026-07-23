@@ -277,6 +277,9 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: .7rem .75rem .8rem;
+  min-width: 0; /* grid items default to min-width:auto, which refused to
+    shrink below its buttons/dropdowns once the single-column ≤800px layout
+    kicked in — this let content overflow the card at in-between window widths */
 }
 .board-col h3 { font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .55rem; }
 .col-count { color: var(--accent); }
