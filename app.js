@@ -1705,10 +1705,10 @@ function readFileAsDataUri(file) {
 // Photos get resized/compressed; PDFs are stored as-is (with a lower size cap).
 async function processAttachment(file) {
   if (file.type === "application/pdf") {
-    if (file.size > 8 * 1024 * 1024) throw new Error("PDF is over 8 MB — pick a smaller one.");
+    if (file.size > 20 * 1024 * 1024) throw new Error("PDF is over 20 MB — pick a smaller one.");
     return readFileAsDataUri(file);
   }
-  if (file.size > 10 * 1024 * 1024) throw new Error("Image is over 10 MB — pick a smaller one.");
+  if (file.size > 20 * 1024 * 1024) throw new Error("Image is over 20 MB — pick a smaller one.");
   return resizePhoto(file);
 }
 
