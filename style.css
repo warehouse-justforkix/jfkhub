@@ -959,7 +959,7 @@ details.chat-acc[open] summary::after { content: "▾"; }
   .cal-nav span { min-width: 0; flex: 1; }
 }
 .cl-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .35rem; }
-.cl-item { display: flex; align-items: center; gap: .4rem; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: .45rem .55rem; font-size: .9rem; }
+.cl-item { display: flex; align-items: center; gap: .4rem; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: .45rem .55rem; font-size: .9rem; min-width: 0; }
 .cl-item label { display: flex; align-items: center; gap: .5rem; flex: 1; cursor: pointer; min-width: 0; }
 .cl-item input[type="checkbox"] { width: 1.05rem; height: 1.05rem; accent-color: var(--brand); flex-shrink: 0; }
 .cl-item.done .cl-label { text-decoration: line-through; color: var(--ink-soft); }
@@ -1138,8 +1138,9 @@ details.chat-acc[open] summary::after { content: "▾"; }
 #sup-receipts { margin-top: .5rem; }
 
 /* Restocking: per-item comments — always visible, no click needed */
-.rs-line { display: flex; flex-direction: column; align-items: stretch; gap: .4rem; }
-.rs-line-top { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+.rs-line { display: flex; flex-direction: column; align-items: stretch; gap: .4rem; min-width: 0; }
+.rs-line-top { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; min-width: 0; }
+.rs-line-top .cl-label { min-width: 0; overflow-wrap: break-word; }
 .rs-comments-block { border-top: 1px solid var(--line); padding-top: .4rem; display: flex; flex-direction: column; gap: .3rem; }
 .rs-comment {
   display: flex;
