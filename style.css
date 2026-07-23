@@ -1141,6 +1141,12 @@ details.chat-acc[open] summary::after { content: "▾"; }
    own row so a block-level photo never shares wrapping space with the
    buttons (that mixing is what caused them to visually collide). */
 .rs-line { display: flex; flex-direction: column; align-items: stretch; gap: .4rem; min-width: 0; }
+/* An older rule (".rs-board .cl-item { flex-wrap: wrap; }" above) was still
+   applying to this element too, and flex-wrap:wrap combined with
+   flex-direction:column makes browsers lay out MULTIPLE side-by-side columns
+   instead of stacking — that's what was pushing content past the card edge.
+   Higher specificity here cancels it out. */
+#restocking .rs-line { flex-wrap: nowrap; }
 .rs-line-info { min-width: 0; overflow-wrap: break-word; text-align: left; }
 .rs-line-photo { min-width: 0; }
 /* Mobile keeps the original row-wrap layout (buttons flow side by side). */
