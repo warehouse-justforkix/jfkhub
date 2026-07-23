@@ -676,11 +676,11 @@ function restockLine(r) {
           : ""}
         <div class="rs-action-row">
           <button class="btn-mini ${r.assigned_to ? "primary" : ""}" data-rs-done="${r.id}">Done ✓</button>
-          <button class="note-delete" data-rs-del="${r.id}" title="Remove">✕</button>
+          <button class="note-delete" data-rs-del="${r.id}" title="Remove">Remove</button>
         </div>`
       : `<div class="rs-action-row">
           <button class="btn-mini" data-rs-reopen="${r.id}">Reopen</button>
-          <button class="note-delete" data-rs-del="${r.id}" title="Remove">✕</button>
+          <button class="note-delete" data-rs-del="${r.id}" title="Remove">Remove</button>
         </div>`;
 
   const comments = restockComments.filter((c) => c.restock_item_id === r.id);
@@ -689,7 +689,7 @@ function restockLine(r) {
       (c) => `<div class="rs-comment">
         <span class="rs-comments-label">Comments:</span> <span class="rs-comment-green">${esc(c.body)}</span>
         <span class="cl-by">${esc(c.author_name)} · ${fmtTime(c.created_at)} ${new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-        ${c.author_name === myProfile.name || myProfile.is_admin ? `<button class="note-delete" data-rs-comment-del="${c.id}" title="Delete comment">✕</button>` : ""}
+        ${c.author_name === myProfile.name || myProfile.is_admin ? `<button class="note-delete" data-rs-comment-del="${c.id}" title="Delete comment">Remove</button>` : ""}
       </div>`
     )
     .join("");
@@ -700,7 +700,7 @@ function restockLine(r) {
   // narrower column widths.
   return `<li class="cl-item rs-line ${r.status === "done" ? "done" : ""}">
     <div class="rs-line-info">
-      <b>${esc(r.item)}</b>${r.note ? ` — ${esc(r.note)}` : ""}
+      <b class="rs-item-title">${esc(r.item)}</b>${r.note ? ` — ${esc(r.note)}` : ""}
       <span class="cl-by" style="color:var(--ink-soft)">· ${esc(r.requested_by)}</span>
     </div>
     ${r.photo ? `<div class="rs-line-photo">${photoThumb(r.photo, true)}</div>` : ""}
@@ -856,7 +856,7 @@ function renderWarnings() {
           ${admin && person ? `— ${nameWithAvatar(person.name)}` : ""}
           — ${esc(w.reason)}
           <span class="cl-by" style="color:var(--ink-soft)">· logged by ${esc(w.created_by)}</span></span>
-        ${admin ? `<button class="note-delete" data-warn-del="${w.id}" title="Remove warning">✕</button>` : ""}
+        ${admin ? `<button class="note-delete" data-warn-del="${w.id}" title="Remove warning">Remove</button>` : ""}
       </li>`;
     })
     .join("");
@@ -1027,7 +1027,7 @@ function supplyLine(s) {
       <span class="cl-by" style="color:var(--ink-soft)">· ${esc(s.requested_by)}</span>
       ${photoThumb(s.photo, true)}</span>
     ${advance}
-    <button class="note-delete" data-sup-del="${s.id}" title="Remove">✕</button>
+    <button class="note-delete" data-sup-del="${s.id}" title="Remove">Remove</button>
   </li>`;
 }
 
@@ -1181,7 +1181,7 @@ function renderChecklists() {
             ${i.team === "support" ? '<span class="role-badge role-part-time">CS</span>' : ""}
           </label>
           ${check ? `<span class="cl-by">✓ ${esc(check.checked_by)}</span>` : ""}
-          ${myProfile.is_admin ? `<button class="note-delete" data-del-item="${i.id}" title="Delete item">✕</button>` : ""}
+          ${myProfile.is_admin ? `<button class="note-delete" data-del-item="${i.id}" title="Delete item">Remove</button>` : ""}
         </li>`;
       })
       .join("");
@@ -1895,7 +1895,7 @@ function renderPersonalNotes() {
               ${photoThumb(n.photo, true)}
               <span class="cl-by" style="color:var(--ink-soft)">· ${fmtDate(n.created_at.slice(0, 10))}</span>
             </span>
-            <button class="note-delete" data-pn-del="${n.id}" title="Delete note">✕</button>
+            <button class="note-delete" data-pn-del="${n.id}" title="Delete note">Remove</button>
           </li>`
         )
         .join("")
@@ -1951,7 +1951,7 @@ async function loadAnnouncements() {
           return `<li>
             <div class="ann-meta"><span class="note-name">${nameWithAvatar(a.author_name)}</span>
               <span class="ann-when">${when} ${fmtTime(a.created_at)}</span>
-              ${canDelete ? `<button class="note-delete" data-ann="${a.id}" title="Delete announcement">✕</button>` : ""}
+              ${canDelete ? `<button class="note-delete" data-ann="${a.id}" title="Delete announcement">Remove</button>` : ""}
             </div>
             <div class="ann-body">${esc(a.body)}</div>
             ${photoThumb(a.photo)}
@@ -2238,7 +2238,7 @@ function renderNotes() {
         ${n.recurrence && n.recurrence !== "none" ? `<span class="note-details">↻ ${NOTE_RECUR_LABELS[n.recurrence]}</span>` : ""}
         ${n.details ? `<span class="note-details">${esc(n.details)}</span>` : ""}
         <button class="note-edit" data-edit="${n.id}" title="Edit this entry" aria-label="Edit entry">✎</button>
-        <button class="note-delete" data-id="${n.id}" title="Remove this entry${n.recurrence && n.recurrence !== "none" ? " (removes every repeat)" : ""}" aria-label="Remove entry">✕</button>
+        <button class="note-delete" data-id="${n.id}" title="Remove this entry${n.recurrence && n.recurrence !== "none" ? " (removes every repeat)" : ""}" aria-label="Remove entry">Remove</button>
       </li>`;
     })
     .join("");
