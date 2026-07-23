@@ -170,14 +170,22 @@ create table if not exists supply_requests (
   updated_at timestamptz not null default now()
 );
 
--- PDFs live here instead of inline on their entry (a "photo" column may hold
--- 'pdf-ref:<id>' pointing here) so list queries stay fast — the bytes only
--- get fetched when someone actually taps "View PDF".
+-- PDFs are stored in the "attachments" Storage bucket (a "photo" column may
+-- hold 'pdf-storage:<path>' pointing there) so list queries stay fast — the
+-- real file only downloads when someone taps "View PDF", via a short-lived
+-- signed URL. This Postgres table is the OLDER mechanism (photo holding
+-- 'pdf-ref:<id>') — kept only so PDFs saved before the Storage bucket existed
+-- still open; new uploads no longer use it.
 create table if not exists attachments (
   id uuid primary key default gen_random_uuid(),
   data_uri text not null,
   created_at timestamptz not null default now()
 );
+
+-- Storage bucket for PDF attachments (private; any member can upload/read).
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+  values ('attachments', 'attachments', false, 25000000, array['application/pdf'])
+  on conflict (id) do nothing;
 
 -- One row per device that opted in to push notifications.
 create table if not exists push_subscriptions (
@@ -291,12 +299,18 @@ create policy "member post restock comments" on restock_comments for insert
 create policy "own or admin delete restock comments" on restock_comments for delete
   to authenticated using (author_name = (select name from profiles where id = auth.uid()) or public.is_admin());
 
--- attachments: any member can save/read a PDF (they're immutable once posted).
+-- attachments (legacy Postgres-table PDFs): any member can save/read.
 alter table attachments enable row level security;
 create policy "member read attachments" on attachments for select
   to authenticated using (public.is_member());
 create policy "member insert attachments" on attachments for insert
   to authenticated with check (public.is_member());
+
+-- Storage bucket policies: any member can upload/read a PDF attachment.
+create policy "member upload attachments" on storage.objects for insert
+  to authenticated with check (bucket_id = 'attachments' and public.is_member());
+create policy "member read attachments storage" on storage.objects for select
+  to authenticated using (bucket_id = 'attachments' and public.is_member());
 
 alter table restock_items enable row level security;
 create policy "member all restock" on restock_items for all

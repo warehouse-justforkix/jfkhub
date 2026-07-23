@@ -1702,18 +1702,18 @@ function readFileAsDataUri(file) {
   });
 }
 
-// Photos get resized/compressed and stored inline (small either way). PDFs
-// are saved to the `attachments` table instead, and only a lightweight
-// "pdf-ref:<id>" pointer rides along on the entry itself — this keeps every
-// list fast to load, since the heavy bytes are only fetched when someone
-// actually taps "View PDF".
+// Photos get resized/compressed and stored inline (small either way). PDFs go
+// straight to Supabase Storage — only a lightweight "pdf-storage:<path>"
+// pointer rides along on the entry itself, so every list stays fast to load;
+// the real file only transfers when someone taps "View PDF", and it downloads
+// as a plain file (no base64 bloat, no client-side decoding needed).
 async function processAttachment(file) {
   if (file.type === "application/pdf") {
     if (file.size > 20 * 1024 * 1024) throw new Error("PDF is over 20 MB — pick a smaller one.");
-    const dataUri = await readFileAsDataUri(file);
-    const { data, error } = await supabase.from("attachments").insert({ data_uri: dataUri }).select("id").single();
+    const path = `${crypto.randomUUID()}.pdf`;
+    const { error } = await supabase.storage.from("attachments").upload(path, file, { contentType: "application/pdf" });
     if (error) throw new Error(`Couldn't save the PDF: ${error.message}`);
-    return `pdf-ref:${data.id}`;
+    return `pdf-storage:${path}`;
   }
   if (file.size > 20 * 1024 * 1024) throw new Error("Image is over 20 MB — pick a smaller one.");
   return resizePhoto(file);
@@ -1766,15 +1766,19 @@ const supPhoto = photoPicker("sup-photo-btn", "sup-photo", "sup-status");
 
 const photoThumb = (src, small) => {
   if (!src) return "";
-  // PDFs are stored out-of-line in the `attachments` table (see pdf-ref: below)
-  // so the heavy bytes aren't re-downloaded on every list load — only fetched
-  // when someone actually taps to view it.
+  // PDFs live out-of-line (Storage, or the older `attachments` table before
+  // that) so the heavy bytes aren't re-downloaded on every list load — only
+  // fetched when someone actually taps "View PDF".
+  if (src.startsWith("pdf-storage:")) {
+    const path = src.slice("pdf-storage:".length);
+    return `<button type="button" class="entry-pdf${small ? " entry-pdf-sm" : ""}" data-pdf-path="${esc(path)}">📄 View PDF</button>`;
+  }
   if (src.startsWith("pdf-ref:")) {
     const id = src.slice("pdf-ref:".length);
     return `<button type="button" class="entry-pdf${small ? " entry-pdf-sm" : ""}" data-pdf-ref="${esc(id)}">📄 View PDF</button>`;
   }
   if (src.startsWith("data:application/pdf")) {
-    // Older PDFs saved before the attachments table existed — still inline.
+    // Oldest PDFs, saved before any out-of-line storage existed — still inline.
     return `<button type="button" class="entry-pdf${small ? " entry-pdf-sm" : ""}" data-pdf-src="${esc(src)}">📄 View PDF</button>`;
   }
   return `<img class="entry-photo${small ? " entry-photo-sm" : ""}" src="${esc(src)}" alt="Attached photo" title="Tap to view">`;
@@ -1814,12 +1818,30 @@ function openPdfBlob(dataUri) {
 document.addEventListener("click", async (e) => {
   const btn = e.target.closest(".entry-pdf");
   if (!btn) return;
+  const original = btn.textContent;
   try {
+    // Storage-backed PDFs: a signed URL lets the browser download the real
+    // file directly — fast, and no client-side base64 decoding at all.
+    if (btn.dataset.pdfPath) {
+      btn.disabled = true;
+      btn.textContent = "Loading…";
+      const { data, error } = await supabase.storage
+        .from("attachments")
+        .createSignedUrl(btn.dataset.pdfPath, 60);
+      btn.disabled = false;
+      btn.textContent = original;
+      if (error || !data) {
+        alert("Couldn't load that PDF.");
+        return;
+      }
+      window.open(data.signedUrl, "_blank");
+      return;
+    }
     if (btn.dataset.pdfSrc) {
       openPdfBlob(btn.dataset.pdfSrc);
       return;
     }
-    const original = btn.textContent;
+    // Older PDFs saved in the `attachments` table before Storage was wired up.
     btn.disabled = true;
     btn.textContent = "Loading…";
     const { data, error } = await supabase
@@ -1835,6 +1857,8 @@ document.addEventListener("click", async (e) => {
     }
     openPdfBlob(data.data_uri);
   } catch {
+    btn.disabled = false;
+    btn.textContent = original;
     alert("Couldn't open that PDF.");
   }
 });
