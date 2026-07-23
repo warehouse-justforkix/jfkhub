@@ -1702,11 +1702,18 @@ function readFileAsDataUri(file) {
   });
 }
 
-// Photos get resized/compressed; PDFs are stored as-is (with a lower size cap).
+// Photos get resized/compressed and stored inline (small either way). PDFs
+// are saved to the `attachments` table instead, and only a lightweight
+// "pdf-ref:<id>" pointer rides along on the entry itself — this keeps every
+// list fast to load, since the heavy bytes are only fetched when someone
+// actually taps "View PDF".
 async function processAttachment(file) {
   if (file.type === "application/pdf") {
     if (file.size > 20 * 1024 * 1024) throw new Error("PDF is over 20 MB — pick a smaller one.");
-    return readFileAsDataUri(file);
+    const dataUri = await readFileAsDataUri(file);
+    const { data, error } = await supabase.from("attachments").insert({ data_uri: dataUri }).select("id").single();
+    if (error) throw new Error(`Couldn't save the PDF: ${error.message}`);
+    return `pdf-ref:${data.id}`;
   }
   if (file.size > 20 * 1024 * 1024) throw new Error("Image is over 20 MB — pick a smaller one.");
   return resizePhoto(file);
@@ -1759,10 +1766,15 @@ const supPhoto = photoPicker("sup-photo-btn", "sup-photo", "sup-status");
 
 const photoThumb = (src, small) => {
   if (!src) return "";
+  // PDFs are stored out-of-line in the `attachments` table (see pdf-ref: below)
+  // so the heavy bytes aren't re-downloaded on every list load — only fetched
+  // when someone actually taps to view it.
+  if (src.startsWith("pdf-ref:")) {
+    const id = src.slice("pdf-ref:".length);
+    return `<button type="button" class="entry-pdf${small ? " entry-pdf-sm" : ""}" data-pdf-ref="${esc(id)}">📄 View PDF</button>`;
+  }
   if (src.startsWith("data:application/pdf")) {
-    // Chrome blocks direct navigation to data: URLs (a phishing-prevention
-    // rule) — the button below converts to a Blob URL on click instead,
-    // which isn't restricted the same way.
+    // Older PDFs saved before the attachments table existed — still inline.
     return `<button type="button" class="entry-pdf${small ? " entry-pdf-sm" : ""}" data-pdf-src="${esc(src)}">📄 View PDF</button>`;
   }
   return `<img class="entry-photo${small ? " entry-photo-sm" : ""}" src="${esc(src)}" alt="Attached photo" title="Tap to view">`;
@@ -1793,13 +1805,35 @@ document.addEventListener("click", (e) => {
   if (img) showPhoto(img.src);
 });
 
-document.addEventListener("click", (e) => {
+function openPdfBlob(dataUri) {
+  const url = URL.createObjectURL(dataUriToBlob(dataUri));
+  window.open(url, "_blank");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+document.addEventListener("click", async (e) => {
   const btn = e.target.closest(".entry-pdf");
   if (!btn) return;
   try {
-    const url = URL.createObjectURL(dataUriToBlob(btn.dataset.pdfSrc));
-    window.open(url, "_blank");
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    if (btn.dataset.pdfSrc) {
+      openPdfBlob(btn.dataset.pdfSrc);
+      return;
+    }
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Loading…";
+    const { data, error } = await supabase
+      .from("attachments")
+      .select("data_uri")
+      .eq("id", btn.dataset.pdfRef)
+      .single();
+    btn.disabled = false;
+    btn.textContent = original;
+    if (error || !data) {
+      alert("Couldn't load that PDF.");
+      return;
+    }
+    openPdfBlob(data.data_uri);
   } catch {
     alert("Couldn't open that PDF.");
   }
@@ -2796,8 +2830,10 @@ async function loadMessages() {
 }
 
 // Check for new messages on a timer so banners arrive without a refresh.
+// Skipped while the tab is backgrounded — push notifications already cover
+// that case, so there's no need to keep polling underneath a hidden tab.
 setInterval(() => {
-  if (myProfile) loadMessages();
+  if (myProfile && document.visibilityState === "visible") loadMessages();
 }, 45_000);
 
 function renderThread() {

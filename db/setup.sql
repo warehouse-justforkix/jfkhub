@@ -170,6 +170,15 @@ create table if not exists supply_requests (
   updated_at timestamptz not null default now()
 );
 
+-- PDFs live here instead of inline on their entry (a "photo" column may hold
+-- 'pdf-ref:<id>' pointing here) so list queries stay fast — the bytes only
+-- get fetched when someone actually taps "View PDF".
+create table if not exists attachments (
+  id uuid primary key default gen_random_uuid(),
+  data_uri text not null,
+  created_at timestamptz not null default now()
+);
+
 -- One row per device that opted in to push notifications.
 create table if not exists push_subscriptions (
   id uuid primary key default gen_random_uuid(),
@@ -281,6 +290,13 @@ create policy "member post restock comments" on restock_comments for insert
   to authenticated with check (public.is_member());
 create policy "own or admin delete restock comments" on restock_comments for delete
   to authenticated using (author_name = (select name from profiles where id = auth.uid()) or public.is_admin());
+
+-- attachments: any member can save/read a PDF (they're immutable once posted).
+alter table attachments enable row level security;
+create policy "member read attachments" on attachments for select
+  to authenticated using (public.is_member());
+create policy "member insert attachments" on attachments for insert
+  to authenticated with check (public.is_member());
 
 alter table restock_items enable row level security;
 create policy "member all restock" on restock_items for all
