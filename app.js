@@ -1680,9 +1680,8 @@ function renderHoursTable() {
 
 // ---------- photo attachments ----------
 
-// Resize to a reasonable size and return a data URI (same approach as avatars).
+// Resize an image to a reasonable size and return a data URI (same approach as avatars).
 async function resizePhoto(file) {
-  if (file.size > 10 * 1024 * 1024) throw new Error("Image is over 10 MB — pick a smaller one.");
   const bitmap = await createImageBitmap(file).catch(() => null);
   if (!bitmap) throw new Error("That file doesn't look like an image.");
   const MAX = 640;
@@ -1694,9 +1693,27 @@ async function resizePhoto(file) {
   return canvas.toDataURL("image/jpeg", 0.75);
 }
 
-// Wire a 📷 label to its file input; the picked photo rides along on the next add.
-// The label opens the picker natively; the click handler is a scripted backup
-// (preventDefault stops the native path so only one dialog ever opens).
+function readFileAsDataUri(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Couldn't read that file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+// Photos get resized/compressed; PDFs are stored as-is (with a lower size cap).
+async function processAttachment(file) {
+  if (file.type === "application/pdf") {
+    if (file.size > 8 * 1024 * 1024) throw new Error("PDF is over 8 MB — pick a smaller one.");
+    return readFileAsDataUri(file);
+  }
+  if (file.size > 10 * 1024 * 1024) throw new Error("Image is over 10 MB — pick a smaller one.");
+  return resizePhoto(file);
+}
+
+// Wire a 📷 button to its hidden file input — a single, direct input.click()
+// call opens the picker (the standard, most reliable technique).
 function photoPicker(btnId, inputId, statusId) {
   const btn = $(btnId), input = $(inputId), statusEl = statusId ? $(statusId) : null;
   const state = {
@@ -1720,10 +1737,11 @@ function photoPicker(btnId, inputId, statusId) {
     const file = input.files[0];
     if (!file) return;
     try {
-      state.uri = await resizePhoto(file);
+      state.uri = await processAttachment(file);
+      const isPdf = file.type === "application/pdf";
       btn.classList.add("has-photo");
-      btn.title = "Photo attached — tap to change";
-      if (statusEl) setStatus(statusEl, "Photo attached ✔ — it'll post with this entry.");
+      btn.title = `${isPdf ? "PDF" : "Photo"} attached — tap to change`;
+      if (statusEl) setStatus(statusEl, `${isPdf ? "PDF" : "Photo"} attached ✔ — it'll post with this entry.`);
     } catch (err) {
       alert(err.message);
       state.clear();
@@ -1739,8 +1757,13 @@ const rsPhoto = photoPicker("rs-photo-btn", "rs-photo", "rs-status");
 const clPhoto = photoPicker("cl-photo-btn", "cl-photo", "cl-status");
 const supPhoto = photoPicker("sup-photo-btn", "sup-photo", "sup-status");
 
-const photoThumb = (src, small) =>
-  src ? `<img class="entry-photo${small ? " entry-photo-sm" : ""}" src="${esc(src)}" alt="Attached photo" title="Tap to view">` : "";
+const photoThumb = (src, small) => {
+  if (!src) return "";
+  if (src.startsWith("data:application/pdf")) {
+    return `<a class="entry-pdf${small ? " entry-pdf-sm" : ""}" href="${esc(src)}" target="_blank" rel="noopener">📄 View PDF</a>`;
+  }
+  return `<img class="entry-photo${small ? " entry-photo-sm" : ""}" src="${esc(src)}" alt="Attached photo" title="Tap to view">`;
+};
 
 // Tap any thumbnail to view it full-screen.
 function showPhoto(src) {

@@ -523,6 +523,22 @@ details.punch-acc .punch-rows { padding: 0 .65rem .55rem; }
   cursor: zoom-in;
 }
 .entry-photo-sm { max-height: 64px; max-width: 120px; }
+.entry-pdf {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  margin-top: .35rem;
+  padding: .2rem .55rem;
+  background: #fdeaf4;
+  color: var(--brand-dark);
+  border-radius: 99px;
+  font-size: .78rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--line);
+}
+.entry-pdf:hover { background: #fadbeb; }
+.entry-pdf-sm { font-size: .72rem; padding: .15rem .45rem; }
 .photo-view {
   position: fixed;
   inset: 0;
