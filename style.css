@@ -653,8 +653,58 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 .cal-today { outline: 2px solid var(--accent); outline-offset: -2px; }
 .cal-daynum { font-size: .74rem; font-weight: 600; color: var(--ink-soft); margin-bottom: .15rem; }
 .cal-today .cal-daynum { color: var(--accent); }
-.cal-chip { border-radius: 5px; padding: .06rem .3rem; margin-bottom: .15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.cal-chip { border-radius: 5px; padding: .06rem .3rem; margin-bottom: .15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; cursor: pointer; }
 .cal-more { color: var(--ink-soft); font-size: .7rem; }
+
+/* Hover tooltip on a calendar entry */
+.cal-tooltip {
+  position: absolute;
+  z-index: 3000;
+  background: #35202c;
+  color: #fff;
+  border-radius: 8px;
+  padding: .5rem .65rem;
+  font-size: .78rem;
+  line-height: 1.4;
+  max-width: 220px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .25);
+  pointer-events: none;
+}
+.cal-tooltip div:first-child { font-weight: 700; color: #ffe9a8; margin-bottom: .1rem; }
+
+/* Click-for-details popup */
+.cal-detail-view {
+  position: fixed;
+  inset: 0;
+  z-index: 3100;
+  background: rgba(30, 5, 18, .55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.cal-detail-card {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.3rem 1.5rem;
+  max-width: 340px;
+  width: 100%;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, .3);
+}
+.cal-detail-close {
+  position: absolute;
+  top: .6rem;
+  right: .7rem;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.cal-detail-close:hover { color: var(--out); }
+.cal-detail-lines { display: flex; flex-direction: column; gap: .45rem; font-size: .92rem; color: var(--ink); padding-right: 1rem; }
+.cal-detail-lines div:first-child { font-weight: 700; color: var(--brand-dark); font-size: 1.02rem; }
 .type-meeting { background: #e9edfb; color: var(--other); }
 @media (max-width: 700px) {
   .cal-cell { min-height: 54px; }

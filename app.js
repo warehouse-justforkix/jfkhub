@@ -2298,7 +2298,7 @@ function renderCalendar() {
       .slice(0, 4)
       .map(
         (n) =>
-          `<div class="cal-chip" style="background:${personColor(n.staff_name).bg};color:${personColor(n.staff_name).fg}" title="${esc(n.staff_name)} — ${TYPE_LABELS[n.note_type]}${n.event_time ? " " + esc(n.event_time) : ""}${n.details ? ": " + esc(n.details) : ""}${n.visibility === "admin" ? " (only visible to you)" : ""}">${n.visibility === "admin" ? "🔒 " : ""}${esc(n.staff_name)}${n.note_type === "meeting" && n.event_time ? " · " + esc(n.event_time) : ""}</div>`
+          `<div class="cal-chip" data-note-id="${n.id}" style="background:${personColor(n.staff_name).bg};color:${personColor(n.staff_name).fg}">${n.visibility === "admin" ? "🔒 " : ""}${esc(n.staff_name)}${n.note_type === "meeting" && n.event_time ? " · " + esc(n.event_time) : ""}</div>`
       )
       .join("");
     const more = dayNotes.length > 4 ? `<div class="cal-more">+${dayNotes.length - 4} more</div>` : "";
@@ -2331,11 +2331,87 @@ els.calNext.addEventListener("click", () => {
 });
 
 els.calGrid.addEventListener("click", (e) => {
+  if (e.target.closest(".cal-chip")) return; // handled below — don't also fill the add-entry form
   const cell = e.target.closest(".cal-cell[data-date]");
   if (!cell) return;
   els.nfStart.value = cell.dataset.date;
   els.nfStart.scrollIntoView({ behavior: "smooth", block: "center" });
   els.nfType.focus();
+});
+
+// ---------- calendar entry hover tooltip + click-for-details popup ----------
+
+function noteDetailLines(n) {
+  const lines = [
+    `${TYPE_LABELS[n.note_type] || n.note_type}${n.visibility === "admin" ? " 🔒 (only visible to you)" : ""}`,
+    `${esc(n.staff_name)}`,
+    `${noteDateLabel(n)}`,
+  ];
+  if (n.event_time) lines.push(`Time: ${esc(n.event_time)}`);
+  if (n.recurrence && n.recurrence !== "none") lines.push(`Repeats ${NOTE_RECUR_LABELS[n.recurrence]}`);
+  if (n.details) lines.push(`Details: ${esc(n.details)}`);
+  return lines;
+}
+
+let calTooltipEl = null;
+function showCalTooltip(chip, n) {
+  hideCalTooltip();
+  const div = document.createElement("div");
+  div.className = "cal-tooltip";
+  div.innerHTML = noteDetailLines(n).map((l) => `<div>${l}</div>`).join("");
+  document.body.appendChild(div);
+  const r = chip.getBoundingClientRect();
+  const tip = div.getBoundingClientRect();
+  let left = r.left + r.width / 2 - tip.width / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - tip.width - 8));
+  const top = r.top - tip.height - 8;
+  div.style.left = `${left + window.scrollX}px`;
+  div.style.top = `${(top < 0 ? r.bottom + 8 : top) + window.scrollY}px`;
+  calTooltipEl = div;
+}
+function hideCalTooltip() {
+  calTooltipEl?.remove();
+  calTooltipEl = null;
+}
+
+els.calGrid.addEventListener("mouseover", (e) => {
+  const chip = e.target.closest(".cal-chip");
+  if (!chip || chip._tooltipShown) return;
+  const n = notes.find((x) => x.id === chip.dataset.noteId);
+  if (!n) return;
+  chip._tooltipShown = true;
+  showCalTooltip(chip, n);
+});
+els.calGrid.addEventListener("mouseout", (e) => {
+  const chip = e.target.closest(".cal-chip");
+  if (!chip) return;
+  if (chip.contains(e.relatedTarget)) return;
+  chip._tooltipShown = false;
+  hideCalTooltip();
+});
+
+function showNoteDetailPopup(n) {
+  document.querySelector(".cal-detail-view")?.remove();
+  const div = document.createElement("div");
+  div.className = "cal-detail-view";
+  div.innerHTML = `
+    <div class="cal-detail-card">
+      <button class="cal-detail-close" type="button" aria-label="Close">✕</button>
+      <div class="cal-detail-lines">${noteDetailLines(n).map((l) => `<div>${l}</div>`).join("")}</div>
+    </div>`;
+  div.addEventListener("click", (e) => {
+    if (e.target === div || e.target.closest(".cal-detail-close")) div.remove();
+  });
+  document.body.appendChild(div);
+}
+
+els.calGrid.addEventListener("click", (e) => {
+  const chip = e.target.closest(".cal-chip");
+  if (!chip) return;
+  e.stopPropagation();
+  hideCalTooltip();
+  const n = notes.find((x) => x.id === chip.dataset.noteId);
+  if (n) showNoteDetailPopup(n);
 });
 
 els.showPast.addEventListener("change", renderNotes);
