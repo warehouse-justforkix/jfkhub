@@ -48,7 +48,7 @@ create table if not exists member_hours (
 create table if not exists schedule_notes (
   id uuid primary key default gen_random_uuid(),
   staff_name text not null,
-  note_type text not null check (note_type in ('out', 'different-hours', 'meeting', 'other')),
+  note_type text not null check (note_type in ('out', 'out-of-office', 'different-hours', 'meeting', 'other')),
   start_date date not null,
   end_date date,
   event_time text,                      -- freeform, mainly for meetings ("2:00–3:00 PM")

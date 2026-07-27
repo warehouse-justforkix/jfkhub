@@ -1343,7 +1343,7 @@ function renderPunchTable() {
       // Off that day? (no scheduled hours, or time-off on the calendar)
       const scheduled = dayKey ? ((hoursById[s.id] || {})[dayKey] || "").trim() : "";
       const timeOff = notes.some(
-        (n) => n.note_type === "out" && n.staff_name === s.name && noteOnDay(n, day)
+        (n) => (n.note_type === "out" || n.note_type === "out-of-office") && n.staff_name === s.name && noteOnDay(n, day)
       );
       const isOff = lastType === "none" && (timeOff || !scheduled);
       const self = s.id === myProfile.id;
@@ -2098,6 +2098,7 @@ function renderNameOptions() {
 
 const TYPE_LABELS = {
   out: "Time off",
+  "out-of-office": "Out of Office",
   "different-hours": "Different hours",
   meeting: "Meeting",
   other: "Note",
@@ -2397,10 +2398,16 @@ function showNoteDetailPopup(n) {
   div.innerHTML = `
     <div class="cal-detail-card">
       <button class="cal-detail-close" type="button" aria-label="Close">✕</button>
+      <button class="cal-detail-edit" type="button" data-edit="${n.id}" title="Edit this entry" aria-label="Edit entry">✎</button>
       <div class="cal-detail-lines">${noteDetailLines(n).map((l) => `<div>${l}</div>`).join("")}</div>
     </div>`;
   div.addEventListener("click", (e) => {
-    if (e.target === div || e.target.closest(".cal-detail-close")) div.remove();
+    if (e.target === div || e.target.closest(".cal-detail-close")) { div.remove(); return; }
+    const editBtn = e.target.closest(".cal-detail-edit");
+    if (editBtn) {
+      div.remove();
+      startNoteEdit(n);
+    }
   });
   document.body.appendChild(div);
 }
