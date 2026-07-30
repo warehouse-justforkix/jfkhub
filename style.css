@@ -1106,6 +1106,12 @@ details.chat-acc[open] summary::after { content: "▾"; }
 .msg-bubble { padding: .45rem .7rem; border-radius: 12px; font-size: .92rem; white-space: pre-wrap; }
 .msg-mine .msg-bubble { background: var(--brand); color: #fff; border-bottom-right-radius: 4px; }
 .msg-theirs .msg-bubble { background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+
+/* Auto-detected URLs turned into clickable blue links (see linkify() in app.js) */
+a.linkified { color: #1a56db; text-decoration: underline; word-break: break-word; overflow-wrap: anywhere; }
+a.linkified:hover { color: #1e40af; }
+/* Keep links legible on the brand-colored "my message" bubble */
+.msg-mine .msg-bubble a.linkified { color: #fff; text-decoration: underline; }
 .msg-thread .empty { align-self: center; }
 .msg-form { display: flex; gap: .6rem; align-items: stretch; }
 .msg-form input,

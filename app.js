@@ -218,6 +218,32 @@ function esc(s) {
   return div.innerHTML;
 }
 
+// Escape text AND turn any URLs (http(s):// or www.) into clickable blue links.
+// Safe against injection: both the href and the visible text are escaped.
+function linkify(s) {
+  const text = s ?? "";
+  const re = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
+  let out = "";
+  let last = 0;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    out += esc(text.slice(last, m.index));
+    let url = m[0];
+    // Don't swallow trailing sentence punctuation into the link.
+    let trail = "";
+    const tm = url.match(/[.,;:!?)\]}'"]+$/);
+    if (tm) {
+      trail = tm[0];
+      url = url.slice(0, -trail.length);
+    }
+    const href = url.startsWith("www.") ? "https://" + url : url;
+    out += `<a class="linkified" href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(url)}</a>${esc(trail)}`;
+    last = m.index + m[0].length;
+  }
+  out += esc(text.slice(last));
+  return out;
+}
+
 function setStatus(el, msg, isError = false) {
   el.textContent = msg;
   el.classList.toggle("error", isError);
@@ -687,7 +713,7 @@ function restockLine(r) {
   const commentRows = comments
     .map(
       (c) => `<div class="rs-comment">
-        <span class="rs-comments-label">Comments:</span> <span class="rs-comment-green">${esc(c.body)}</span>
+        <span class="rs-comments-label">Comments:</span> <span class="rs-comment-green">${linkify(c.body)}</span>
         <span class="cl-by">${esc(c.author_name)} · ${fmtTime(c.created_at)} ${new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
         ${c.author_name === myProfile.name || myProfile.is_admin ? `<button class="note-edit" data-rs-comment-edit="${c.id}" title="Edit comment (clear it and save to delete)">✎</button>` : ""}
       </div>`
@@ -700,7 +726,7 @@ function restockLine(r) {
   // narrower column widths.
   return `<li class="cl-item rs-line ${r.status === "done" ? "done" : ""}">
     <div class="rs-line-info">
-      <b class="rs-item-title">${esc(r.item)}</b>${r.note ? ` — ${esc(r.note)}` : ""}
+      <b class="rs-item-title">${esc(r.item)}</b>${r.note ? ` — ${linkify(r.note)}` : ""}
       <span class="cl-by" style="color:var(--ink-soft)">· ${esc(r.requested_by)}</span>
     </div>
     ${r.photo ? `<div class="rs-line-photo">${photoThumb(r.photo, true)}</div>` : ""}
@@ -861,7 +887,7 @@ function renderWarnings() {
       return `<li class="cl-item warn-item">
         <span class="cl-label" style="flex:1">⚠ <b>${fmtDate(w.incident_date)}</b>
           ${admin && person ? `— ${nameWithAvatar(person.name)}` : ""}
-          — ${esc(w.reason)}
+          — ${linkify(w.reason)}
           <span class="cl-by" style="color:var(--ink-soft)">· logged by ${esc(w.created_by)}</span></span>
         ${admin ? `<button class="btn-mini danger" data-warn-del="${w.id}" title="Remove warning">Remove</button>` : ""}
       </li>`;
@@ -1030,7 +1056,7 @@ function supplyLine(s) {
         ? `<button class="btn-mini primary" data-sup-status="received" data-sup="${s.id}">Received</button>`
         : "";
   return `<li class="cl-item sup-line ${s.status === "received" ? "done" : ""}">
-    <span class="cl-label sup-line-info"><b>${esc(s.item)}</b>${s.note ? ` — ${esc(s.note)}` : ""}
+    <span class="cl-label sup-line-info"><b>${esc(s.item)}</b>${s.note ? ` — ${linkify(s.note)}` : ""}
       <span class="cl-by" style="color:var(--ink-soft)">· ${esc(s.requested_by)}</span>
       ${photoThumb(s.photo, true)}</span>
     <span class="sup-line-actions">
@@ -1077,7 +1103,7 @@ function renderOrderReceipts() {
       const when = items[0].updated_at;
       const who = items[0].ordered_by;
       const rows = items
-        .map((s) => `<li class="cl-item"><span class="cl-label" style="flex:1"><b>${esc(s.item)}</b>${s.note ? ` — ${esc(s.note)}` : ""}${photoThumb(s.photo, true)}</span></li>`)
+        .map((s) => `<li class="cl-item"><span class="cl-label" style="flex:1"><b>${esc(s.item)}</b>${s.note ? ` — ${linkify(s.note)}` : ""}${photoThumb(s.photo, true)}</span></li>`)
         .join("");
       return `<details class="hrs-acc" data-batch="${batchId}" ${wasOpen.has(batchId) ? "open" : ""}>
         <summary><span class="roster-name">Order — ${fmtDate(when.slice(0, 10))} at ${fmtTime(when)}</span><span class="cl-by">${items.length} item${items.length === 1 ? "" : "s"} · ${esc(who || "")}</span></summary>
@@ -1900,7 +1926,7 @@ function renderPersonalNotes() {
         .map(
           (n) => `<li class="cl-item">
             <span class="cl-label" style="flex:1">
-              ${n.body ? `<span class="pn-text">${esc(n.body)}</span>` : ""}
+              ${n.body ? `<span class="pn-text">${linkify(n.body)}</span>` : ""}
               ${photoThumb(n.photo, true)}
               <span class="cl-by" style="color:var(--ink-soft)">· ${fmtDate(n.created_at.slice(0, 10))}</span>
             </span>
@@ -1962,7 +1988,7 @@ async function loadAnnouncements() {
               <span class="ann-when">${when} ${fmtTime(a.created_at)}</span>
               ${canDelete ? `<button class="btn-mini danger" data-ann="${a.id}" title="Delete announcement">Remove</button>` : ""}
             </div>
-            <div class="ann-body">${esc(a.body)}</div>
+            <div class="ann-body">${linkify(a.body)}</div>
             ${photoThumb(a.photo)}
           </li>`;
         })
@@ -2246,7 +2272,7 @@ function renderNotes() {
         <span class="note-name" style="background:${personColor(n.staff_name).bg};color:${personColor(n.staff_name).fg}">${esc(n.staff_name)}${n.visibility === "admin" ? ' <span title="Only visible to you">🔒</span>' : ""}</span>
         ${n.event_time ? `<span class="note-details">${esc(n.event_time)}</span>` : ""}
         ${n.recurrence && n.recurrence !== "none" ? `<span class="note-details">↻ ${NOTE_RECUR_LABELS[n.recurrence]}</span>` : ""}
-        ${n.details ? `<span class="note-details">${esc(n.details)}</span>` : ""}
+        ${n.details ? `<span class="note-details">${linkify(n.details)}</span>` : ""}
         <button class="note-edit" data-edit="${n.id}" title="Edit this entry" aria-label="Edit entry">✎</button>
         <button class="note-delete note-delete-x" data-id="${n.id}" title="Remove this entry${n.recurrence && n.recurrence !== "none" ? " (removes every repeat)" : ""}" aria-label="Remove entry">✕</button>
       </li>`;
@@ -2627,7 +2653,7 @@ function taskCard(t) {
 
   return `<li class="task-card ${t.status}">
     <div class="task-title">${esc(t.title)}</div>
-    ${t.details ? `<div class="task-details">${esc(t.details)}</div>` : ""}
+    ${t.details ? `<div class="task-details">${linkify(t.details)}</div>` : ""}
     ${photoThumb(t.photo, true)}
     ${meta ? `<div class="task-meta">${meta}</div>` : ""}
     <div class="task-actions">${actions}</div>
@@ -2788,7 +2814,7 @@ function threadHtml(memberId) {
       const mine = myProfile.is_admin ? m.from_admin : !m.from_admin;
       return `<li class="msg ${mine ? "msg-mine" : "msg-theirs"}">
         <div class="msg-meta">${nameWithAvatar(m.sender_name)} · ${fmtTime(m.created_at)} ${new Date(m.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
-        <div class="msg-bubble">${esc(m.body)}</div>
+        <div class="msg-bubble">${linkify(m.body)}</div>
       </li>`;
     })
     .join("");
@@ -3007,7 +3033,7 @@ function renderThread() {
         const mine = iAmAdmin ? m.from_admin : !m.from_admin;
         return `<li class="msg ${mine ? "msg-mine" : "msg-theirs"}">
           <div class="msg-meta">${nameWithAvatar(m.sender_name)} · ${fmtTime(m.created_at)} ${new Date(m.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
-          <div class="msg-bubble">${esc(m.body)}</div>
+          <div class="msg-bubble">${linkify(m.body)}</div>
         </li>`;
       })
       .join("");
