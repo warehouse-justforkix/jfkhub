@@ -93,6 +93,8 @@ const els = {
   tfRecurrence: $("tf-recurrence"),
   tfAssign: $("tf-assign"),
   tfDetails: $("tf-details"),
+  tfSubmit: $("tf-submit"),
+  tfCancel: $("tf-cancel"),
   taskStatus: $("task-status"),
   colOpen: $("col-open"),
   colClaimed: $("col-claimed"),
@@ -1771,6 +1773,17 @@ function photoPicker(btnId, inputId, statusId) {
       btn.classList.remove("has-photo");
       btn.title = "Attach a photo";
     },
+    // Prefill with an already-saved attachment (used when editing an entry).
+    set(uri) {
+      state.uri = uri || null;
+      if (uri) {
+        btn.classList.add("has-photo");
+        btn.title = "Attachment kept — tap to change";
+      } else {
+        btn.classList.remove("has-photo");
+        btn.title = "Attach a photo";
+      }
+    },
   };
   // A real <button> with a single, direct input.click() call — the standard,
   // most reliable way to open a file picker across browsers (no dependency
@@ -2652,6 +2665,7 @@ function taskCard(t) {
   }
 
   return `<li class="task-card ${t.status}">
+    ${t.status === "open" ? `<button class="note-edit task-edit" data-task-edit="${t.id}" title="Edit this task" aria-label="Edit task">✎</button>` : ""}
     <div class="task-title">${esc(t.title)}</div>
     ${t.details ? `<div class="task-details">${linkify(t.details)}</div>` : ""}
     ${photoThumb(t.photo, true)}
@@ -2723,12 +2737,48 @@ async function taskAction(act, id) {
   } else if (act === "delete") {
     const extra = t.recurrence !== "none" ? " This is a recurring task — removing it stops it from coming back." : "";
     if (!confirm(`Remove "${t.title}"?${extra}`)) return;
+    if (id === editingTaskId) cancelTaskEdit();
     await supabase.from("tasks").delete().eq("id", id);
   }
   await loadTasks();
 }
 
+// Editing state: which task the form is currently updating (null = new task)
+let editingTaskId = null;
+
+function startTaskEdit(t) {
+  editingTaskId = t.id;
+  setTeam(t.team || "warehouse"); // make sure the form's board matches the task
+  els.tfTitle.value = t.title;
+  els.tfDue.value = t.due_date || "";
+  els.tfRecurrence.value = t.recurrence || "none";
+  els.tfAssign.value = t.assigned_to || "";
+  els.tfDetails.value = t.details || "";
+  tfPhoto.set(t.photo);
+  els.tfSubmit.textContent = "Save Changes";
+  els.tfCancel.classList.remove("hidden");
+  setStatus(els.taskStatus, `Editing "${t.title}" — make your changes above and hit Save.`);
+  els.tfTitle.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function cancelTaskEdit() {
+  editingTaskId = null;
+  els.taskForm.reset();
+  tfPhoto.clear();
+  els.tfSubmit.textContent = "Add task";
+  els.tfCancel.classList.add("hidden");
+  setStatus(els.taskStatus, "");
+}
+
+els.tfCancel.addEventListener("click", cancelTaskEdit);
+
 $("tasks").addEventListener("click", (e) => {
+  const editBtn = e.target.closest("button[data-task-edit]");
+  if (editBtn) {
+    const t = tasks.find((x) => x.id === editBtn.dataset.taskEdit);
+    if (t) startTaskEdit(t);
+    return;
+  }
   const btn = e.target.closest("button[data-act]");
   if (btn) taskAction(btn.dataset.act, btn.dataset.id);
 });
@@ -2749,24 +2799,26 @@ els.taskForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   setStatus(els.taskStatus, "");
 
-  const { error } = await supabase.from("tasks").insert({
-    team: curTeam,
+  const fields = {
     title: els.tfTitle.value.trim(),
     due_date: els.tfDue.value || null,
     recurrence: els.tfRecurrence.value,
     assigned_to: els.tfAssign.value || null,
     details: els.tfDetails.value.trim() || null,
     photo: tfPhoto.uri,
-    created_by: myProfile.name,
-  });
+  };
+
+  const { error } = editingTaskId
+    ? await supabase.from("tasks").update(fields).eq("id", editingTaskId)
+    : await supabase.from("tasks").insert({ ...fields, team: curTeam, created_by: myProfile.name });
 
   if (error) {
-    setStatus(els.taskStatus, `Couldn't add it: ${error.message}`, true);
+    setStatus(els.taskStatus, `Couldn't ${editingTaskId ? "save" : "add"} it: ${error.message}`, true);
     return;
   }
-  setStatus(els.taskStatus, "Task added! ✔");
-  els.taskForm.reset();
-  tfPhoto.clear();
+  const wasEditing = !!editingTaskId;
+  cancelTaskEdit();
+  setStatus(els.taskStatus, wasEditing ? "Changes saved! ✔" : "Task added! ✔");
   await loadTasks();
 });
 

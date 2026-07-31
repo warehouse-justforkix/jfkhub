@@ -295,6 +295,7 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
 .task-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .55rem; }
 .task-list .empty { color: var(--ink-soft); font-style: italic; font-size: .88rem; padding: .2rem; }
 .task-card {
+  position: relative;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -302,6 +303,16 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
   font-size: .9rem;
   box-shadow: 0 1px 2px rgba(42, 36, 49, .05);
 }
+/* Edit pencil, top-right of the card. Title reserves room so long titles
+   don't run under it. */
+.task-edit {
+  position: absolute;
+  top: .3rem;
+  right: .35rem;
+  margin: 0;
+  line-height: 1;
+}
+.task-card.open .task-title { padding-right: 1.1rem; }
 .task-card.done .task-title { text-decoration: line-through; color: var(--ink-soft); }
 /* Grey the whole card once a task's done — Reopen stays full color so it's
    still easy to spot and use. */
