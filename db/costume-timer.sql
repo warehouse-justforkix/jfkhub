@@ -1,18 +1,28 @@
 -- Defective Costumes → Teehive: 30-day reminder timer.
--- Run once against the Supabase project (SQL editor or `supabase db` push).
+-- Run once against the Supabase project (SQL editor).
+--
+-- Self-contained: it defines its OWN security-definer permission helpers
+-- (ct_is_member / ct_is_admin) rather than assuming the repo's is_member()/
+-- is_admin() exist — the live DB was set up without them.
 --
 -- What this adds:
 --   * costume_timer   — a single row holding the next due date (shared by the team)
 --   * team_broadcasts — insert-a-row-to-push-the-whole-team, wired to the SAME
---                       pg_net push trigger that already serves messages/tasks
+--                       Database Webhook that already serves messages/tasks
 --   * fire_costume_reminder_if_due() — atomic "if 30 days are up, push everyone
---                       and restart the clock." Safe to call from every device on
---                       load; only the first caller past the due time fires.
+--                       and restart the clock." Safe to call from every device.
 --   * send_costume_reminder_now()    — admin: push the team now and restart.
---
--- The push itself is delivered by the existing push-message edge function, which
--- gains a `team_broadcasts` branch that notifies every member (see
--- supabase/functions/push-message/index.ts).
+
+-- ---------- self-contained permission helpers (bypass RLS, no recursion) ----------
+create or replace function public.ct_is_member() returns boolean
+language sql stable security definer set search_path = public as
+$$ select exists (select 1 from profiles where id = auth.uid()) $$;
+grant execute on function public.ct_is_member() to authenticated;
+
+create or replace function public.ct_is_admin() returns boolean
+language sql stable security definer set search_path = public as
+$$ select coalesce((select is_admin from profiles where id = auth.uid()), false) $$;
+grant execute on function public.ct_is_admin() to authenticated;
 
 -- ---------- the shared timer (one row) ----------
 create table if not exists costume_timer (
@@ -27,10 +37,10 @@ insert into costume_timer (id) values (1) on conflict (id) do nothing;
 alter table costume_timer enable row level security;
 drop policy if exists "member read timer" on costume_timer;
 create policy "member read timer" on costume_timer for select
-  to authenticated using (public.is_member());
+  to authenticated using (public.ct_is_member());
 drop policy if exists "admin update timer" on costume_timer;
 create policy "admin update timer" on costume_timer for update
-  to authenticated using (public.is_admin()) with check (public.is_admin());
+  to authenticated using (public.ct_is_admin()) with check (public.ct_is_admin());
 
 -- ---------- team broadcast (insert => push everyone) ----------
 create table if not exists team_broadcasts (
@@ -44,7 +54,7 @@ create table if not exists team_broadcasts (
 alter table team_broadcasts enable row level security;
 drop policy if exists "member read broadcasts" on team_broadcasts;
 create policy "member read broadcasts" on team_broadcasts for select
-  to authenticated using (public.is_member());
+  to authenticated using (public.ct_is_member());
 -- (No insert policy on purpose: rows are written only by the security-definer
 --  functions below, never directly by the browser.)
 
@@ -78,7 +88,7 @@ create or replace function public.send_costume_reminder_now()
 returns void
 language plpgsql security definer set search_path = public as $$
 begin
-  if not public.is_admin() then
+  if not coalesce((select is_admin from profiles where id = auth.uid()), false) then
     raise exception 'admins only';
   end if;
   update costume_timer
@@ -96,11 +106,10 @@ begin
 end $$;
 grant execute on function public.send_costume_reminder_now() to authenticated;
 
--- ---------- wire the existing push trigger onto team_broadcasts ----------
--- Clones the exact Database Webhook trigger already on `messages` (the same push
--- pipeline serves announcements + tasks) onto team_broadcasts, preserving its
--- function URL + secret-header arguments. The webhook posts {type, table, record}
--- to the edge function, so an insert here arrives with table = 'team_broadcasts'.
+-- ---------- wire the existing push Database Webhook onto team_broadcasts ----------
+-- Clones whatever webhook already posts pushes on `messages` (URL + secret args
+-- and all) onto team_broadcasts, so an insert here reaches the push-message edge
+-- function with table = 'team_broadcasts'. Run AFTER the block above succeeds.
 do $$
 declare def text;
 begin
@@ -115,10 +124,10 @@ begin
    limit 1;
 
   if def is null then
-    raise notice 'No Database Webhook found on public.messages — wire team_broadcasts to the push-message function manually (Database > Webhooks).';
+    raise notice 'No Database Webhook found on public.messages — wire team_broadcasts to push-message manually (Database > Webhooks).';
   else
     execute 'drop trigger if exists team_broadcasts_push on public.team_broadcasts';
-    def := regexp_replace(def, 'CREATE TRIGGER \S+', 'CREATE TRIGGER team_broadcasts_push');
+    def := regexp_replace(def, '^CREATE TRIGGER (\S+|"[^"]*")', 'CREATE TRIGGER team_broadcasts_push');
     def := regexp_replace(def, ' ON public\.messages ', ' ON public.team_broadcasts ');
     execute def;
   end if;
