@@ -57,6 +57,7 @@
         <a href="#restocking" id="nav-restocking">Restocking</a>
         <a href="#checklists">Checklists</a>
         <a href="#supplies">Supplies</a>
+        <a href="#defective" id="nav-defective">Defective Costumes</a>
         <a href="#mynotes">My Notes</a>
       </nav>
     </div>
@@ -613,6 +614,44 @@
           <h3>Order Receipts</h3>
         </div>
         <div id="sup-receipts"><p class="empty-hint">No orders confirmed yet.</p></div>
+      </section>
+
+      <!-- Defective costumes → Teehive: 30-day reminder + email draft -->
+      <section id="defective" class="card">
+        <div class="card-head">
+          <h2>Defective Costumes → Teehive</h2>
+        </div>
+        <p class="hint">Every 30 days it's time to ship the defective costume stockpile to Teehive. The whole team gets a notification when the timer runs out, then it restarts.</p>
+
+        <div class="dc-timer">
+          <div class="dc-count">
+            <span id="dc-days" class="dc-days">—</span>
+            <span class="dc-days-label">days until the next reminder</span>
+          </div>
+          <p id="dc-status" class="dc-status">Loading timer…</p>
+        </div>
+
+        <div class="dc-email-head">
+          <h3>Email to Teehive</h3>
+          <button id="dc-copy" class="btn btn-primary" type="button">📋 Copy email</button>
+        </div>
+        <details class="dc-preview">
+          <summary>Preview the draft</summary>
+          <pre id="dc-email" class="dc-email-body">Hi ______,
+
+We are reaching out to see if we could send over this month's (30 days' worth) defective costume stockpile. Many of the costumes have rubber bands notifying of the defective area, or sticky notes.
+
+Please let us know the best way to coordinate getting these over to you.
+
+Thank you,
+Just For Kix Warehouse</pre>
+        </details>
+
+        <div id="dc-admin" class="dc-admin hidden">
+          <span class="dc-admin-label">Admin:</span>
+          <button id="dc-send-now" class="btn btn-ghost" type="button" title="Notify the whole team now and restart the 30 days">Send reminder now</button>
+          <button id="dc-restart" class="btn btn-ghost" type="button" title="Restart the 30-day timer without notifying anyone">Restart 30 days (no notice)</button>
+        </div>
       </section>
 
       <!-- Personal notes: private to each person -->

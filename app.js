@@ -662,8 +662,88 @@ async function loadEverything() {
     loadWarnings(),
     loadAdmin(),
     loadPersonalNotes(),
+    loadCostumeTimer(),
   ]);
 }
+
+// ---------- defective costumes → Teehive 30-day reminder ----------
+
+function renderCostumeTimer(timer) {
+  const daysEl = $("dc-days");
+  const statusEl = $("dc-status");
+  if (!timer || !timer.due_at) {
+    daysEl.textContent = "—";
+    statusEl.textContent = "Timer isn't set up yet.";
+    return;
+  }
+  const dueMs = new Date(timer.due_at).getTime();
+  const days = Math.ceil((dueMs - Date.now()) / 86_400_000);
+  const dueStr = new Date(timer.due_at).toLocaleDateString("en-US", {
+    weekday: "short", month: "short", day: "numeric",
+  });
+  daysEl.textContent = days <= 0 ? "0" : String(days);
+  const sent = timer.last_sent_at
+    ? ` · last sent ${new Date(timer.last_sent_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+    : "";
+  statusEl.textContent =
+    days <= 0 ? `Due now — the team is being notified${sent}` : `Next reminder: ${dueStr}${sent}`;
+}
+
+async function loadCostumeTimer() {
+  $("dc-admin").classList.toggle("hidden", !myProfile?.is_admin);
+  try {
+    // If the 30 days are up, this atomically fires the team push + restarts.
+    // Only the first client past the due time actually sends it.
+    await supabase.rpc("fire_costume_reminder_if_due");
+    const { data, error } = await supabase.from("costume_timer").select("*").eq("id", 1).maybeSingle();
+    if (error) throw error;
+    renderCostumeTimer(data);
+  } catch (err) {
+    // Table/function not deployed yet — leave the email tools working, just hide the count.
+    $("dc-days").textContent = "—";
+    $("dc-status").textContent = "Timer setup pending.";
+  }
+}
+
+$("dc-copy").addEventListener("click", async () => {
+  const text = $("dc-email").textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("Email copied — paste it into your message to Teehive 📋");
+  } catch {
+    // Fallback for browsers that block the async clipboard API.
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); showToast("Email copied 📋"); }
+    catch { showToast("Couldn't copy automatically — select the preview text and copy."); }
+    ta.remove();
+  }
+});
+
+$("dc-send-now").addEventListener("click", async () => {
+  if (!myProfile?.is_admin) return;
+  if (!confirm("Notify the whole team now that it's time to send defective costumes to Teehive, and restart the 30-day timer?")) return;
+  const { error } = await supabase.rpc("send_costume_reminder_now");
+  if (error) { showToast(`Couldn't send: ${error.message}`); return; }
+  showToast("Team notified — timer restarted at 30 days ✅");
+  await loadCostumeTimer();
+});
+
+$("dc-restart").addEventListener("click", async () => {
+  if (!myProfile?.is_admin) return;
+  const due = new Date(Date.now() + 30 * 86_400_000).toISOString();
+  const { error } = await supabase
+    .from("costume_timer")
+    .update({ due_at: due, last_sent_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq("id", 1);
+  if (error) { showToast(`Couldn't restart: ${error.message}`); return; }
+  showToast("Timer restarted at 30 days (no notification sent) ✅");
+  await loadCostumeTimer();
+});
 
 // ---------- restocking list ----------
 

@@ -1123,6 +1123,27 @@ a.linkified { color: #7c3aed; text-decoration: underline; word-break: break-word
 a.linkified:hover { color: #6d28d9; }
 /* Keep links legible on the brand-colored "my message" bubble */
 .msg-mine .msg-bubble a.linkified { color: #fff; text-decoration: underline; }
+
+/* Defective costumes → Teehive reminder */
+.dc-timer {
+  display: flex; flex-direction: column; align-items: center; gap: .35rem;
+  background: linear-gradient(135deg, #fff0f7, #ffe4f1);
+  border: 1px solid var(--line); border-radius: 14px;
+  padding: 1.1rem 1rem; margin-bottom: 1.1rem; text-align: center;
+}
+.dc-count { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.dc-days { font-size: 3rem; font-weight: 900; color: var(--brand-dark); }
+.dc-days-label { font-size: .82rem; color: var(--ink-soft); margin-top: .25rem; }
+.dc-status { margin: 0; font-size: .85rem; color: var(--ink-soft); }
+.dc-email-head { display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; margin-bottom: .5rem; }
+.dc-preview { border: 1px solid var(--line); border-radius: 10px; padding: .5rem .75rem; background: #fffafd; }
+.dc-preview summary { cursor: pointer; font-size: .88rem; color: var(--brand-dark); font-weight: 600; }
+.dc-email-body {
+  margin: .7rem 0 .2rem; white-space: pre-wrap; word-break: break-word;
+  font: inherit; font-size: .9rem; color: var(--ink); line-height: 1.5;
+}
+.dc-admin { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-top: 1rem; padding-top: .8rem; border-top: 1px dashed var(--line); }
+.dc-admin-label { font-size: .8rem; color: var(--ink-soft); font-weight: 600; }
 .msg-thread .empty { align-self: center; }
 .msg-form { display: flex; gap: .6rem; align-items: stretch; }
 .msg-form input,

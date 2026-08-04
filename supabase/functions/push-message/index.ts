@@ -68,6 +68,16 @@ Deno.serve(async (req) => {
     title = `New task from ${m.created_by}`;
     text = String(m.title ?? "").slice(0, 140);
     url += "#tasks";
+  } else if (table === "team_broadcasts") {
+    // Team-wide reminder (e.g. defective costumes → Teehive): notify everyone.
+    const { data: everyone, error: everyoneErr } = await supabase
+      .from("profiles")
+      .select("id");
+    if (everyoneErr) return new Response(JSON.stringify({ everyoneErr: everyoneErr.message }), { status: 500 });
+    recipientIds = (everyone ?? []).map((p) => p.id);
+    title = String(m.title ?? "JFK Warehouse Hub");
+    text = String(m.body ?? "").slice(0, 140);
+    url += String(m.url_hash ?? "");
   } else {
     return new Response("unknown table — skipped");
   }
