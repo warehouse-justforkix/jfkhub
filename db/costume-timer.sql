@@ -16,12 +16,12 @@
 -- ---------- self-contained permission helpers (bypass RLS, no recursion) ----------
 create or replace function public.ct_is_member() returns boolean
 language sql stable security definer set search_path = public as
-$$ select exists (select 1 from profiles where id = auth.uid()) $$;
+$$ select exists (select 1 from public.profiles where id = auth.uid()) $$;
 grant execute on function public.ct_is_member() to authenticated;
 
 create or replace function public.ct_is_admin() returns boolean
 language sql stable security definer set search_path = public as
-$$ select coalesce((select is_admin from profiles where id = auth.uid()), false) $$;
+$$ select coalesce((select is_admin from public.profiles where id = auth.uid()), false) $$;
 grant execute on function public.ct_is_admin() to authenticated;
 
 -- ---------- the shared timer (one row) ----------
@@ -88,7 +88,7 @@ create or replace function public.send_costume_reminder_now()
 returns void
 language plpgsql security definer set search_path = public as $$
 begin
-  if not coalesce((select is_admin from profiles where id = auth.uid()), false) then
+  if not coalesce((select is_admin from public.profiles where id = auth.uid()), false) then
     raise exception 'admins only';
   end if;
   update costume_timer
