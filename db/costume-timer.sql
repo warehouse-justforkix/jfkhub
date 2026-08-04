@@ -97,26 +97,29 @@ end $$;
 grant execute on function public.send_costume_reminder_now() to authenticated;
 
 -- ---------- wire the existing push trigger onto team_broadcasts ----------
--- Reuses whatever trigger function already fires pushes on `messages` (the same
--- one serves announcements + tasks), so no push secret or function URL is needed
--- here. An insert into team_broadcasts will call the edge function with
--- table = 'team_broadcasts'.
+-- Clones the exact Database Webhook trigger already on `messages` (the same push
+-- pipeline serves announcements + tasks) onto team_broadcasts, preserving its
+-- function URL + secret-header arguments. The webhook posts {type, table, record}
+-- to the edge function, so an insert here arrives with table = 'team_broadcasts'.
 do $$
-declare fn oid;
+declare def text;
 begin
-  select t.tgfoid into fn
+  select pg_get_triggerdef(t.oid) into def
     from pg_trigger t
     join pg_class c on c.oid = t.tgrelid
-   where c.relname = 'messages' and not t.tgisinternal
+    join pg_namespace n on n.oid = c.relnamespace
+    join pg_proc p on p.oid = t.tgfoid
+   where c.relname = 'messages' and n.nspname = 'public'
+     and not t.tgisinternal
+     and p.proname = 'http_request'      -- Supabase Database Webhook function
    limit 1;
-  if fn is null then
-    raise notice 'No push trigger found on messages; attach a trigger to team_broadcasts manually.';
+
+  if def is null then
+    raise notice 'No Database Webhook found on public.messages — wire team_broadcasts to the push-message function manually (Database > Webhooks).';
   else
-    execute 'drop trigger if exists team_broadcasts_push on team_broadcasts';
-    execute format(
-      'create trigger team_broadcasts_push after insert on team_broadcasts '
-      'for each row execute function %s',
-      fn::regproc
-    );
+    execute 'drop trigger if exists team_broadcasts_push on public.team_broadcasts';
+    def := regexp_replace(def, 'CREATE TRIGGER \S+', 'CREATE TRIGGER team_broadcasts_push');
+    def := regexp_replace(def, ' ON public\.messages ', ' ON public.team_broadcasts ');
+    execute def;
   end if;
 end $$;
