@@ -663,6 +663,7 @@ async function loadEverything() {
     loadAdmin(),
     loadPersonalNotes(),
     loadCostumeTimer(),
+    loadPerformances(),
   ]);
 }
 
@@ -2472,6 +2473,196 @@ function noteDetailLines(n) {
   if (n.details) lines.push(`Details: ${esc(n.details)}`);
   return lines;
 }
+
+// ---------- performances calendar (team-wide parades / performances / shows) ----------
+
+let performances = [];
+let perfMonth = null;
+let editingPerfId = null;
+
+const PERF_KIND_LABELS = { parade: "Parade", performance: "Performance", show: "Show" };
+const PERF_KIND_COLORS = {
+  performance: { bg: "#fde2ec", fg: "#b3005f" },
+  parade: { bg: "#e3ecfd", fg: "#2b4bab" },
+  show: { bg: "#f0e4fb", fg: "#6d28a8" },
+};
+const perfColor = (k) => PERF_KIND_COLORS[k] || PERF_KIND_COLORS.performance;
+const perfEnd = (p) => p.end_date || p.perf_date;
+const perfOnDay = (p, iso) => p.perf_date <= iso && perfEnd(p) >= iso;
+function perfDateLabel(p) {
+  return p.end_date && p.end_date !== p.perf_date
+    ? `${fmtDate(p.perf_date)} – ${fmtDate(p.end_date)}`
+    : fmtDate(p.perf_date);
+}
+
+async function loadPerformances() {
+  try {
+    const { data, error } = await supabase
+      .from("performances")
+      .select("*")
+      .order("perf_date", { ascending: true });
+    if (error) throw error;
+    performances = data || [];
+    renderPerfCalendar();
+    renderPerfList();
+  } catch (err) {
+    $("perf-list").innerHTML = `<li class="empty">Performances setup pending.</li>`;
+  }
+}
+
+function renderPerfCalendar() {
+  if (!perfMonth) {
+    const now = new Date();
+    perfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  }
+  const y = perfMonth.getFullYear();
+  const m = perfMonth.getMonth();
+  $("perf-title").textContent = perfMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  const firstDow = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const today = todayStr();
+
+  let html = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    .map((d) => `<div class="cal-dow">${d}</div>`)
+    .join("");
+  for (let i = 0; i < firstDow; i++) html += `<div class="cal-cell cal-blank"></div>`;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const iso = dateToStr(new Date(y, m, day));
+    const dayPerfs = performances.filter((p) => perfOnDay(p, iso));
+    const chips = dayPerfs
+      .slice(0, 4)
+      .map((p) => {
+        const c = perfColor(p.kind);
+        return `<div class="cal-chip perf-chip" data-perf-id="${p.id}" style="background:${c.bg};color:${c.fg}">${esc(p.title)}</div>`;
+      })
+      .join("");
+    const more = dayPerfs.length > 4 ? `<div class="cal-more">+${dayPerfs.length - 4} more</div>` : "";
+    html += `<div class="cal-cell ${iso === today ? "cal-today" : ""}" data-perf-date="${iso}">
+      <div class="cal-daynum">${day}</div>${chips}${more}
+    </div>`;
+  }
+  $("perf-grid").innerHTML = html;
+}
+
+function renderPerfList() {
+  const today = todayStr();
+  const showPast = $("perf-show-past").checked;
+  const visible = performances
+    .filter((p) => showPast || perfEnd(p) >= today)
+    .sort((a, b) => a.perf_date.localeCompare(b.perf_date));
+  if (!visible.length) {
+    $("perf-list").innerHTML = `<li class="empty">No performances on the calendar yet.</li>`;
+    return;
+  }
+  const canEdit = (p) => myProfile.is_admin || p.created_by === myProfile.name;
+  $("perf-list").innerHTML = visible
+    .map((p) => {
+      const c = perfColor(p.kind);
+      const isPast = perfEnd(p) < today;
+      return `<li class="${isPast ? "past" : ""}">
+        <span class="note-date">${perfDateLabel(p)}</span>
+        <span class="note-type" style="background:${c.bg};color:${c.fg}">${PERF_KIND_LABELS[p.kind] || p.kind}</span>
+        <span class="perf-title-cell">${esc(p.title)}</span>
+        ${p.details ? `<span class="note-details">${linkify(p.details)}</span>` : ""}
+        ${canEdit(p) ? `<button class="note-edit" data-perf-edit="${p.id}" title="Edit" aria-label="Edit performance">✎</button>
+        <button class="note-delete note-delete-x" data-perf-del="${p.id}" title="Remove" aria-label="Remove performance">✕</button>` : ""}
+      </li>`;
+    })
+    .join("");
+}
+
+function cancelPerfEdit() {
+  editingPerfId = null;
+  $("perf-form").reset();
+  $("pf-submit").textContent = "Add performance";
+  $("pf-cancel").classList.add("hidden");
+  setStatus($("perf-status"), "");
+}
+
+function startPerfEdit(p) {
+  editingPerfId = p.id;
+  $("pf-title").value = p.title;
+  $("pf-kind").value = p.kind;
+  $("pf-date").value = p.perf_date;
+  $("pf-end").value = p.end_date || "";
+  $("pf-details").value = p.details || "";
+  $("pf-submit").textContent = "Save changes";
+  $("pf-cancel").classList.remove("hidden");
+  $("perf-form").scrollIntoView({ behavior: "smooth", block: "center" });
+  setStatus($("perf-status"), `Editing "${p.title}" — make your changes above and hit Save.`);
+}
+
+$("perf-prev").addEventListener("click", () => {
+  perfMonth = new Date(perfMonth.getFullYear(), perfMonth.getMonth() - 1, 1);
+  renderPerfCalendar();
+});
+$("perf-next").addEventListener("click", () => {
+  perfMonth = new Date(perfMonth.getFullYear(), perfMonth.getMonth() + 1, 1);
+  renderPerfCalendar();
+});
+$("perf-show-past").addEventListener("change", renderPerfList);
+$("pf-cancel").addEventListener("click", cancelPerfEdit);
+
+$("perf-grid").addEventListener("click", (e) => {
+  const chip = e.target.closest(".perf-chip");
+  if (chip) {
+    const p = performances.find((x) => x.id === chip.dataset.perfId);
+    if (p && (myProfile.is_admin || p.created_by === myProfile.name)) startPerfEdit(p);
+    return;
+  }
+  const cell = e.target.closest(".cal-cell[data-perf-date]");
+  if (!cell) return;
+  $("pf-date").value = cell.dataset.perfDate;
+  $("pf-title").focus();
+  $("perf-form").scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
+$("perf-list").addEventListener("click", async (e) => {
+  const editBtn = e.target.closest("button[data-perf-edit]");
+  if (editBtn) {
+    const p = performances.find((x) => x.id === editBtn.dataset.perfEdit);
+    if (p) startPerfEdit(p);
+    return;
+  }
+  const delBtn = e.target.closest("button[data-perf-del]");
+  if (delBtn) {
+    if (!confirm("Remove this performance from the calendar?")) return;
+    const { error } = await supabase.from("performances").delete().eq("id", delBtn.dataset.perfDel);
+    if (error) { showToast(`Couldn't remove: ${error.message}`); return; }
+    if (editingPerfId === delBtn.dataset.perfDel) cancelPerfEdit();
+    await loadPerformances();
+  }
+});
+
+$("perf-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const end = $("pf-end").value || null;
+  const start = $("pf-date").value;
+  if (end && end < start) {
+    setStatus($("perf-status"), "The 'Through' date can't be before the start date.", true);
+    return;
+  }
+  const row = {
+    title: $("pf-title").value.trim(),
+    kind: $("pf-kind").value,
+    perf_date: start,
+    end_date: end,
+    details: $("pf-details").value.trim() || null,
+  };
+  const wasEdit = !!editingPerfId;
+  const { error } = wasEdit
+    ? await supabase.from("performances").update(row).eq("id", editingPerfId)
+    : await supabase.from("performances").insert({ ...row, created_by: myProfile.name });
+  if (error) {
+    setStatus($("perf-status"), `Couldn't save: ${error.message}`, true);
+    return;
+  }
+  cancelPerfEdit();
+  await loadPerformances();
+  showToast(wasEdit ? "Performance updated ✅" : "Performance added to the calendar 🎭");
+});
 
 let calTooltipEl = null;
 function showCalTooltip(chip, n) {

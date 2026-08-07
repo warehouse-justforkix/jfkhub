@@ -1144,6 +1144,11 @@ a.linkified:hover { color: #6d28d9; }
 }
 .dc-admin { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-top: 1rem; padding-top: .8rem; border-top: 1px dashed var(--line); }
 .dc-admin-label { font-size: .8rem; color: var(--ink-soft); font-weight: 600; }
+
+/* Performances calendar */
+.perf-chip { font-weight: 600; }
+.perf-legend { margin-bottom: 1rem; }
+.perf-title-cell { font-weight: 600; color: var(--ink); }
 .msg-thread .empty { align-self: center; }
 .msg-form { display: flex; gap: .6rem; align-items: stretch; }
 .msg-form input,

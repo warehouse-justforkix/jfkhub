@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=146">
+  <link rel="stylesheet" href="style.css?v=147">
   <script>
     // Surface script errors in the footer so problems are visible without devtools.
     window.addEventListener("error", function (e) {
@@ -52,6 +52,7 @@
         <a href="#clock" id="nav-clock" class="hidden">Time Clock</a>
         <a href="#schedules">Schedule</a>
         <a href="#calendar">Calendar</a>
+        <a href="#performances">Performances</a>
         <a href="#announcements">Announcements</a>
         <a href="#tasks">Task Board</a>
         <a href="#restocking" id="nav-restocking">Restocking</a>
@@ -432,6 +433,66 @@
         </ul>
       </section>
 
+      <!-- Performances: team-wide parades / performances / shows -->
+      <section id="performances" class="card">
+        <div class="card-head">
+          <h2>Performances</h2>
+          <div class="cal-nav">
+            <button id="perf-prev" class="btn-mini" type="button" aria-label="Previous month">‹</button>
+            <span id="perf-title"></span>
+            <button id="perf-next" class="btn-mini" type="button" aria-label="Next month">›</button>
+          </div>
+        </div>
+        <p class="hint">Parades, performances, and shows the whole team should know about. Tap a day to add one.</p>
+
+        <div id="perf-grid" class="cal-grid"></div>
+        <div class="cal-legend perf-legend">
+          <span><i class="cal-dot" style="background:#b3005f"></i>Performance</span>
+          <span><i class="cal-dot" style="background:#2b4bab"></i>Parade</span>
+          <span><i class="cal-dot" style="background:#6d28a8"></i>Show</span>
+        </div>
+
+        <form id="perf-form" class="note-form">
+          <div class="field field-wide">
+            <label for="pf-title">Name</label>
+            <input id="pf-title" type="text" maxlength="120" required placeholder="e.g. Fall Showcase, Homecoming Parade">
+          </div>
+          <div class="field">
+            <label for="pf-kind">Type</label>
+            <select id="pf-kind" required>
+              <option value="performance">Performance</option>
+              <option value="parade">Parade</option>
+              <option value="show">Show</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="pf-date">Date</label>
+            <input id="pf-date" type="date" required>
+          </div>
+          <div class="field">
+            <label for="pf-end">Through</label>
+            <input id="pf-end" type="date">
+          </div>
+          <div class="field field-wide">
+            <label for="pf-details">Details</label>
+            <input id="pf-details" type="text" maxlength="300" placeholder="Optional — theme, call time, what to bring…">
+          </div>
+          <div class="field field-submit">
+            <div class="submit-row">
+              <button id="pf-cancel" class="btn btn-ghost hidden" type="button">Cancel</button>
+              <button id="pf-submit" class="btn btn-primary" type="submit">Add performance</button>
+            </div>
+          </div>
+        </form>
+        <p id="perf-status" class="form-status" role="status"></p>
+
+        <div class="notes-head">
+          <h3>Upcoming</h3>
+          <label class="show-past"><input id="perf-show-past" type="checkbox"> show past</label>
+        </div>
+        <ul id="perf-list" class="notes-list"><li class="empty">Loading…</li></ul>
+      </section>
+
       <!-- Announcements -->
       <section id="announcements" class="card">
         <div class="card-head">
@@ -676,9 +737,9 @@ Just For Kix Warehouse</pre>
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">Just For Kix · internal team tool · v146</div>
+    <div class="wrap">Just For Kix · internal team tool · v147</div>
   </footer>
 
-  <script type="module" src="app.js?v=146"></script>
+  <script type="module" src="app.js?v=147"></script>
 </body>
 </html>
