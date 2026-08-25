@@ -2416,13 +2416,13 @@ function renderCalendar() {
     const iso = dateToStr(new Date(y, m, day));
     const dayNotes = notes.filter((n) => noteInHub(n) && noteOnDay(n, iso));
     const chips = dayNotes
-      .slice(0, 4)
+      .slice(0, 3)
       .map(
         (n) =>
           `<div class="cal-chip" data-note-id="${n.id}" style="background:${personColor(n.staff_name).bg};color:${personColor(n.staff_name).fg}">${n.visibility === "admin" ? "🔒 " : ""}${esc(n.staff_name)}${n.note_type === "meeting" && n.event_time ? " · " + esc(n.event_time) : ""}</div>`
       )
       .join("");
-    const more = dayNotes.length > 4 ? `<div class="cal-more">+${dayNotes.length - 4} more</div>` : "";
+    const more = dayNotes.length > 3 ? `<div class="cal-more">+${dayNotes.length - 3} more</div>` : "";
     html += `<div class="cal-cell ${iso === today ? "cal-today" : ""}" data-date="${iso}">
       <div class="cal-daynum">${day}</div>${chips}${more}
     </div>`;
