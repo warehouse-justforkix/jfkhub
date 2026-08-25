@@ -731,6 +731,7 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
 .type-meeting { background: #e9edfb; color: var(--other); }
 @media (max-width: 700px) {
   .cal-cell { min-height: 54px; }
+  #perf-grid .cal-cell { height: 72px; }
   .cal-chip { font-size: .6rem; }
 }
 
@@ -1149,6 +1150,23 @@ a.linkified:hover { color: #6d28d9; }
 .perf-chip { font-weight: 600; }
 .perf-legend { margin-bottom: 1rem; }
 .perf-title-cell { font-weight: 600; color: var(--ink); }
+
+/* Uniform day-cells: same size whether or not a day has entries */
+#perf-grid .cal-cell { height: 92px; overflow: hidden; display: flex; flex-direction: column; }
+
+/* Upcoming list, collapsible below the calendar */
+.perf-upcoming { border: 1px solid var(--line); border-radius: 10px; background: #fffafd; overflow: hidden; }
+.perf-upcoming > summary {
+  cursor: pointer; list-style: none;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .6rem .85rem; font-weight: 700; font-size: 1rem; color: var(--brand-dark);
+}
+.perf-upcoming > summary::-webkit-details-marker { display: none; }
+.perf-upcoming > summary::after { content: "▾"; font-size: .9rem; transition: transform .15s ease; }
+.perf-upcoming[open] > summary::after { transform: rotate(180deg); }
+.perf-upcoming > summary:hover { background: #fff0f8; }
+.perf-upcoming-body { padding: 0 .85rem .7rem; }
+.perf-upcoming-body .notes-list { margin-top: .5rem; }
 .msg-thread .empty { align-self: center; }
 .msg-form { display: flex; gap: .6rem; align-items: stretch; }
 .msg-form input,

@@ -2532,13 +2532,13 @@ function renderPerfCalendar() {
     const iso = dateToStr(new Date(y, m, day));
     const dayPerfs = performances.filter((p) => perfOnDay(p, iso));
     const chips = dayPerfs
-      .slice(0, 4)
+      .slice(0, 3)
       .map((p) => {
         const c = perfColor(p.kind);
         return `<div class="cal-chip perf-chip" data-perf-id="${p.id}" style="background:${c.bg};color:${c.fg}">${esc(p.title)}</div>`;
       })
       .join("");
-    const more = dayPerfs.length > 4 ? `<div class="cal-more">+${dayPerfs.length - 4} more</div>` : "";
+    const more = dayPerfs.length > 3 ? `<div class="cal-more">+${dayPerfs.length - 3} more</div>` : "";
     html += `<div class="cal-cell ${iso === today ? "cal-today" : ""}" data-perf-date="${iso}">
       <div class="cal-daynum">${day}</div>${chips}${more}
     </div>`;
