@@ -549,7 +549,8 @@ els.btnForgot.addEventListener("click", async () => {
     return;
   }
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin,
+    // Full app URL incl. the /jfkhub/ path — NOT just origin, which 404s on Pages.
+    redirectTo: window.location.href.split(/[?#]/)[0],
   });
   setStatus(els.authStatus, error ? error.message : "Reset link sent — check your email.", !!error);
 });
