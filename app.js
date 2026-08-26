@@ -2216,17 +2216,40 @@ const asgStr = (arr) => {
   return u.length ? u.join(", ") : null;
 };
 const pickedAssignees = () => [...els.tfAssign.querySelectorAll("input:checked")].map((i) => i.value);
-const setAssignees = (arr) =>
+function updateAssignLabel() {
+  const picked = pickedAssignees();
+  const label = els.tfAssign.querySelector(".assign-dd-label");
+  if (label) {
+    label.textContent = !picked.length
+      ? "Leave open for anyone"
+      : picked.length <= 2
+      ? picked.join(", ")
+      : `${picked.length} people`;
+    label.classList.toggle("assign-dd-placeholder", !picked.length);
+  }
+}
+const setAssignees = (arr) => {
   els.tfAssign.querySelectorAll("input").forEach((i) => (i.checked = arr.includes(i.value)));
+  updateAssignLabel();
+};
 
 function renderNameOptions() {
-  els.tfAssign.innerHTML = staff
+  const menu = els.tfAssign.querySelector(".assign-dd-menu");
+  menu.innerHTML = staff
     .map(
       (p) =>
         `<label class="assign-opt"><input type="checkbox" value="${esc(p.name)}"> ${esc(p.avatar || "🙂")} ${esc(p.name)}</label>`
     )
     .join("");
+  updateAssignLabel();
 }
+
+// Keep the collapsed label in sync as people are ticked, and close the dropdown
+// when clicking elsewhere.
+els.tfAssign.addEventListener("change", updateAssignLabel);
+document.addEventListener("click", (e) => {
+  if (els.tfAssign.open && !els.tfAssign.contains(e.target)) els.tfAssign.open = false;
+});
 
 // ---------- calendar + out/meetings board ----------
 
