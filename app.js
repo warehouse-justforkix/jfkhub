@@ -429,7 +429,7 @@ $("docs-back").addEventListener("click", () => {
 // ---------- documentation (large file storage: catalogs up to ~650 MB) ----------
 
 const DOCS_BUCKET = "documents";
-const DOCS_MAX = 650 * 1024 * 1024; // 650 MB
+const DOCS_MAX = 50 * 1024 * 1024; // 50 MB (Supabase Free-plan upload cap)
 
 function fmtBytes(n) {
   if (n == null) return "";
@@ -508,7 +508,7 @@ $("docs-form").addEventListener("submit", async (e) => {
   const file = $("docs-file").files[0];
   if (!file) { setStatus($("docs-status"), "Pick a file first.", true); return; }
   if (file.size > DOCS_MAX) {
-    setStatus($("docs-status"), `That file is ${fmtBytes(file.size)} — the limit is 650 MB.`, true);
+    setStatus($("docs-status"), `That file is ${fmtBytes(file.size)} — the limit is 50 MB.`, true);
     return;
   }
   const name = $("docs-name").value.trim() || file.name;

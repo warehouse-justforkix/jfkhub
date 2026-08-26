@@ -1,16 +1,14 @@
--- Documentation: large-file storage (catalogs up to ~650 MB) + downloads.
+-- Documentation: file storage (up to 50 MB per file) + downloads.
 -- Run once in the Supabase SQL editor (project iptnlqfitvmoiofzrmvx).
 -- Reuses the ct_is_member / ct_is_admin helpers from db/costume-timer.sql.
 --
--- ⚠️ 650 MB uploads require a paid Supabase plan. The Free plan caps a single
--- upload at ~50 MB and total storage at 1 GB, so large catalogs will fail to
--- upload on Free regardless of the file_size_limit set below. On Pro you can
--- raise the per-file limit (this sets it to 700 MB) and storage/egress is billed.
+-- Sized for the Supabase Free plan: 50 MB per file, 1 GB total storage.
+-- (To allow larger files later, upgrade to Pro and raise file_size_limit.)
 
 -- ---------- storage bucket (private; downloads via short-lived signed URLs) ----------
 insert into storage.buckets (id, name, public, file_size_limit)
-values ('documents', 'documents', false, 700000000)
-on conflict (id) do update set file_size_limit = 700000000, public = false;
+values ('documents', 'documents', false, 52428800)   -- 50 MB
+on conflict (id) do update set file_size_limit = 52428800, public = false;
 
 -- storage.objects policies for the documents bucket.
 -- (select + insert + update are all needed so resumable/chunked uploads work.)
