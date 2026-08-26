@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=154">
+  <link rel="stylesheet" href="style.css?v=155">
   <script>
     // Surface script errors in the footer so problems are visible without devtools.
     window.addEventListener("error", function (e) {
@@ -28,7 +28,6 @@
         <p class="tagline">Schedules, Tasks, and Who's In — All in One Place.</p>
       </div>
       <div class="header-right">
-        <button id="docs-btn" class="docs-btn hidden" type="button" title="Documentation & catalogs">📁 Documentation</button>
         <div id="user-chip" class="user-chip hidden">
           <span id="user-avatar" class="user-avatar"></span>
           <span id="user-name"></span>
@@ -740,36 +739,12 @@ Just For Kix Warehouse</pre>
       </div><!-- /main-col -->
      </div><!-- /layout -->
     </div>
-
-    <!-- Documentation: its own page (reached from the header button, not the nav) -->
-    <div id="docs-view" class="hidden">
-      <section id="documentation" class="card">
-        <div class="card-head">
-          <h2>📁 Documentation</h2>
-          <button id="docs-back" class="btn-mini" type="button">← Back to hub</button>
-        </div>
-        <p class="hint">Upload catalogs and reference files here for the whole team. Files up to <strong>50 MB</strong> each — keep this tab open until the progress bar hits 100%.</p>
-
-        <form id="docs-form" class="docs-upload">
-          <input type="file" id="docs-file" class="docs-file-input">
-          <input type="text" id="docs-name" maxlength="140" placeholder="Name / label (optional)">
-          <button class="btn btn-primary" type="submit" id="docs-upload-btn">Upload</button>
-        </form>
-        <div id="docs-progress" class="docs-progress hidden">
-          <div class="docs-progress-bar"><span id="docs-progress-fill"></span></div>
-          <span id="docs-progress-label" class="docs-progress-label"></span>
-        </div>
-        <p id="docs-status" class="form-status" role="status"></p>
-
-        <ul id="docs-list" class="docs-list"><li class="empty">Loading…</li></ul>
-      </section>
-    </div>
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">Just For Kix · internal team tool · v154</div>
+    <div class="wrap">Just For Kix · internal team tool · v155</div>
   </footer>
 
-  <script type="module" src="app.js?v=154"></script>
+  <script type="module" src="app.js?v=155"></script>
 </body>
 </html>
