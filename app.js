@@ -2301,23 +2301,32 @@ function noteDateLabel(n) {
   return fmtDate(n.start_date);
 }
 
-// Each person gets their own calendar color (assigned alphabetically, so it's
-// stable unless the roster changes).
+// Karley (the admin) is always purple. Everyone else gets a vivid, well-separated
+// hue assigned alphabetically, so colors stay stable unless the roster changes.
+const KARLEY_COLOR = { bg: "#e9d5ff", fg: "#6b21a8" }; // purple
 const PERSON_COLORS = [
-  { bg: "#fde2ec", fg: "#b3005f" },
-  { bg: "#e3ecfd", fg: "#2b4bab" },
-  { bg: "#e2f6e5", fg: "#157347" },
-  { bg: "#fdf3d8", fg: "#8a6d0a" },
-  { bg: "#f0e4fb", fg: "#6d28a8" },
-  { bg: "#fde8dd", fg: "#b5490f" },
-  { bg: "#ddf4f6", fg: "#0f6f7a" },
-  { bg: "#f6e0e0", fg: "#a02929" },
-  { bg: "#e8e8f0", fg: "#4a4a6a" },
-  { bg: "#e6f0dc", fg: "#4a7016" },
+  { bg: "#ffd6d6", fg: "#b3141f" }, // red
+  { bg: "#ffe1bf", fg: "#b45309" }, // orange
+  { bg: "#faedac", fg: "#7a5c08" }, // gold
+  { bg: "#c9efcb", fg: "#15803d" }, // green
+  { bg: "#c2edef", fg: "#0f766e" }, // teal
+  { bg: "#cfe2ff", fg: "#1d4ed8" }, // blue
+  { bg: "#ffd0e8", fg: "#be185d" }, // magenta
+  { bg: "#ecdac6", fg: "#7c4a1e" }, // brown
+  { bg: "#dde3ec", fg: "#374151" }, // slate
 ];
 function personColor(name) {
-  const names = [...new Set(staff.map((s) => s.name))].sort();
-  let idx = names.indexOf(name);
+  if (name === "Karley") return KARLEY_COLOR;
+  // Assign by JOIN ORDER (created_at), not alphabetically — so when a new person
+  // is added, everyone already here keeps their color and the newcomer simply
+  // takes the next one in the palette. (Karley is excluded; she's always purple.)
+  const seen = new Set();
+  const order = staff
+    .filter((p) => p.name !== "Karley")
+    .slice()
+    .sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""))
+    .filter((p) => (seen.has(p.name) ? false : seen.add(p.name)));
+  let idx = order.findIndex((p) => p.name === name);
   if (idx === -1) {
     let h = 0;
     for (const c of String(name || "")) h = (h * 31 + c.charCodeAt(0)) | 0;
