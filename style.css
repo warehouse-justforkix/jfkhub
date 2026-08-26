@@ -1155,6 +1155,30 @@ a.linkified:hover { color: #6d28d9; }
 /* Keep links legible on the brand-colored "my message" bubble */
 .msg-mine .msg-bubble a.linkified { color: #fff; text-decoration: underline; }
 
+/* Documentation: header button + its own page */
+.docs-btn {
+  background: #fff; color: var(--brand-dark); border: 1px solid rgba(255,255,255,.6);
+  font-weight: 700; font-size: .82rem; border-radius: 99px; padding: .3rem .8rem; cursor: pointer;
+}
+.docs-btn:hover { background: #fff3c9; }
+.docs-upload {
+  display: flex; flex-wrap: wrap; gap: .6rem; align-items: center;
+  background: #fff7fb; border: 1px solid var(--line); border-radius: 10px; padding: .9rem 1rem;
+}
+.docs-file-input { flex: 1 1 260px; font-size: .9rem; }
+.docs-upload input[type="text"] { flex: 1 1 200px; font: inherit; padding: .4rem .6rem; border: 1px solid #e8b7d1; border-radius: 8px; }
+.docs-progress { display: flex; align-items: center; gap: .6rem; margin: .8rem 0 .2rem; }
+.docs-progress-bar { flex: 1; height: 12px; background: #f3d9e8; border-radius: 99px; overflow: hidden; }
+.docs-progress-bar span { display: block; height: 100%; width: 0; background: var(--brand); transition: width .2s ease; }
+.docs-progress-label { font-size: .8rem; color: var(--ink-soft); white-space: nowrap; }
+.docs-list { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-direction: column; gap: .5rem; }
+.doc-row { display: flex; align-items: center; justify-content: space-between; gap: .8rem; flex-wrap: wrap;
+  border: 1px solid var(--line); border-radius: 10px; padding: .7rem .9rem; background: #fff; }
+.doc-info { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.doc-name { font-weight: 700; color: var(--ink); word-break: break-word; }
+.doc-meta { font-size: .78rem; color: var(--ink-soft); }
+.doc-actions { display: flex; gap: .4rem; flex-shrink: 0; }
+
 /* Defective costumes → Teehive reminder */
 .dc-timer {
   display: flex; flex-direction: column; align-items: center; gap: .35rem;

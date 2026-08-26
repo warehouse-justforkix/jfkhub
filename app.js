@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createAvatar } from "https://esm.sh/@dicebear/core@9";
 import { avataaars } from "https://esm.sh/@dicebear/collection@9";
+import * as tus from "https://esm.sh/tus-js-client@4";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -402,14 +403,177 @@ async function uploadAvatarImage() {
 
 // ---------- auth & routing ----------
 
+const docsView = $("docs-view");
 function showView(view) {
-  [els.authView, els.profileView, els.gateView, els.appView].forEach((v) =>
+  [els.authView, els.profileView, els.gateView, els.appView, docsView].forEach((v) =>
     v.classList.toggle("hidden", v !== view)
   );
   els.userChip.classList.toggle("hidden", !session);
   els.siteNav.classList.toggle("hidden", view !== els.appView);
   $("admin-quick").classList.toggle("hidden", view !== els.appView);
+  // The Documentation button lives in the header and works from the hub or its
+  // own page — visible whenever you're signed in and past the gate.
+  $("docs-btn").classList.toggle("hidden", view !== els.appView && view !== docsView);
 }
+
+$("docs-btn").addEventListener("click", () => {
+  showView(docsView);
+  window.scrollTo(0, 0);
+  loadDocuments();
+});
+$("docs-back").addEventListener("click", () => {
+  showView(els.appView);
+  window.scrollTo(0, 0);
+});
+
+// ---------- documentation (large file storage: catalogs up to ~650 MB) ----------
+
+const DOCS_BUCKET = "documents";
+const DOCS_MAX = 650 * 1024 * 1024; // 650 MB
+
+function fmtBytes(n) {
+  if (n == null) return "";
+  const u = ["B", "KB", "MB", "GB"];
+  let i = 0, v = Number(n);
+  while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+  return `${v.toFixed(v >= 10 || i === 0 ? 0 : 1)} ${u[i]}`;
+}
+
+async function loadDocuments() {
+  const list = $("docs-list");
+  try {
+    const { data, error } = await supabase
+      .from("documents")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    if (!data.length) {
+      list.innerHTML = `<li class="empty">No files yet — upload your first catalog above.</li>`;
+      return;
+    }
+    list.innerHTML = data
+      .map((d) => {
+        const canDel = myProfile.is_admin || d.uploaded_by === myProfile.name;
+        const when = new Date(d.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        return `<li class="doc-row">
+          <div class="doc-info">
+            <span class="doc-name">${esc(d.name)}</span>
+            <span class="doc-meta">${fmtBytes(d.size)} · ${esc(d.uploaded_by || "?")} · ${when}</span>
+          </div>
+          <div class="doc-actions">
+            <button class="btn-mini primary" data-doc-dl="${d.id}">⬇ Download</button>
+            ${canDel ? `<button class="btn-mini danger" data-doc-del="${d.id}">Remove</button>` : ""}
+          </div>
+        </li>`;
+      })
+      .join("");
+  } catch (err) {
+    list.innerHTML = `<li class="empty">Documentation setup pending${err?.message ? ` (${esc(err.message)})` : ""}.</li>`;
+  }
+}
+
+// Resumable (chunked) upload — the reliable path for very large files from a browser.
+function uploadDocument(file, objectName, onProgress) {
+  return new Promise((resolve, reject) => {
+    supabase.auth.getSession().then(({ data }) => {
+      const token = data.session?.access_token;
+      if (!token) return reject(new Error("Not signed in."));
+      const upload = new tus.Upload(file, {
+        endpoint: `${SUPABASE_URL}/storage/v1/upload/resumable`,
+        retryDelays: [0, 3000, 5000, 10000, 20000],
+        headers: { authorization: `Bearer ${token}`, "x-upsert": "true", apikey: SUPABASE_ANON_KEY },
+        uploadDataDuringCreation: true,
+        removeFingerprintOnSuccess: true,
+        chunkSize: 6 * 1024 * 1024,
+        metadata: {
+          bucketName: DOCS_BUCKET,
+          objectName,
+          contentType: file.type || "application/octet-stream",
+          cacheControl: "3600",
+        },
+        onError: reject,
+        onProgress: (sent, total) => onProgress && onProgress(sent / total),
+        onSuccess: () => resolve(),
+      });
+      upload.findPreviousUploads().then((prev) => {
+        if (prev.length) upload.resumeFromPreviousUpload(prev[0]);
+        upload.start();
+      });
+    }, reject);
+  });
+}
+
+$("docs-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const file = $("docs-file").files[0];
+  if (!file) { setStatus($("docs-status"), "Pick a file first.", true); return; }
+  if (file.size > DOCS_MAX) {
+    setStatus($("docs-status"), `That file is ${fmtBytes(file.size)} — the limit is 650 MB.`, true);
+    return;
+  }
+  const name = $("docs-name").value.trim() || file.name;
+  const path = `${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
+
+  const btn = $("docs-upload-btn");
+  const prog = $("docs-progress"), fill = $("docs-progress-fill"), label = $("docs-progress-label");
+  btn.disabled = true;
+  setStatus($("docs-status"), "");
+  prog.classList.remove("hidden");
+  fill.style.width = "0%";
+  label.textContent = "Starting…";
+
+  try {
+    await uploadDocument(file, path, (frac) => {
+      const pct = Math.round(frac * 100);
+      fill.style.width = pct + "%";
+      label.textContent = `${pct}% of ${fmtBytes(file.size)}`;
+    });
+    const { error } = await supabase.from("documents").insert({
+      name,
+      file_path: path,
+      size: file.size,
+      content_type: file.type || null,
+      uploaded_by: myProfile.name,
+    });
+    if (error) throw error;
+    $("docs-form").reset();
+    setStatus($("docs-status"), "Uploaded ✔");
+    await loadDocuments();
+  } catch (err) {
+    setStatus($("docs-status"), `Upload failed: ${err.message || err}`, true);
+  } finally {
+    btn.disabled = false;
+    prog.classList.add("hidden");
+  }
+});
+
+$("docs-list").addEventListener("click", async (e) => {
+  const dl = e.target.closest("button[data-doc-dl]");
+  if (dl) {
+    const { data: doc } = await supabase.from("documents").select("*").eq("id", dl.dataset.docDl).maybeSingle();
+    if (!doc) return;
+    const { data, error } = await supabase.storage
+      .from(DOCS_BUCKET)
+      .createSignedUrl(doc.file_path, 3600, { download: doc.name });
+    if (error) { showToast(`Couldn't get the file: ${error.message}`); return; }
+    const a = document.createElement("a");
+    a.href = data.signedUrl;
+    a.download = doc.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return;
+  }
+  const del = e.target.closest("button[data-doc-del]");
+  if (del) {
+    const { data: doc } = await supabase.from("documents").select("*").eq("id", del.dataset.docDel).maybeSingle();
+    if (!doc) return;
+    if (!confirm(`Remove "${doc.name}"? This deletes the file for everyone.`)) return;
+    await supabase.storage.from(DOCS_BUCKET).remove([doc.file_path]);
+    await supabase.from("documents").delete().eq("id", doc.id);
+    await loadDocuments();
+  }
+});
 
 async function route() {
   const { data } = await supabase.auth.getSession();
