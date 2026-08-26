@@ -2207,11 +2207,25 @@ els.saveSchedules.addEventListener("click", async () => {
   await loadHours();
 });
 
+// Tasks can have more than one assignee — stored as a comma-separated list in
+// the single `assigned_to` text column (first names have no commas).
+const asgList = (t) => (t.assigned_to ? t.assigned_to.split(",").map((s) => s.trim()).filter(Boolean) : []);
+const asgHas = (t, name) => asgList(t).includes(name);
+const asgStr = (arr) => {
+  const u = [...new Set(arr.map((s) => s.trim()).filter(Boolean))];
+  return u.length ? u.join(", ") : null;
+};
+const pickedAssignees = () => [...els.tfAssign.querySelectorAll("input:checked")].map((i) => i.value);
+const setAssignees = (arr) =>
+  els.tfAssign.querySelectorAll("input").forEach((i) => (i.checked = arr.includes(i.value)));
+
 function renderNameOptions() {
-  const opts = staff
-    .map((p) => `<option value="${esc(p.name)}">${esc(p.avatar || "🙂")} ${esc(p.name)}</option>`)
+  els.tfAssign.innerHTML = staff
+    .map(
+      (p) =>
+        `<label class="assign-opt"><input type="checkbox" value="${esc(p.name)}"> ${esc(p.avatar || "🙂")} ${esc(p.name)}</label>`
+    )
     .join("");
-  els.tfAssign.innerHTML = `<option value="" selected>Leave open for anyone</option>` + opts;
 }
 
 // ---------- calendar + out/meetings board ----------
@@ -2875,7 +2889,7 @@ function renderReminders() {
     return;
   }
   const today = todayStr();
-  const myTasks = tasks.filter((t) => t.status === "open" && t.assigned_to === myProfile.name);
+  const myTasks = tasks.filter((t) => t.status === "open" && asgHas(t, myProfile.name));
   const myNotes = notes.filter(
     (n) => n.staff_name === myProfile.name && noteOnDay(n, today)
   );
@@ -2898,30 +2912,42 @@ function renderReminders() {
 function taskCard(t) {
   const today = todayStr();
   const overdue = t.status === "open" && t.due_date && t.due_date < today;
+  const owners = asgList(t);
+  const ownerChips = owners
+    .map(
+      (n) =>
+        `<span class="task-owner">${nameWithAvatar(n)}${t.status === "open" ? `<button class="owner-x" data-rm-task="${t.id}" data-rm-name="${esc(n)}" title="Remove ${esc(n)}" aria-label="Remove ${esc(n)}">✕</button>` : ""}</span>`
+    )
+    .join("");
   const meta = [
     t.due_date
       ? `<span class="task-due ${overdue ? "overdue" : ""}">${overdue ? "⚠ " : ""}Due ${fmtDate(t.due_date)}</span>`
       : "",
     t.recurrence !== "none" ? `<span class="task-recur">↻ ${RECUR_LABELS[t.recurrence]}</span>` : "",
-    t.assigned_to ? `<span class="task-owner">${nameWithAvatar(t.assigned_to)}</span>` : "",
+    t.created_at ? `<span class="task-created">Added ${new Date(t.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>` : "",
+    ownerChips ? `<span class="task-owners">${ownerChips}</span>` : "",
   ]
     .filter(Boolean)
     .join("");
 
   let actions = "";
   if (t.status === "open") {
-    const mine = t.assigned_to && t.assigned_to === myProfile.name;
-    // anyone can hand an open task to a teammate on this board's team
-    const assignSel = `<select class="team-select" data-assign="${t.id}" title="Assign this task">
-          <option value="">Assign to…</option>
-          ${staff
-            .filter((p) => (curTeam === "support" ? p.support_access || p.is_admin : p.warehouse_access !== false || p.is_admin))
-            .map((p) => `<option value="${esc(p.name)}" ${t.assigned_to === p.name ? "selected" : ""}>${esc(p.name)}</option>`)
-            .join("")}
-        </select>`;
+    const mine = asgHas(t, myProfile.name);
+    // anyone can add a teammate on this board's team to the task (adds, doesn't replace)
+    const addable = staff.filter(
+      (p) =>
+        (curTeam === "support" ? p.support_access || p.is_admin : p.warehouse_access !== false || p.is_admin) &&
+        !owners.includes(p.name)
+    );
+    const assignSel = addable.length
+      ? `<select class="team-select" data-assign="${t.id}" title="Add someone to this task">
+          <option value="">Add someone…</option>
+          ${addable.map((p) => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("")}
+        </select>`
+      : "";
     actions = [
-      !t.assigned_to ? `<button class="btn-mini primary" data-act="claim" data-id="${t.id}">Claim</button>` : "",
-      `<button class="btn-mini ${t.assigned_to ? "primary" : ""}" data-act="done" data-id="${t.id}">Done ✓</button>`,
+      !mine ? `<button class="btn-mini primary" data-act="claim" data-id="${t.id}">${owners.length ? "Add me" : "Claim"}</button>` : "",
+      `<button class="btn-mini ${owners.length ? "primary" : ""}" data-act="done" data-id="${t.id}">Done ✓</button>`,
       mine ? `<button class="btn-mini" data-act="unclaim" data-id="${t.id}">Unclaim</button>` : "",
       assignSel,
       `<button class="btn-mini danger" data-act="delete" data-id="${t.id}">Remove</button>`,
@@ -2985,9 +3011,9 @@ async function taskAction(act, id) {
   if (!t) return;
 
   if (act === "claim") {
-    await supabase.from("tasks").update({ assigned_to: myProfile.name }).eq("id", id);
+    await supabase.from("tasks").update({ assigned_to: asgStr([...asgList(t), myProfile.name]) }).eq("id", id);
   } else if (act === "unclaim") {
-    await supabase.from("tasks").update({ assigned_to: null }).eq("id", id);
+    await supabase.from("tasks").update({ assigned_to: asgStr(asgList(t).filter((n) => n !== myProfile.name)) }).eq("id", id);
   } else if (act === "done") {
     await supabase
       .from("tasks")
@@ -3023,7 +3049,7 @@ function startTaskEdit(t) {
   els.tfTitle.value = t.title;
   els.tfDue.value = t.due_date || "";
   els.tfRecurrence.value = t.recurrence || "none";
-  els.tfAssign.value = t.assigned_to || "";
+  setAssignees(asgList(t));
   els.tfDetails.value = t.details || "";
   tfPhoto.set(t.photo);
   els.tfSubmit.textContent = "Save Changes";
@@ -3035,6 +3061,7 @@ function startTaskEdit(t) {
 function cancelTaskEdit() {
   editingTaskId = null;
   els.taskForm.reset();
+  setAssignees([]);
   tfPhoto.clear();
   els.tfSubmit.textContent = "Add task";
   els.tfCancel.classList.add("hidden");
@@ -3050,17 +3077,31 @@ $("tasks").addEventListener("click", (e) => {
     if (t) startTaskEdit(t);
     return;
   }
+  const rmBtn = e.target.closest("button[data-rm-task]");
+  if (rmBtn) {
+    const t = tasks.find((x) => x.id === rmBtn.dataset.rmTask);
+    if (t) {
+      supabase
+        .from("tasks")
+        .update({ assigned_to: asgStr(asgList(t).filter((n) => n !== rmBtn.dataset.rmName)) })
+        .eq("id", t.id)
+        .then(() => loadTasks());
+    }
+    return;
+  }
   const btn = e.target.closest("button[data-act]");
   if (btn) taskAction(btn.dataset.act, btn.dataset.id);
 });
 
-// anyone reassigns an open task to a teammate from the card's dropdown
+// anyone can ADD a teammate to an open task from the card's dropdown
 $("tasks").addEventListener("change", async (e) => {
   const sel = e.target.closest("select[data-assign]");
-  if (!sel) return;
+  if (!sel || !sel.value) return;
+  const t = tasks.find((x) => x.id === sel.dataset.assign);
+  if (!t) return;
   const { error } = await supabase
     .from("tasks")
-    .update({ assigned_to: sel.value || null })
+    .update({ assigned_to: asgStr([...asgList(t), sel.value]) })
     .eq("id", sel.dataset.assign);
   if (error) alert(`Couldn't assign: ${error.message}`);
   await loadTasks();
@@ -3074,7 +3115,7 @@ els.taskForm.addEventListener("submit", async (e) => {
     title: els.tfTitle.value.trim(),
     due_date: els.tfDue.value || null,
     recurrence: els.tfRecurrence.value,
-    assigned_to: els.tfAssign.value || null,
+    assigned_to: asgStr(pickedAssignees()),
     details: els.tfDetails.value.trim() || null,
     photo: tfPhoto.uri,
   };

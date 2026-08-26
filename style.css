@@ -340,8 +340,22 @@ input::placeholder, textarea::placeholder { font-size: .82rem; color: #b78fa3; }
   padding: .08rem .45rem;
   border-radius: 99px;
 }
-.task-owner { font-weight: 600; color: var(--brand-dark); }
+.task-owners { display: inline-flex; flex-wrap: wrap; gap: .3rem; align-items: center; }
+.task-owner { font-weight: 600; color: var(--brand-dark); display: inline-flex; align-items: center; gap: .15rem; background: #fbeaf3; padding: .08rem .1rem .08rem .4rem; border-radius: 99px; }
+.owner-x { border: none; background: none; cursor: pointer; color: var(--brand-dark); opacity: .6; font-size: .7rem; line-height: 1; padding: 0 .25rem; }
+.owner-x:hover { opacity: 1; }
+.task-created { color: var(--ink-soft); }
 .task-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+
+/* multi-assignee picker in the task form */
+.assign-picker { display: flex; flex-wrap: wrap; gap: .3rem .5rem; }
+.assign-opt {
+  display: inline-flex; align-items: center; gap: .3rem;
+  background: #fff; border: 1px solid #eab4d1; border-radius: 99px;
+  padding: .2rem .6rem; font-size: .82rem; cursor: pointer; color: var(--ink);
+}
+.assign-opt:has(input:checked) { background: #fde2ec; border-color: var(--brand); color: var(--brand-dark); font-weight: 600; }
+.assign-opt input { accent-color: var(--brand); }
 .btn-mini {
   font: inherit;
   font-size: .78rem;
