@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=157">
+  <link rel="stylesheet" href="style.css?v=158">
   <script>
     // Surface script errors in the footer so problems are visible without devtools.
     window.addEventListener("error", function (e) {
@@ -453,6 +453,17 @@
               <option value="admin">Only Me</option>
             </select>
           </div>
+          <div class="field field-wide hidden" id="nf-remind-field">
+            <label for="nf-remind">Remind me <span class="optional">(just you)</span></label>
+            <select id="nf-remind">
+              <option value="">No reminder</option>
+              <option value="0">At the time</option>
+              <option value="10">10 min before</option>
+              <option value="30">30 min before</option>
+              <option value="60">1 hour before</option>
+              <option value="1440">1 day before</option>
+            </select>
+          </div>
           <div class="field field-wide">
             <label for="nf-details">Details</label>
             <input id="nf-details" type="text" maxlength="200" placeholder="Optional">
@@ -784,9 +795,9 @@ Just For Kix Warehouse</pre>
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">Just For Kix · internal team tool · v157</div>
+    <div class="wrap">Just For Kix · internal team tool · v158</div>
   </footer>
 
-  <script type="module" src="app.js?v=157"></script>
+  <script type="module" src="app.js?v=158"></script>
 </body>
 </html>

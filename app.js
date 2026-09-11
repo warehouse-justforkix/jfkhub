@@ -76,6 +76,7 @@ const els = {
   calNext: $("cal-next"),
   form: $("note-form"),
   nfVisField: $("nf-vis-field"),
+  nfRemindField: $("nf-remind-field"),
   nfVis: $("nf-vis"),
   postingAs: $("posting-as"),
   nfType: $("nf-type"),
@@ -452,6 +453,7 @@ async function route() {
     els.navAttendance.classList.toggle("hidden", !admin);
     $("attendance").classList.toggle("hidden", !admin);
     els.nfVisField.classList.toggle("hidden", !admin);
+    els.nfRemindField.classList.toggle("hidden", !admin);
     els.punchAdmin.classList.remove("hidden"); // everyone sees who's in
     els.punchFixHint.classList.toggle("hidden", admin);
     if (!admin) els.punchReqs.classList.add("hidden"); // shown by renderPunchRequests when pending exist
@@ -2381,6 +2383,29 @@ function firstTimeInText(str) {
   return h * 60 + mins;
 }
 
+// The moment an entry "happens": its date + parsed time (or 9:00 AM if untimed),
+// in the viewer's local zone. Used to schedule personal reminders.
+function noteMomentMinutes(event_time) {
+  const m = firstTimeInText(event_time);
+  return m == null ? 9 * 60 : m; // untimed entries anchor to 9:00 AM
+}
+function computeRemindAt(start_date, event_time, leadMinutes) {
+  const [y, mo, d] = start_date.split("-").map(Number);
+  const mins = noteMomentMinutes(event_time);
+  const at = new Date(y, mo - 1, d, Math.floor(mins / 60), mins % 60, 0, 0);
+  return new Date(at.getTime() - leadMinutes * 60000).toISOString();
+}
+// Reverse: given a stored remind_at, pick the lead-time <select> value to show on edit.
+const REMIND_LEADS = ["0", "10", "30", "60", "1440"];
+function remindLeadFromNote(n) {
+  if (!n.remind_at) return "";
+  const [y, mo, d] = n.start_date.split("-").map(Number);
+  const mins = noteMomentMinutes(n.event_time);
+  const at = new Date(y, mo - 1, d, Math.floor(mins / 60), mins % 60).getTime();
+  const lead = Math.round((at - new Date(n.remind_at).getTime()) / 60000);
+  return REMIND_LEADS.includes(String(lead)) ? String(lead) : "0";
+}
+
 // True once a non-recurring entry's listed day AND time have fully passed —
 // so it drops off Upcoming the moment it's over instead of lingering until
 // midnight (or longer). Entries with no parseable time just go by day.
@@ -2474,6 +2499,7 @@ async function loadNotes() {
   renderTodayCallout();
   renderCalendar();
   renderReminders();
+  checkReminders();
 }
 
 function renderNotes() {
@@ -2891,6 +2917,7 @@ function startNoteEdit(n) {
   els.nfDetails.value = n.details || "";
   $("nf-recur").value = n.recurrence || "none";
   if (myProfile.is_admin) els.nfVis.value = n.visibility || "team";
+  if (myProfile.is_admin) $("nf-remind").value = remindLeadFromNote(n);
   $("nf-submit").textContent = "Save Changes";
   $("nf-cancel").classList.remove("hidden");
   setStatus(els.formStatus, `Editing "${TYPE_LABELS[n.note_type] || n.note_type}" for ${n.staff_name} — make your changes above and hit Save.`);
@@ -2906,6 +2933,28 @@ function cancelNoteEdit() {
 }
 
 $("nf-cancel").addEventListener("click", cancelNoteEdit);
+
+// In-app reminders for MY calendar entries (fires while the hub is open). Once
+// the app-closed push path is wired, the same remind_at drives that too.
+function entryMomentMs(n) {
+  const [y, mo, d] = n.start_date.split("-").map(Number);
+  const mins = noteMomentMinutes(n.event_time);
+  return new Date(y, mo - 1, d, Math.floor(mins / 60), mins % 60).getTime();
+}
+function checkReminders() {
+  if (!myProfile) return;
+  const now = Date.now();
+  for (const n of notes) {
+    if (n.staff_name !== myProfile.name || !n.remind_at) continue;
+    if (new Date(n.remind_at).getTime() > now) continue;      // not due yet
+    if (now > entryMomentMs(n) + 6 * 3600e3) continue;         // long over — skip
+    const key = `rem:${n.id}:${n.remind_at}`;
+    try { if (localStorage.getItem(key) === "1") continue; localStorage.setItem(key, "1"); } catch {}
+    const label = TYPE_LABELS[n.note_type] || n.note_type;
+    const when = n.event_time ? ` at ${n.event_time}` : "";
+    showToast(`⏰ Reminder: ${label}${n.details ? " — " + n.details : ""}${when} (${fmtDate(n.start_date)})`);
+  }
+}
 
 els.notesList.addEventListener("click", async (e) => {
   const editBtn = e.target.closest("button[data-edit]");
@@ -2943,6 +2992,12 @@ els.form.addEventListener("submit", async (e) => {
     visibility: myProfile.is_admin ? els.nfVis.value : "team",
     recurrence: $("nf-recur").value,
   };
+  // Personal reminder (admins only) — computed to an exact timestamp we can act on.
+  if (myProfile.is_admin) {
+    const lead = $("nf-remind").value;
+    row.remind_at = lead === "" ? null : computeRemindAt(start, row.event_time, Number(lead));
+    row.reminded_at = null; // reset so a re-saved reminder fires again
+  }
 
   const { error } = editingNoteId
     ? await supabase.from("schedule_notes").update(row).eq("id", editingNoteId)
@@ -3513,7 +3568,7 @@ setInterval(() => {
 // Re-check "has this passed" every minute — no new data needed, just re-runs
 // the same filter — so Upcoming entries drop off live as their time passes.
 setInterval(() => {
-  if (myProfile && document.visibilityState === "visible") renderNotes();
+  if (myProfile && document.visibilityState === "visible") { renderNotes(); checkReminders(); }
 }, 60_000);
 
 function renderThread() {
