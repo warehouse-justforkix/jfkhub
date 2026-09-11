@@ -802,6 +802,13 @@ details.hrs-acc summary .roster-name { flex: 0 1 auto; }
   border-radius: var(--radius) var(--radius) 0 0;
 }
 .admin-strip.hidden { display: none; }
+.admin-strip-private { background: #4a1d3f; color: #ffd9ef; }
+
+/* Attendance tracker */
+.att-tally { display: flex; flex-wrap: wrap; gap: .4rem .5rem; margin-bottom: 1rem; }
+.att-tally-chip { background: #fff0f7; border: 1px solid var(--line); border-radius: 99px; padding: .3rem .7rem; font-size: .82rem; color: var(--ink); }
+.att-badge { font-size: .66rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: .1rem .45rem; border-radius: 99px; margin-right: .3rem; }
+.att-form { margin-bottom: .3rem; }
 
 /* Two-column layout: main content + messages sidebar */
 .layout { display: flex; gap: 1.2rem; align-items: flex-start; }

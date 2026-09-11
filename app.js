@@ -16,6 +16,7 @@ const els = {
   appView: $("app-view"),
   siteNav: $("site-nav"),
   navAdmin: $("nav-admin"),
+  navAttendance: $("nav-attendance"),
   userChip: $("user-chip"),
   userName: $("user-name"),
   // auth
@@ -448,6 +449,8 @@ async function route() {
       : "Everyone's current weekly hours. You can edit your own row.";
     els.navAdmin.classList.toggle("hidden", !admin);
     els.adminSection.classList.toggle("hidden", !admin);
+    els.navAttendance.classList.toggle("hidden", !admin);
+    $("attendance").classList.toggle("hidden", !admin);
     els.nfVisField.classList.toggle("hidden", !admin);
     els.punchAdmin.classList.remove("hidden"); // everyone sees who's in
     els.punchFixHint.classList.toggle("hidden", admin);
@@ -661,6 +664,7 @@ async function loadEverything() {
     loadSupplies(),
     loadRestock(),
     loadWarnings(),
+    loadAttendance(),
     loadAdmin(),
     loadPersonalNotes(),
     loadCostumeTimer(),
@@ -1007,6 +1011,101 @@ $("warnings-card").addEventListener("click", async (e) => {
   if (!confirm("Remove this warning from the record?")) return;
   await supabase.from("warnings").delete().eq("id", del.dataset.warnDel);
   await loadWarnings();
+});
+
+// ---------- attendance tracker (ADMIN-PRIVATE: call-ins / no-shows) ----------
+
+let attendance = [];
+const ATT_KIND_LABELS = { "no-show": "No-show", "call-in": "Called in", late: "Late", "left-early": "Left early", other: "Other" };
+const ATT_KIND_COLORS = {
+  "no-show": { bg: "#ffd6d6", fg: "#b3141f" },
+  "call-in": { bg: "#cfe2ff", fg: "#1d4ed8" },
+  late: { bg: "#faedac", fg: "#7a5c08" },
+  "left-early": { bg: "#ffe1bf", fg: "#b45309" },
+  other: { bg: "#dde3ec", fg: "#374151" },
+};
+
+async function loadAttendance() {
+  if (!myProfile?.is_admin) return; // admin-only; never queried for members
+  const { data, error } = await supabase
+    .from("attendance_log")
+    .select("*")
+    .order("incident_date", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (error) {
+    $("att-list").innerHTML = `<li class="empty">Couldn't load: ${esc(error.message)}${/attendance_log/.test(error.message) ? " — run db/attendance.sql." : ""}</li>`;
+    return;
+  }
+  attendance = data || [];
+  renderAttendance();
+}
+
+function renderAttendance() {
+  // member picker (everyone except admins)
+  const members = staff.filter((p) => !p.is_admin);
+  $("att-member").innerHTML = members.length
+    ? members.map((p) => `<option value="${esc(p.name)}">${esc(p.avatar || "🙂")} ${esc(p.name)}</option>`).join("")
+    : `<option value="">No members yet</option>`;
+
+  // per-person tally
+  const counts = {};
+  for (const a of attendance) {
+    counts[a.staff_name] = counts[a.staff_name] || {};
+    counts[a.staff_name][a.kind] = (counts[a.staff_name][a.kind] || 0) + 1;
+  }
+  const tallyNames = Object.keys(counts).sort();
+  $("att-tally").innerHTML = tallyNames.length
+    ? tallyNames
+        .map((name) => {
+          const parts = Object.entries(counts[name])
+            .map(([k, n]) => `${n} ${ATT_KIND_LABELS[k] || k}${n > 1 ? "s" : ""}`)
+            .join(" · ");
+          return `<span class="att-tally-chip"><b>${esc(name)}</b> — ${parts}</span>`;
+        })
+        .join("")
+    : "";
+
+  if (!attendance.length) {
+    $("att-list").innerHTML = `<li class="empty">Nothing logged yet.</li>`;
+    return;
+  }
+  $("att-list").innerHTML = attendance
+    .map((a) => {
+      const c = ATT_KIND_COLORS[a.kind] || ATT_KIND_COLORS.other;
+      return `<li class="cl-item">
+        <span class="cl-label" style="flex:1">
+          <span class="att-badge" style="background:${c.bg};color:${c.fg}">${ATT_KIND_LABELS[a.kind] || a.kind}</span>
+          <b>${fmtDate(a.incident_date)}</b> — ${nameWithAvatar(a.staff_name)}${a.note ? ` — ${linkify(a.note)}` : ""}
+          <span class="cl-by" style="color:var(--ink-soft)">· logged by ${esc(a.created_by || "?")}</span>
+        </span>
+        <button class="btn-mini danger" data-att-del="${a.id}" title="Remove">Remove</button>
+      </li>`;
+    })
+    .join("");
+}
+
+$("att-add").addEventListener("click", async () => {
+  const staff_name = $("att-member").value;
+  if (!staff_name) { setStatus($("att-status"), "Pick a person first.", true); return; }
+  const { error } = await supabase.from("attendance_log").insert({
+    staff_name,
+    kind: $("att-kind").value,
+    incident_date: $("att-date").value || todayStr(),
+    note: $("att-note").value.trim() || null,
+    created_by: myProfile.name,
+  });
+  if (error) { setStatus($("att-status"), `Couldn't log it: ${error.message}`, true); return; }
+  $("att-note").value = "";
+  setStatus($("att-status"), "Logged — private to you. ✔");
+  await loadAttendance();
+});
+
+$("attendance").addEventListener("click", async (e) => {
+  const del = e.target.closest("button[data-att-del]");
+  if (!del) return;
+  if (!confirm("Remove this attendance entry?")) return;
+  await supabase.from("attendance_log").delete().eq("id", del.dataset.attDel);
+  await loadAttendance();
 });
 
 // ---------- supplies to order ----------

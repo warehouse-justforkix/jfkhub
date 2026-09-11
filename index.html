@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>JFK Warehouse Hub</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=156">
+  <link rel="stylesheet" href="style.css?v=157">
   <script>
     // Surface script errors in the footer so problems are visible without devtools.
     window.addEventListener("error", function (e) {
@@ -37,6 +37,7 @@
         <div id="admin-quick" class="admin-quick hidden">
           <a href="#messages" id="chip-messages"><span id="chip-msg-label">Admin Messages</span><span id="chip-msg-dot" class="msg-pop hidden">💬</span></a>
           <a href="#admin" id="nav-admin" class="hidden">Admin Directory</a>
+          <a href="#attendance" id="nav-attendance" class="hidden">Attendance</a>
         </div>
       </div>
     </div>
@@ -272,6 +273,47 @@
         </div>
         <p id="warn-status" class="form-status" role="status"></p>
         <ul id="warn-list" class="cl-list"><li class="empty">Loading…</li></ul>
+      </section>
+
+      <!-- Attendance tracker: ADMIN-PRIVATE — only admins can see or edit this -->
+      <section id="attendance" class="card hidden">
+        <span class="admin-strip admin-strip-private">🔒 ADMIN ONLY — PRIVATE</span>
+        <div class="card-head">
+          <h2>Attendance Tracker</h2>
+        </div>
+        <p class="hint">Log call-ins and no-shows. This is completely private — <strong>only you (admin)</strong> can see it; staff members can't.</p>
+
+        <div id="att-tally" class="att-tally"></div>
+
+        <div class="note-form att-form">
+          <div class="field">
+            <label for="att-member">Person</label>
+            <select id="att-member"></select>
+          </div>
+          <div class="field">
+            <label for="att-kind">Type</label>
+            <select id="att-kind">
+              <option value="no-show">No-show</option>
+              <option value="call-in">Called in</option>
+              <option value="late">Late</option>
+              <option value="left-early">Left early</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="att-date">Date</label>
+            <input id="att-date" type="date">
+          </div>
+          <div class="field field-wide">
+            <label for="att-note">Note <span class="optional">(optional)</span></label>
+            <input id="att-note" type="text" maxlength="240" placeholder="What happened? Reason given?">
+          </div>
+          <div class="field field-submit">
+            <button id="att-add" class="btn btn-primary" type="button">Log it</button>
+          </div>
+        </div>
+        <p id="att-status" class="form-status" role="status"></p>
+        <ul id="att-list" class="cl-list"><li class="empty">Loading…</li></ul>
       </section>
 
       </aside>
@@ -742,9 +784,9 @@ Just For Kix Warehouse</pre>
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">Just For Kix · internal team tool · v156</div>
+    <div class="wrap">Just For Kix · internal team tool · v157</div>
   </footer>
 
-  <script type="module" src="app.js?v=156"></script>
+  <script type="module" src="app.js?v=157"></script>
 </body>
 </html>
