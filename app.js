@@ -2920,7 +2920,8 @@ function startNoteEdit(n) {
   if (myProfile.is_admin) $("nf-remind").value = remindLeadFromNote(n);
   $("nf-submit").textContent = "Save Changes";
   $("nf-cancel").classList.remove("hidden");
-  setStatus(els.formStatus, `Editing "${TYPE_LABELS[n.note_type] || n.note_type}" for ${n.staff_name} — make your changes above and hit Save.`);
+  $("nf-delete").classList.remove("hidden");
+  setStatus(els.formStatus, `Editing "${TYPE_LABELS[n.note_type] || n.note_type}" for ${n.staff_name} — make your changes above and hit Save, or Remove entry to delete it.`);
   els.nfStart.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
@@ -2929,10 +2930,27 @@ function cancelNoteEdit() {
   els.form.reset();
   $("nf-submit").textContent = "Post it";
   $("nf-cancel").classList.add("hidden");
+  $("nf-delete").classList.add("hidden");
   setStatus(els.formStatus, "");
 }
 
 $("nf-cancel").addEventListener("click", cancelNoteEdit);
+
+// Remove the entry being edited entirely (e.g. the event was cancelled).
+$("nf-delete").addEventListener("click", async () => {
+  if (!editingNoteId) return;
+  const n = notes.find((x) => x.id === editingNoteId);
+  const recurs = n && n.recurrence && n.recurrence !== "none";
+  if (!confirm(`Remove this entry entirely?${recurs ? " This deletes every repeat." : ""}`)) return;
+  const { error } = await supabase.from("schedule_notes").delete().eq("id", editingNoteId);
+  if (error) {
+    setStatus(els.formStatus, `Couldn't remove it: ${error.message}`, true);
+    return;
+  }
+  cancelNoteEdit();
+  setStatus(els.formStatus, "Entry removed. ✔");
+  await loadNotes();
+});
 
 // In-app reminders for MY calendar entries (fires while the hub is open). Once
 // the app-closed push path is wired, the same remind_at drives that too.

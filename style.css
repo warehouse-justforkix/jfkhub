@@ -167,6 +167,8 @@ td.cell-off { color: var(--ink-soft); font-style: italic; }
 .btn-primary:hover { background: var(--brand-dark); }
 .btn-ghost { background: transparent; color: var(--brand-dark); border-color: #eab4d1; }
 .btn-ghost:hover { background: #fdeaf4; }
+.nf-delete-btn { color: var(--out); border-color: #e5b6b2; }
+.nf-delete-btn:hover { background: #fdecea; }
 .btn[disabled] { opacity: .55; cursor: default; }
 
 /* Note form */
