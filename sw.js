@@ -11,6 +11,7 @@ self.addEventListener("push", (e) => {
       body: data.body || "",
       icon: "icons/icon-192.png",
       badge: "icons/icon-192.png",
+      requireInteraction: true, // keep the notification up until it's acted on / cleared
       data: { url: data.url || "./" },
     })
   );
