@@ -3866,6 +3866,15 @@ async function enablePush() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
     if (!myProfile || Notification.permission !== "granted") return;
     const reg = await navigator.serviceWorker.register("sw.js");
+    // Drop any existing subscription and make a brand-new one. The browser's
+    // subscribe() reuses a stale subscription forever, and a dead endpoint still
+    // returns success to the push server — so the hub thinks it's delivering while
+    // nothing arrives. Re-subscribing fresh on each enable keeps the endpoint live.
+    const existing = await reg.pushManager.getSubscription().catch(() => null);
+    if (existing) {
+      try { await existing.unsubscribe(); } catch {}
+      try { await supabase.from("push_subscriptions").delete().eq("endpoint", existing.endpoint); } catch {}
+    }
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY),
