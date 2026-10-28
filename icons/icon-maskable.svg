@@ -14,8 +14,9 @@
   <!-- full-bleed background so the launcher mask always has pink to crop into -->
   <rect width="512" height="512" fill="url(#bg)"/>
   <rect width="512" height="300" fill="url(#gloss)"/>
-  <!-- foreground scaled into the maskable safe zone (~62% around center) -->
-  <g transform="translate(256,256) scale(0.62) translate(-256,-256)">
+  <!-- foreground scaled to fill the maskable safe zone (~85% — corners still inside
+       the 80%-diameter safe circle, but much larger so it isn't tiny on macOS) -->
+  <g transform="translate(256,256) scale(0.85) translate(-256,-256)">
     <!-- calendar card -->
     <rect x="116" y="128" width="280" height="256" rx="28" fill="#ffffff"/>
     <rect x="116" y="128" width="280" height="74" rx="28" fill="#ffd3e9"/>
